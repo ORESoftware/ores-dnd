@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ores.dnd.authored.schema.json",
+  "$defs": {
+    "DndOperation": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndOperation",
+      "type": "string",
+      "enum": ["copy", "move", "link"]
+    },
+    "DndItemKind": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndItemKind",
+      "type": "string",
+      "enum": ["text", "uri", "json", "bytes"]
+    },
+    "DndLifecyclePhase": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndLifecyclePhase",
+      "type": "string",
+      "enum": ["drag-start", "drag-enter", "drag-over", "drag-leave", "drop", "drag-end"]
+    },
+    "DndItem": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndItem",
+      "type": "object",
+      "properties": {
+        "kind": { "$ref": "DndItemKind" },
+        "mediaType": { "type": "string" },
+        "data": { "type": "string" },
+        "name": { "type": "string" }
+      },
+      "required": ["kind", "mediaType", "data"],
+      "unevaluatedProperties": false
+    },
+    "DndEnvelope": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndEnvelope",
+      "type": "object",
+      "properties": {
+        "protocol": { "type": "string" },
+        "dragId": { "type": "string" },
+        "sourceRuntime": { "type": "string" },
+        "allowedOperations": { "type": "array", "items": { "$ref": "DndOperation" } },
+        "items": { "type": "array", "items": { "$ref": "DndItem" } },
+        "traceparent": { "type": "string" },
+        "formId": { "type": "string" }
+      },
+      "required": ["protocol", "dragId", "sourceRuntime", "allowedOperations", "items"],
+      "unevaluatedProperties": false
+    },
+    "DndDropResult": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndDropResult",
+      "type": "object",
+      "properties": {
+        "dragId": { "type": "string" },
+        "accepted": { "type": "boolean" },
+        "operation": { "$ref": "DndOperation" },
+        "targetId": { "type": "string" },
+        "errorCode": { "type": "string" }
+      },
+      "required": ["dragId", "accepted"],
+      "unevaluatedProperties": false
+    },
+    "DndTelemetryEvent": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndTelemetryEvent",
+      "type": "object",
+      "properties": {
+        "phase": { "$ref": "DndLifecyclePhase" },
+        "dragId": { "type": "string" },
+        "sourceRuntime": { "type": "string" },
+        "itemCount": { "type": "integer" },
+        "operation": { "$ref": "DndOperation" },
+        "targetId": { "type": "string" }
+      },
+      "required": ["phase", "dragId", "sourceRuntime", "itemCount"],
+      "unevaluatedProperties": false
+    }
+  }
+}

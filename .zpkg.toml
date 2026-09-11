@@ -1,0 +1,45 @@
+[package]
+org = "oresoftware"
+name = "ores-dnd"
+version = "0.1.0"
+kind = "pub-lib-core"
+description = "Cross-runtime drag-and-drop contracts and adapters"
+license = "MIT"
+keywords = ["drag-drop", "wasm", "typescript", "rust", "flutter", "dart"]
+
+[package.repository]
+vcs = "git"
+url = "https://github.com/ORESoftware/ores-dnd"
+
+[publish]
+include_readme = true
+tag_format = "v{version}"
+exclude = [".env", ".env.*", ".direnv/**", ".vendor/.zed/**", ".zed/**", ".zed-pack/**", "tmp/**", "**/*.log", ".DS_Store", "**/target/**", "**/node_modules/**", "**/dist/**", "**/.dart_tool/**", "**/build/**", "artifacts/**", ".typespec-json-schema-validator/**"]
+
+[install]
+dir = ".vendor/.zed"
+
+[targets.repository]
+dir = "."
+
+[targets.rust]
+dir = "src/rust"
+adapter = "rust"
+
+[targets.wasm]
+dir = "src/rust-wasm"
+adapter = "rust"
+
+[targets.typescript]
+dir = "src/ts"
+name = "ores-dnd-typescript"
+adapter = "node"
+
+[targets.dart]
+dir = "src/dart"
+adapter = "dart"
+
+[targets.contracts]
+dir = "contracts"
+name = "ores-dnd-contracts"
+adapter = "none"
