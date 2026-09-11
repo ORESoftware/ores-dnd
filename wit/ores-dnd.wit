@@ -1,0 +1,39 @@
+package oresoftware:ores-dnd@0.1.0;
+
+interface protocol {
+  enum operation {
+    copy,
+    move,
+    link,
+  }
+
+  enum item-kind {
+    text,
+    uri,
+    json,
+    bytes,
+  }
+
+  record item {
+    kind: item-kind,
+    media-type: string,
+    data: string,
+    name: option<string>,
+  }
+
+  record envelope {
+    protocol: string,
+    drag-id: string,
+    source-runtime: string,
+    allowed-operations: list<operation>,
+    items: list<item>,
+    traceparent: option<string>,
+    form-id: option<string>,
+  }
+
+  normalize-envelope-json: func(payload: string) -> result<string, string>;
+}
+
+world ores-dnd {
+  export protocol;
+}

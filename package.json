@@ -1,0 +1,15 @@
+{
+  "name": "@oresoftware/ores-dnd-contracts",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Contract verification toolchain for ores-dnd",
+  "engines": { "node": ">=22.9.0" },
+  "scripts": {
+    "contracts:check": "tjsv check --typespec=contracts/main.tsp --schema=contracts/authored.schema.json --instances=contracts/instances --report=artifacts/schema-parity.json",
+    "contracts:inventory": "tjsv inventory --typespec=contracts/main.tsp",
+    "test": "npm run contracts:check && npm --prefix src/ts test"
+  },
+  "devDependencies": {
+    "@oresoftware/typespec-json-schema-validator": "https://github.com/ORESoftware/typespec-json-schema-validator/archive/4af1c3da7764996602872e89222569113830fb98.tar.gz"
+  }
+}

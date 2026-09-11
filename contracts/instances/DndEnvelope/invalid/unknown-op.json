@@ -1,0 +1,13 @@
+{
+  "protocol": "ores.dnd/v1",
+  "dragId": "drag-bad-op",
+  "sourceRuntime": "fixture",
+  "allowedOperations": ["teleport"],
+  "items": [
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "nope"
+    }
+  ]
+}

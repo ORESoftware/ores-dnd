@@ -1,0 +1,146 @@
+schema = "ores.dnd.fleet-rollout/v1"
+dependency = "oresoftware/ores-dnd"
+version = "^0.1.0"
+linear = "DEN-1025"
+
+# First cohort: 20 non-test organizations with a shared public core plus web,
+# Rust desktop, and Flutter families discovered from the connected GitHub fleet.
+[[targets]]
+org = "gha-indie-worker"
+pub_lib_core = "gha-indie-worker-pub-lib-core"
+web = "gha-indie-worker-web-server.rs"
+desktop = "gha-indie-worker-desktop-app.rs"
+flutter = "gha-indie-worker-flutter"
+
+[[targets]]
+org = "athlet-o"
+pub_lib_core = "athleto-pub-lib-core"
+web = "athleto-web-server.rs"
+desktop = "athleto-desktop-app.rs"
+flutter = "athleto-flutter"
+
+[[targets]]
+org = "3FA-app"
+pub_lib_core = "3fa-pub-lib-core"
+web = "3fa-web-server.rs"
+desktop = "3fa-desktop-app.rs"
+flutter = "3fa-flutter"
+
+[[targets]]
+org = "cliptown"
+pub_lib_core = "cliptown-pub-lib-core"
+web = "cliptown-web-server.rs"
+desktop = "cliptown-desktop-app.rs"
+flutter = "cliptown-flutter"
+
+[[targets]]
+org = "daedalus-fab"
+pub_lib_core = "daedalus-pub-lib-core"
+web = "daedalus-web-server.rs"
+desktop = "daedalus-desktop-app.rs"
+flutter = "daedalus-flutter"
+
+[[targets]]
+org = "claritas-viz"
+pub_lib_core = "claritas-pub-lib-core"
+web = "claritas-web-server.rs"
+desktop = "claritas-desktop-app.rs"
+flutter = "claritas-flutter"
+
+[[targets]]
+org = "quaestor-ledger"
+pub_lib_core = "quaestor-pub-lib-core"
+web = "quaestor-web-server.rs"
+desktop = "quaestor-desktop-app.rs"
+flutter = "quaestor-flutter"
+
+[[targets]]
+org = "shared-auth"
+pub_lib_core = "shared-auth-pub-lib-core"
+web = "shared-auth-web-server.rs"
+desktop = "shared-auth-desktop-app.rs"
+flutter = "shared-auth-flutter"
+
+[[targets]]
+org = "zed-pkg"
+pub_lib_core = "zed-pub-lib-core"
+web = "zed-web-server.rs"
+desktop = "zed-desktop-app.rs"
+flutter = "zed-flutter"
+
+[[targets]]
+org = "sonus-auris"
+pub_lib_core = "sonus-auris-pub-lib-core"
+web = "sonus-auris-web-server.rs"
+desktop = "sonus-auris-desktop-app.rs"
+flutter = "sonus-auris-flutter"
+
+[[targets]]
+org = "hypesiege"
+pub_lib_core = "hypesiege-pub-lib-core"
+web = "hypesiege-web-server.rs"
+desktop = "hypesiege-desktop-app.rs"
+flutter = "hypesiege-flutter"
+
+[[targets]]
+org = "StreemPilot"
+pub_lib_core = "streempilot-pub-lib-core"
+web = "streempilot-web-server.rs"
+desktop = "streempilot-desktop-app.rs"
+flutter = "streempilot-flutter"
+
+[[targets]]
+org = "file-tunnel"
+pub_lib_core = "ftnl-pub-lib-core"
+web = "ftnl-web-server.rs"
+desktop = "ftnl-desktop-app.rs"
+flutter = "ftnl-flutter"
+
+[[targets]]
+org = "fanwaave"
+pub_lib_core = "fanwaave-pub-lib-core"
+web = "fanwaave-web-server.rs"
+desktop = "fanwaave-desktop-app.rs"
+flutter = "fanwaave-flutter"
+
+[[targets]]
+org = "embedded-alerts"
+pub_lib_core = "eal-pub-lib-core"
+web = "eal-web-server.rs"
+desktop = "eal-desktop-app.rs"
+flutter = "eal-flutter"
+
+[[targets]]
+org = "hacker-house-medellin"
+pub_lib_core = "hhm-pub-lib-core"
+web = "hhm-web-server.rs"
+desktop = "hhm-desktop-app.rs"
+flutter = "hhm-flutter"
+
+[[targets]]
+org = "happy-wakey"
+pub_lib_core = "happy-wakey-pub-lib-core"
+web = "happy-wakey-web-server.rs"
+desktop = "happy-wakey-desktop-app.rs"
+flutter = "happy-wakey-flutter"
+
+[[targets]]
+org = "chapter-publishing"
+pub_lib_core = "cp-pub-lib-core"
+web = "cp-web-server.rs"
+desktop = "cp-desktop-app.rs"
+flutter = "cp-flutter"
+
+[[targets]]
+org = "ecma-d"
+pub_lib_core = "ecmad-pub-lib-core"
+web = "ecmad-web-server.rs"
+desktop = "ecmad-desktop-app.rs"
+flutter = "ecmad-flutter"
+
+[[targets]]
+org = "ores-chat"
+pub_lib_core = "ores-chat-pub-lib-core"
+web = "ores-chat-web-server.rs"
+desktop = "ores-chat-desktop-app.rs"
+flutter = "ores-chat-flutter"

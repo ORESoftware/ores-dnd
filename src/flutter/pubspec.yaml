@@ -1,0 +1,23 @@
+name: ores_dnd_flutter
+version: 0.1.0
+description: Flutter widgets for the ores.dnd/v1 protocol.
+repository: https://github.com/ORESoftware/ores-dnd
+publish_to: none
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  ores_dnd:
+    path: ../dart
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: false

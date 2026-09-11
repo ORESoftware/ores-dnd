@@ -1,0 +1,16 @@
+node_modules/
+dist/
+target/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+coverage/
+.typespec-json-schema-validator/generated/
+artifacts/
+.vendor/.zed/
+.zed/
+.zed-pack/
+tmp/
+*.log
+.DS_Store
