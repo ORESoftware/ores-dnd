@@ -46,11 +46,25 @@ jobs:
           targets: wasm32-unknown-unknown
       - run: cargo check -p ores-dnd-wasm --target wasm32-unknown-unknown
 
-  flutter:
+  dart:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: src/dart
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart pub get
+      - run: dart analyze --fatal-infos
+      - run: dart test
+
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/flutter
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2

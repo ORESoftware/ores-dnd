@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:ores_dnd/ores_dnd.dart';
+import 'package:test/test.dart';
 
 void main() {
   const codec = OresDndCodec();
@@ -43,18 +42,5 @@ void main() {
     final event = telemetryFor(DndLifecyclePhase.drop, valid, operation: DndOperation.copy);
     expect(jsonEncode(event.toJson()).contains('hello'), isFalse);
     expect(event.itemCount, 1);
-  });
-
-  testWidgets('Flutter draggable carries the shared JSON envelope', (tester) async {
-    await tester.pumpWidget(Directionality(
-      textDirection: TextDirection.ltr,
-      child: OresDraggable(
-        envelope: valid,
-        feedback: const SizedBox(width: 10, height: 10),
-        child: const Text('drag'),
-      ),
-    ));
-    expect(find.text('drag'), findsOneWidget);
-    expect(find.byType(Draggable<String>), findsOneWidget);
   });
 }

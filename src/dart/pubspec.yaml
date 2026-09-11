@@ -1,21 +1,12 @@
 name: ores_dnd
 version: 0.1.0
-description: Cross-runtime drag-and-drop protocol and Flutter adapters for ORESoftware apps.
+description: Pure Dart codec and ports for the ores.dnd/v1 cross-runtime drag-and-drop protocol.
 repository: https://github.com/ORESoftware/ores-dnd
 publish_to: none
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
-  flutter: ">=3.24.0"
-
-dependencies:
-  flutter:
-    sdk: flutter
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^5.0.0
-
-flutter:
-  uses-material-design: false
+  lints: ^5.1.1
+  test: ^1.25.0

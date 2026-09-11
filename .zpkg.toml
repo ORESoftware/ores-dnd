@@ -35,8 +35,15 @@ dir = "src/ts"
 name = "ores-dnd-typescript"
 adapter = "node"
 
+# Pure Dart protocol/runtime target. This intentionally has no Flutter dependency
+# so public core packages can consume the contract without importing UI code.
 [targets.dart]
 dir = "src/dart"
+adapter = "dart"
+
+# Flutter widgets are a separate target so hosts opt into framework dependencies.
+[targets.flutter]
+dir = "src/flutter"
 adapter = "dart"
 
 [targets.contracts]
