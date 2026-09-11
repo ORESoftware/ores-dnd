@@ -1,5 +1,3 @@
-library ores_dnd;
-
 import 'dart:convert';
 import 'package:flutter/widgets.dart';
 
