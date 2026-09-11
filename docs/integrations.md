@@ -15,9 +15,35 @@ zed-pkg then exposes the runtime target appropriate to the consuming app (`rust`
 
 ## TypeScript / browser / webview
 
-Use `writeToDataTransfer()` in `dragstart`, `readFromDataTransfer()` in `drop`, and `negotiateOperation()` against the target's allowed operations. HTML-first MASH pages can load the compiled TypeScript adapter as a tiny module; no React/JSX is required.
+`@oresoftware/ores-dnd` (`src/ts`) is ESM with subpath exports; no React/JSX, no runtime dependencies.
 
-The TypeScript `DropCommitPorts` map directly onto the fleet components:
+| Module | What it gives a `*-web-server.rs` page or JS client |
+| --- | --- |
+| `codec` | `validateEnvelope`, `encodeEnvelope`/`decodeEnvelope`, `writeToDataTransfer`/`readFromDataTransfer`, `negotiateOperation`, `telemetryFor`, `commitAcceptedDrop` |
+| `policy` | `DndDropPolicy`, `validatePolicy`, `evaluatePolicy` (fleet-wide order), `mediaTypeMatches` |
+| `session` | `DndSession` (`apply`, `snapshot`, `envelope`, `result`, `subscribe`), `inputs.*`, `replayTrace` |
+| `dom` | `bindDragSource(el, envelope, session)`, `bindDropZone(el, policy, session, { onDrop })`, `autoBind(root)` for HTML-first pages; keeps `data-ores-dnd-state` (`idle` / `dragging` / `accepting` / `rejecting` / `dropped`) on every zone and dispatches `ores-dnd:state` / `ores-dnd:drop` |
+| `pointer` | `ZoneRegistry` + `bindPointerDragSource` — the same session inputs from pointer events for touch surfaces and webviews without native DnD |
+| `htmx` | `commitDrop(url, envelope, result)` / `commitFromZone(zone, …)` — POST the `DropCommitRequest` to the `ores-dnd-mash` endpoint, take the **server's** verdict (JSON) or swap an HTML partial and `htmx.process` it |
+| `wasm` | `WasmSession`, `evaluatePolicyWasm`, `crossCheckPolicy`, `crossCheckTrace` over the `ores-dnd-wasm` exports |
+
+Minimal wiring:
+
+```ts
+import { DndSession, bindDragSource, bindDropZone, commitAcceptedDrop } from "@oresoftware/ores-dnd";
+
+const session = new DndSession();
+bindDragSource(card, envelope, session, { otel });
+bindDropZone(list, { targetId: "list", allowedOperations: ["move"], acceptedKinds: ["json"] }, session, {
+  onDrop: (envelope, result) => commitAcceptedDrop(envelope, result, { forms, optoSync, otel }),
+});
+```
+
+External drags (from another page or app) are evaluated provisionally on `DataTransfer.types` during `dragover` — browsers hide the data then — and definitively on `drop`, when the real payload replaces the provisional session before the drop is applied. Modifier keys map to a preferred operation the way native file managers do (Ctrl/⌥ copy, Shift move, Ctrl+Shift/⌘ link).
+
+For MASH pages nothing is hand-wired: the server renders zones/sources with `ores-dnd-mash` and `autoBind(document)` (loaded by `boot_script`) binds them, commits accepted drops to `data-ores-dnd-commit` and lets the server decide.
+
+The `DropCommitPorts` map directly onto the fleet components:
 
 - `OresFormsPort.applyAcceptedDrop` → `ores-forms/ores-forms-clients` form action/field adapter.
 - `OptoSyncPort.persistAcceptedDrop` → `opto-sync/opto-sync-clients` IndexedDB/SQLite mutation + sync path.

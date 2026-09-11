@@ -21,7 +21,7 @@ The contract also carries the drag *session* semantics: `DndDropPolicy` (what a 
 
 | Target | Path | Intended consumers |
 | --- | --- | --- |
-| TypeScript + DOM/WebView | `src/ts` | `*-web-server.rs` HTML/HTMX/webviews and JS clients |
+| TypeScript + DOM/WebView (`@oresoftware/ores-dnd`) | `src/ts` | `*-web-server.rs` HTML/HTMX/webviews and JS clients: codec, policy, session, HTML5 DnD + pointer fallback, htmx commit, WASM shim |
 | Rust core (`ores-dnd-core`) | `src/rust` | `*-desktop-app.rs`, shared `*-pub-lib-core`; codec, drop policy, session state machine, ports |
 | Rust → WASM (`ores-dnd-wasm`) | `src/rust-wasm` + `wit/` | JS clients, Flutter web bridges, Rust desktop webviews; JSON-string ABI incl. `WasmDndSession` |
 | MASH (`ores-dnd-mash`) | `src/rust-mash` | maud drop-zone/drag-source markup, htmx wiring, axum drop-commit endpoint that re-verifies every drop server-side |
