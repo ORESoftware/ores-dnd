@@ -1,0 +1,14 @@
+[package]
+name = "ores-dnd-dioxus"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "ores.dnd/v1 drag-and-drop for Dioxus 0.7 (web + desktop): session signals, DropZone and DragSource components over the portable DataTransfer"
+
+[dependencies]
+ores-dnd-core = { path = "../rust", default-features = false }
+serde_json.workspace = true
+# Renderer-neutral: the app picks web / desktop / mobile. Dioxus' portable
+# DataTransfer means one adapter serves every renderer.
+dioxus = { version = "0.7", default-features = false, features = ["html", "signals", "macro", "hooks"] }

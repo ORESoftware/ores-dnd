@@ -1,0 +1,16 @@
+[package]
+name = "ores-dnd-leptos"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "ores.dnd/v1 drag-and-drop for Leptos 0.8 islands: session signals, DropZone and DragSource components, DataTransfer glue"
+
+[dependencies]
+ores-dnd-core = { path = "../rust", default-features = false }
+serde_json.workspace = true
+# The app selects csr / hydrate / ssr; this crate stays feature-neutral so a
+# Leptos release is an adapter change, never a protocol change.
+leptos = { version = "0.8", default-features = false }
+web-sys = { version = "0.3", features = ["DataTransfer", "DragEvent", "Element", "Event", "EventTarget", "DomStringList"] }
+wasm-bindgen.workspace = true

@@ -22,9 +22,12 @@ The contract also carries the drag *session* semantics: `DndDropPolicy` (what a 
 | Target | Path | Intended consumers |
 | --- | --- | --- |
 | TypeScript + DOM/WebView | `src/ts` | `*-web-server.rs` HTML/HTMX/webviews and JS clients |
-| Rust core | `src/rust` | `*-desktop-app.rs`, shared `*-pub-lib-core`, MASH/Leptos/Dioxus wiring |
-| Rust → WASM | `src/rust-wasm` + `wit/` | JS clients, Flutter web bridges, Rust desktop webviews |
-| Dart/Flutter | `src/dart` | `*-flutter` iOS/Android/desktop/web clients |
+| Rust core (`ores-dnd-core`) | `src/rust` | `*-desktop-app.rs`, shared `*-pub-lib-core`; codec, drop policy, session state machine, ports |
+| Rust → WASM (`ores-dnd-wasm`) | `src/rust-wasm` + `wit/` | JS clients, Flutter web bridges, Rust desktop webviews; JSON-string ABI incl. `WasmDndSession` |
+| MASH (`ores-dnd-mash`) | `src/rust-mash` | maud drop-zone/drag-source markup, htmx wiring, axum drop-commit endpoint that re-verifies every drop server-side |
+| Leptos (`ores-dnd-leptos`) | `src/rust-leptos` | Leptos 0.8 islands/CSR: session signal, `DropZone`/`DragSource`, `web_sys` DataTransfer glue |
+| Dioxus (`ores-dnd-dioxus`) | `src/rust-dioxus` | Dioxus 0.7 web + desktop + mobile over the portable `DataTransfer` |
+| Dart/Flutter | `src/dart`, `src/flutter` | `*-flutter` iOS/Android/desktop/web clients |
 
 The browser MIME type is `application/vnd.ores.dnd+json`. Plain-text fallback is emitted only for text items.
 
@@ -56,8 +59,9 @@ npm --prefix src/ts install
 npm --prefix src/ts run build
 npm --prefix src/ts test
 
-# Rust
-cargo test -p ores-dnd-core --all-features
+# Rust (core, wasm, mash, leptos, dioxus)
+cargo test --workspace --all-features
+cargo clippy --workspace --all-features --all-targets -- -D warnings
 rustup target add wasm32-unknown-unknown
 cargo check -p ores-dnd-wasm --target wasm32-unknown-unknown
 

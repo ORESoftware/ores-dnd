@@ -27,17 +27,20 @@ The core calls them only after decode, validation, operation negotiation, and po
 
 ## Rust desktop + MASH / Leptos / Dioxus
 
-`ores-dnd-core` is UI-framework neutral. Feature modules expose stable binding metadata for MASH, Leptos, and Dioxus, while `ores-dnd-wasm` owns the browser/WASM codec.
+`ores-dnd-core` is UI-framework neutral and owns three things every adapter reuses: the codec, `evaluate_policy` (the fixed-order accept/reject rules) and `DndSession` (the state machine). Native desktop hosts (`*-desktop-app.rs`) map OS drag events straight onto `DndSessionInput`s.
 
-This split is deliberate: Dioxus and Leptos can move release versions without forcing a protocol release, and MASH can stay HTML/HTMX-first. Desktop webviews can invoke the same WASM exports used by browser clients:
+Three adapter crates sit on top and never leak upward:
 
-- `normalize_envelope_json`
-- `validate_envelope_json`
-- `negotiate_operation_json`
-- `protocol_version`
-- `mime_type`
+- **`ores-dnd-mash`** — `html::drop_zone(policy, wiring, inner)` and `html::drag_source(envelope, …)` render maud markup with the stable `data-ores-dnd-*` attributes; `html::boot_script(url)` loads the TypeScript adapter (`autoBind`) that drives the drag in the browser; `server::router(backend, path)` mounts `POST /ores-dnd/drop`, which **re-runs the policy on the server** (`verify_drop_commit`) before calling the app's `DropCommitBackend::commit` — the browser reports, the server decides.
+- **`ores-dnd-leptos`** — `use_dnd_session()` / `provide_dnd_session()` put the snapshot in a signal; `<DropZone handle policy on_drop>` and `<DragSource handle envelope>` bind `on:dragenter/dragover/dragleave/drop/dragstart/dragend`; `browser::*` is the `web_sys` DataTransfer glue (mirrors `src/ts/dom.ts`).
+- **`ores-dnd-dioxus`** — same shape (`use_dnd_session`, `DropZone`, `DragSource`) over Dioxus' portable `DataTransfer`, so one adapter serves web, desktop and mobile.
 
-Native desktop hosts that do not use a DOM can use `ores-dnd-core` directly and map OS drag/drop events into `DndEnvelope`.
+Desktop webviews and JS clients can instead call the `ores-dnd-wasm` exports, all JSON strings so the ABI is identical across hosts:
+
+- `normalize_envelope_json`, `validate_envelope_json`, `validate_declaration_json`
+- `negotiate_operation_json`, `evaluate_policy_json`, `replay_trace_json`
+- `WasmDndSession` (`apply`, `snapshot`, `envelope`, `result`)
+- `protocol_version`, `mime_type`
 
 ## Flutter / Dart + WASM
 
