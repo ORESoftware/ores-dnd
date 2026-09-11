@@ -1,0 +1,51 @@
+{
+  "id": "inputs-ignored-when-idle",
+  "description": "non-start inputs are ignored while idle",
+  "inputs": [
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "acceptedKinds": [
+          "text"
+        ]
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-a"
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-a"
+    },
+    {
+      "kind": "cancel"
+    },
+    {
+      "kind": "end"
+    }
+  ],
+  "expected": [
+    {
+      "state": "idle"
+    },
+    {
+      "state": "idle"
+    },
+    {
+      "state": "idle"
+    },
+    {
+      "state": "idle"
+    },
+    {
+      "state": "idle"
+    }
+  ]
+}

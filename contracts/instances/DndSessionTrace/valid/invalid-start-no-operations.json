@@ -1,0 +1,28 @@
+{
+  "id": "invalid-start-no-operations",
+  "description": "an envelope with no allowed operations never starts a session",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    }
+  ],
+  "expected": [
+    {
+      "state": "idle",
+      "errorCode": "invalid-envelope"
+    }
+  ]
+}

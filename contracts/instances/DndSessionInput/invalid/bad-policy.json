@@ -1,0 +1,7 @@
+{
+  "kind": "enter",
+  "targetId": "zone-a",
+  "policy": {
+    "targetId": "zone-a"
+  }
+}

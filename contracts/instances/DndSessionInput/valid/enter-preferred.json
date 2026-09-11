@@ -1,0 +1,14 @@
+{
+  "kind": "enter",
+  "targetId": "zone-a",
+  "policy": {
+    "targetId": "zone-a",
+    "allowedOperations": [
+      "copy"
+    ],
+    "acceptedKinds": [
+      "text"
+    ]
+  },
+  "preferredOperation": "copy"
+}

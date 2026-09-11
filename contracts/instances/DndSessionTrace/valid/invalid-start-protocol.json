@@ -1,0 +1,49 @@
+{
+  "id": "invalid-start-protocol",
+  "description": "an envelope with an unsupported protocol never starts a session",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v9",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "acceptedKinds": [
+          "text"
+        ]
+      }
+    }
+  ],
+  "expected": [
+    {
+      "state": "idle",
+      "errorCode": "invalid-envelope"
+    },
+    {
+      "state": "idle",
+      "errorCode": "invalid-envelope"
+    }
+  ]
+}

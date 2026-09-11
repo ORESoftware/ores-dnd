@@ -1,0 +1,105 @@
+{
+  "id": "form-match",
+  "description": "matching formIds accept; an envelope without formId is accepted by a form-bound policy",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ],
+        "formId": "form-x"
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-form",
+      "policy": {
+        "targetId": "zone-form",
+        "allowedOperations": [
+          "copy"
+        ],
+        "acceptedKinds": [
+          "text"
+        ],
+        "formId": "form-x"
+      }
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-form"
+    },
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0002",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-form",
+      "policy": {
+        "targetId": "zone-form",
+        "allowedOperations": [
+          "copy"
+        ],
+        "acceptedKinds": [
+          "text"
+        ],
+        "formId": "form-x"
+      }
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "over-target",
+      "dragId": "drag-0001",
+      "targetId": "zone-form",
+      "operation": "copy"
+    },
+    {
+      "state": "dropped",
+      "dragId": "drag-0001",
+      "targetId": "zone-form",
+      "operation": "copy"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0002"
+    },
+    {
+      "state": "over-target",
+      "dragId": "drag-0002",
+      "targetId": "zone-form",
+      "operation": "copy"
+    }
+  ]
+}

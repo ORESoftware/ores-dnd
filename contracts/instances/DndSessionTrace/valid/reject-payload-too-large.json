@@ -1,0 +1,51 @@
+{
+  "id": "reject-payload-too-large",
+  "description": "maxTotalBytes is enforced against the UTF-8 byte length of all item data",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-tiny",
+      "policy": {
+        "targetId": "zone-tiny",
+        "allowedOperations": [
+          "copy"
+        ],
+        "acceptedKinds": [
+          "text"
+        ],
+        "maxTotalBytes": 3
+      }
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001",
+      "targetId": "zone-tiny",
+      "errorCode": "payload-too-large"
+    }
+  ]
+}

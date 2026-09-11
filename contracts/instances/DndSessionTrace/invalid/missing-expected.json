@@ -1,0 +1,8 @@
+{
+  "id": "broken",
+  "inputs": [
+    {
+      "kind": "cancel"
+    }
+  ]
+}

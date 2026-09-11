@@ -1,0 +1,9 @@
+{
+  "targetId": "z",
+  "allowedOperations": [
+    "copy"
+  ],
+  "acceptedKinds": [
+    "file"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "broken",
+  "inputs": [
+    {
+      "kind": "warp"
+    }
+  ],
+  "expected": [
+    {
+      "state": "idle"
+    }
+  ]
+}
