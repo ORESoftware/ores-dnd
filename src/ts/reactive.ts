@@ -57,7 +57,6 @@ export function reactiveStateFor(event: DndReactiveEvent): DndReactiveState {
 
 export type DndLifecycleMode = "strict" | "external-drop-compatible";
 
-/** Stateful validator for one drag lifecycle at a time. */
 export class DndLifecycleGuard {
   #activeDragId: string | null = null;
   #dropped = false;
@@ -86,7 +85,7 @@ export class DndLifecycleGuard {
     }
 
     if (dragId !== this.#activeDragId) {
-      throw new Error(`reactive lifecycle dragId changed before drag-end`);
+      throw new Error("reactive lifecycle dragId changed before drag-end");
     }
     if (this.#dropped) {
       if (phase !== "drag-end") {
@@ -112,6 +111,7 @@ export class DndLifecycleGuard {
         this.#dropped = false;
         return;
     }
+  }
 }
 
 export interface EmitDndReactiveOptions {
