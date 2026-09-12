@@ -12,3 +12,6 @@ repository = "https://github.com/ORESoftware/ores-dnd"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 wasm-bindgen = "0.2"
+# RxRust is used synchronously in the core; hosts choose Local vs Shared
+# subjects/schedulers. Disable scheduler features so the core stays WASM/UI-safe.
+rxrust = { version = "=1.0.0-rc.5", default-features = false }
