@@ -3,6 +3,8 @@ use std::{error::Error, fmt};
 
 #[cfg(feature = "reactive")]
 pub mod reactive;
+#[cfg(feature = "reactive")]
+pub mod supabase_sync;
 
 pub const ORES_DND_PROTOCOL: &str = "ores.dnd/v1";
 pub const ORES_DND_MIME: &str = "application/vnd.ores.dnd+json";
