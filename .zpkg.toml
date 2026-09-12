@@ -29,6 +29,23 @@ adapter = "rust"
 dir = "src/rust-wasm"
 adapter = "rust"
 
+# Framework adapters: each depends on ores-dnd-core, never the reverse, so a
+# Leptos/Dioxus/axum release is an adapter change and not a protocol change.
+[targets.mash]
+dir = "src/rust-mash"
+name = "ores-dnd-mash"
+adapter = "rust"
+
+[targets.leptos]
+dir = "src/rust-leptos"
+name = "ores-dnd-leptos"
+adapter = "rust"
+
+[targets.dioxus]
+dir = "src/rust-dioxus"
+name = "ores-dnd-dioxus"
+adapter = "rust"
+
 [targets.typescript]
 dir = "src/ts"
 name = "ores-dnd-typescript"

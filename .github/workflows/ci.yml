@@ -75,7 +75,11 @@ jobs:
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
         with:
           toolchain: stable
-      - run: cargo test -p ores-dnd-core --all-features
+          components: clippy
+      - name: Test every crate (core, wasm ABI, mash, leptos, dioxus)
+        run: cargo test --workspace --all-features
+      - name: Lint every crate
+        run: cargo clippy --workspace --all-features --all-targets -- -D warnings
 
   wasm:
     runs-on: ubuntu-24.04

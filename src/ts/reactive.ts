@@ -14,7 +14,7 @@ import {
   type DndTelemetryEvent,
   telemetryFor,
   validateEnvelope,
-} from "./index.js";
+} from "./codec.js";
 
 export interface DndReactiveEvent {
   readonly phase: DndLifecyclePhase;
