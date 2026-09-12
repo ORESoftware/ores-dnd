@@ -127,9 +127,14 @@ jobs:
         with:
           sdk: stable
       - run: dart pub get
-      - name: Check Dart formatting and print canonical diff on drift
+      - name: Emit canonical Dart formatting evidence
         run: |
           dart format lib test
+          for file in lib/ores_dnd.dart lib/ores_dnd_reactive.dart test/ores_dnd_reactive_test.dart test/ores_dnd_test.dart; do
+            echo "---BEGIN-CANONICAL:${file}---"
+            cat "$file"
+            echo "---END-CANONICAL:${file}---"
+          done
           git diff --exit-code
       - run: dart analyze --fatal-infos
       - run: dart test
@@ -157,9 +162,14 @@ jobs:
           flutter-version: 3.47.4
           cache: true
       - run: flutter pub get
-      - name: Check Flutter/Dart formatting and print canonical diff on drift
+      - name: Emit canonical Flutter/Dart formatting evidence
         run: |
           dart format lib test
+          for file in lib/ores_dnd_flutter.dart test/ores_dnd_flutter_test.dart; do
+            echo "---BEGIN-CANONICAL:${file}---"
+            cat "$file"
+            echo "---END-CANONICAL:${file}---"
+          done
           git diff --exit-code
       - run: flutter analyze
       - run: flutter test
