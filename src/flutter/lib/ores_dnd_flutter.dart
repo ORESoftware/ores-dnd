@@ -3,6 +3,7 @@ import 'package:ores_dnd/ores_dnd.dart';
 
 export 'package:ores_dnd/ores_dnd.dart';
 export 'package:ores_dnd/ores_dnd_reactive.dart';
+export 'package:ores_dnd/ores_dnd_reactive_effects.dart';
 
 class OresDraggable extends StatelessWidget {
   const OresDraggable({
