@@ -4,15 +4,40 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ores_dnd_flutter/ores_dnd_flutter.dart';
 
+Widget testHost(Widget child) => Directionality(
+      textDirection: TextDirection.ltr,
+      child: Overlay(
+        initialEntries: [OverlayEntry(builder: (_) => child)],
+      ),
+    );
+
 void main() {
   const codec = OresDndCodec();
   final validText = File('../../contracts/instances/DndEnvelope/valid/text-copy.json').readAsStringSync();
   final valid = codec.decode(validText);
 
+  test('Flutter package re-exports the RxDart reactive lifecycle surface', () async {
+    final bus = OresDndReactiveBus();
+    final states = <DndReactiveState>[];
+    final subscription = bus.state.listen(states.add);
+
+    bus.emit(DndLifecyclePhase.dragStart, valid);
+    bus.emit(DndLifecyclePhase.dragEnd, valid);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(states.first.active, isFalse);
+    expect(states.any((state) => state.active), isTrue);
+    expect(states.last.phase, DndLifecyclePhase.dragEnd);
+    expect(states.last.active, isFalse);
+
+    await subscription.cancel();
+    await bus.dispose();
+    expect(bus.isClosed, isTrue);
+  });
+
   testWidgets('Flutter draggable carries the shared JSON envelope', (tester) async {
-    await tester.pumpWidget(Directionality(
-      textDirection: TextDirection.ltr,
-      child: OresDraggable(
+    await tester.pumpWidget(testHost(
+      OresDraggable(
         envelope: valid,
         feedback: const SizedBox(width: 10, height: 10),
         child: const Text('drag'),
@@ -25,9 +50,9 @@ void main() {
   });
 
   testWidgets('Flutter target composes with the same pure Dart codec', (tester) async {
-    await tester.pumpWidget(Directionality(
-      textDirection: TextDirection.ltr,
-      child: Column(
+    await tester.pumpWidget(testHost(
+      Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           OresDraggable(
             envelope: valid,

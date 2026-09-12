@@ -2,7 +2,6 @@
 org = "oresoftware"
 name = "ores-dnd"
 version = "0.1.0"
-kind = "pub-lib-core"
 description = "Cross-runtime drag-and-drop contracts and adapters"
 license = "MIT"
 keywords = ["drag-drop", "wasm", "typescript", "rust", "flutter", "dart"]
