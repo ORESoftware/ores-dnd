@@ -40,6 +40,8 @@ jobs:
       - run: mkdir -p artifacts
       - name: Check independent TypeSpec and JSON Schema authorities
         run: npm run contracts:check
+      - name: Verify contract tooling did not mutate tracked source
+        run: git diff --exit-code
 
   typescript:
     runs-on: ubuntu-24.04
@@ -59,6 +61,8 @@ jobs:
           package-manager-cache: false
       - run: npm install --prefix src/ts --ignore-scripts --no-audit --no-fund
       - run: npm --prefix src/ts test
+      - name: Verify TypeScript tooling did not mutate tracked source
+        run: git diff --exit-code
 
   rust:
     runs-on: ubuntu-24.04
@@ -75,7 +79,14 @@ jobs:
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
         with:
           toolchain: stable
+          components: rustfmt,clippy
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
       - run: cargo test -p ores-dnd-core --all-features
+      - name: Clippy all ores-dnd-core targets
+        run: cargo clippy -p ores-dnd-core --all-targets --all-features -- -D warnings
+      - name: Verify Rust tooling did not mutate tracked source
+        run: git diff --exit-code
 
   wasm:
     runs-on: ubuntu-24.04
@@ -94,6 +105,8 @@ jobs:
           toolchain: stable
           targets: wasm32-unknown-unknown
       - run: cargo check -p ores-dnd-wasm --target wasm32-unknown-unknown
+      - name: Verify WASM tooling did not mutate tracked source
+        run: git diff --exit-code
 
   dart:
     runs-on: ubuntu-24.04
@@ -108,15 +121,18 @@ jobs:
           ref: ${{ env.EXPECTED_SHA }}
           persist-credentials: false
       - name: Verify exact contributor head
-        working-directory: .
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
       - name: Set up Dart
         uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
         with:
           sdk: stable
       - run: dart pub get
+      - name: Check Dart formatting
+        run: dart format --output=none --set-exit-if-changed lib test
       - run: dart analyze --fatal-infos
       - run: dart test
+      - name: Verify Dart tooling did not mutate tracked source
+        run: git diff --exit-code
 
   flutter:
     runs-on: ubuntu-24.04
@@ -131,7 +147,6 @@ jobs:
           ref: ${{ env.EXPECTED_SHA }}
           persist-credentials: false
       - name: Verify exact contributor head
-        working-directory: .
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
@@ -140,5 +155,9 @@ jobs:
           flutter-version: 3.47.4
           cache: true
       - run: flutter pub get
+      - name: Check Flutter/Dart formatting
+        run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
+      - name: Verify Flutter tooling did not mutate tracked source
+        run: git diff --exit-code
