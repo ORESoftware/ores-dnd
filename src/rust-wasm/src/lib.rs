@@ -41,12 +41,16 @@ pub fn negotiate_operation_json(
     let source: Vec<DndOperation> = serde_json::from_str(source_json).map_err(js_error)?;
     let target: Vec<DndOperation> = serde_json::from_str(target_json).map_err(js_error)?;
     let preferred = match preferred {
-        Some(value) => Some(serde_json::from_str::<DndOperation>(&format!("\"{value}\"")).map_err(js_error)?),
+        Some(value) => {
+            Some(serde_json::from_str::<DndOperation>(&format!("\"{value}\"")).map_err(js_error)?)
+        }
         None => None,
     };
-    Ok(negotiate_operation(&source, &target, preferred).map(|op| match op {
-        DndOperation::Copy => "copy".to_owned(),
-        DndOperation::Move => "move".to_owned(),
-        DndOperation::Link => "link".to_owned(),
-    }))
+    Ok(
+        negotiate_operation(&source, &target, preferred).map(|op| match op {
+            DndOperation::Copy => "copy".to_owned(),
+            DndOperation::Move => "move".to_owned(),
+            DndOperation::Link => "link".to_owned(),
+        }),
+    )
 }
