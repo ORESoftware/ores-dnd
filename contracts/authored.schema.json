@@ -71,7 +71,11 @@
         "phase": { "$ref": "DndLifecyclePhase" },
         "dragId": { "type": "string" },
         "sourceRuntime": { "type": "string" },
-        "itemCount": { "type": "integer" },
+        "itemCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
         "operation": { "$ref": "DndOperation" },
         "targetId": { "type": "string" }
       },
