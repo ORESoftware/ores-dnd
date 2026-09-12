@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::rc::Rc;
 
 use rxrust::prelude::*;
 
@@ -231,6 +230,8 @@ impl DndReactiveSink for BufferedReactiveSink {
 
 #[cfg(test)]
 mod tests {
+    use std::rc::Rc;
+
     use super::*;
     use crate::{decode_envelope_json, ValidationOptions};
 
@@ -286,9 +287,10 @@ mod tests {
 
     #[test]
     fn reactive_commit_calls_both_supabase_ports_without_payload_telemetry() {
-        let envelope = match decode_envelope_json(VALID, ValidationOptions::default()) {
-            Ok(envelope) => envelope,
-            Err(error) => panic!("fixture must decode: {error}"),
+        let decoded = decode_envelope_json(VALID, ValidationOptions::default());
+        assert!(decoded.is_ok(), "shared valid fixture must decode");
+        let Ok(envelope) = decoded else {
+            return;
         };
         let calls = Rc::new(RefCell::new(Vec::new()));
         let opto = OptoFake(Rc::clone(&calls));
