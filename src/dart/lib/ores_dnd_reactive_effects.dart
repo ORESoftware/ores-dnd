@@ -67,7 +67,11 @@ abstract interface class OresOtelSupabasePort implements OresOtelPort {
 }
 
 final class OresDndEffectBus {
-  OresDndEffectBus() : _receipts = PublishSubject<DndEffectReceipt>();
+  // Effect receipts are part of the commit completion contract: once
+  // commitAcceptedDropEffects resolves, all receipts it emitted are already
+  // visible to subscribers. Raw drag lifecycle streams intentionally retain
+  // their normal asynchronous RxDart delivery semantics.
+  OresDndEffectBus() : _receipts = PublishSubject<DndEffectReceipt>(sync: true);
 
   final PublishSubject<DndEffectReceipt> _receipts;
   Stream<DndEffectReceipt> get receipts => _receipts.stream;
@@ -124,10 +128,6 @@ Future<void> _runStage(
   }
 }
 
-/// Canonical retry-safe accepted-drop effect sequence.
-///
-/// The host owns durable journal storage and provider-side idempotency. Raw
-/// provider errors are rethrown but never copied into reactive receipts.
 Future<void> commitAcceptedDropEffects(
   DndEnvelope envelope,
   DndDropResult result, {
