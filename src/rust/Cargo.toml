@@ -7,11 +7,13 @@ repository.workspace = true
 description = "Cross-runtime drag-and-drop core for ORESoftware apps"
 
 [features]
-default = ["mash", "leptos", "dioxus"]
+default = ["mash", "leptos", "dioxus", "reactive"]
 mash = []
 leptos = []
 dioxus = []
+reactive = ["dep:rxrust"]
 
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
+rxrust = { workspace = true, optional = true }
