@@ -1,0 +1,6 @@
+{
+  "phase": "drop",
+  "dragId": "drag-overflow-count",
+  "sourceRuntime": "contract-fixture",
+  "itemCount": 2147483648
+}
