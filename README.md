@@ -52,7 +52,7 @@ The core libraries intentionally use narrow ports instead of importing applicati
 - `ores-otel`: emit content-free lifecycle telemetry (phase, operation, item count, runtime, target), never dragged data or credentials.
 - `zed-pkg`: publish/install `oresoftware/ores-dnd` as a multi-target dependency so `*-pub-lib-core` repos can expose the same semantics to web, desktop, and Flutter apps.
 
-See `docs/integrations.md` and `rollout/fleet.toml`.
+See `docs/integrations.md`, `docs/adoption.md` (the per-org runbook), `examples/` (a MASH kanban app and a vanilla-DOM page) and `rollout/fleet.toml`.
 
 ## Security defaults
 

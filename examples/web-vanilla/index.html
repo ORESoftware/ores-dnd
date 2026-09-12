@@ -1,0 +1,69 @@
+<!doctype html>
+<!--
+  Plain-DOM example of @oresoftware/ores-dnd: no framework, no build step.
+  Serve this directory next to the built package (src/ts/dist) — e.g.
+      npm --prefix ../../src/ts run build && npx http-server ../.. -o /examples/web-vanilla/
+  Everything a *-web-server.rs page needs is in the <script type="module"> below.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ores-dnd — vanilla DOM example</title>
+  <style>
+    body { font: 14px system-ui, sans-serif; margin: 2rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .zone { min-height: 10rem; padding: .5rem; border: 2px dashed #bbb; border-radius: .5rem; }
+    .zone[data-ores-dnd-state="accepting"] { border-color: #2a7; background: #eefbf3; }
+    .zone[data-ores-dnd-state="rejecting"] { border-color: #c33; cursor: not-allowed; }
+    .zone[data-ores-dnd-state="dragging"] { border-style: solid; }
+    .card { padding: .5rem; margin: .25rem 0; background: #fff; border: 1px solid #ccc; border-radius: .25rem; cursor: grab; touch-action: none; }
+    pre { grid-column: 1 / -1; background: #f6f6f6; padding: .5rem; max-height: 12rem; overflow: auto; }
+  </style>
+</head>
+<body>
+  <section class="zone" id="notes"><h2>Notes (text only)</h2>
+    <div class="card" id="card-a">A plain text note</div>
+    <div class="card" id="card-b">Another note</div>
+  </section>
+  <section class="zone" id="links"><h2>Links (uri only, copy)</h2></section>
+  <section class="zone" id="archive"><h2>Archive (anything, max 2 KiB)</h2></section>
+  <pre id="log"></pre>
+
+  <script type="module">
+    import { DndSession, bindDragSource, bindDropZone, commitAcceptedDrop, ZoneRegistry, bindPointerDragSource } from "../../src/ts/dist/index.js";
+
+    const log = (line) => { document.getElementById("log").textContent += line + "\n"; };
+    const otel = { emitDndEvent: (e) => log(`otel ${e.phase} ${e.dragId} items=${e.itemCount} op=${e.operation ?? "-"} target=${e.targetId ?? "-"}`) };
+    const session = new DndSession();
+
+    // one policy per zone — identical rules to the Rust and Dart cores
+    const policies = {
+      notes:   { targetId: "notes",   allowedOperations: ["move"],         acceptedKinds: ["text"] },
+      links:   { targetId: "links",   allowedOperations: ["copy"],         acceptedKinds: ["uri"], acceptedMediaTypes: ["text/uri-list"] },
+      archive: { targetId: "archive", allowedOperations: ["copy", "move"], acceptedKinds: ["text", "uri", "json", "bytes"], maxTotalBytes: 2048 },
+    };
+    const registry = new ZoneRegistry();
+    const onDrop = (zone) => (envelope, result) =>
+      commitAcceptedDrop(envelope, result, {
+        forms: { applyAcceptedDrop: () => log(`forms   ← ${envelope.items.length} item(s) into ${zone}`) },
+        optoSync: { persistAcceptedDrop: () => log(`optosync← ${result.dragId} (${result.operation})`) },
+        otel,
+      }).then(() => { const el = document.getElementById(envelope.dragId.replace(/^drag-/, "")); if (el && result.operation === "move") document.getElementById(zone).appendChild(el); });
+
+    for (const [zone, policy] of Object.entries(policies)) {
+      const el = document.getElementById(zone);
+      bindDropZone(el, policy, session, { onDrop: onDrop(zone), onReject: (_e, r) => log(`rejected ${r.errorCode}`) }, { otel });
+      registry.register(el, policy); // same zones reachable by touch/pointer drags
+    }
+    for (const card of document.querySelectorAll(".card")) {
+      const envelope = () => ({
+        protocol: "ores.dnd/v1", dragId: `drag-${card.id}-${Date.now() % 100000}`, sourceRuntime: "web-vanilla",
+        allowedOperations: ["copy", "move"], items: [{ kind: "text", mediaType: "text/plain", data: card.textContent.trim() }],
+      });
+      bindDragSource(card, envelope, session, { otel });                                  // HTML5 DnD (mouse)
+      bindPointerDragSource(card, envelope, session, registry, { otel, onDrop: (e, r, z) => onDrop(z.policy.targetId)(e, r) }); // touch fallback
+    }
+    session.subscribe((s) => log(`state ${JSON.stringify(s)}`));
+    log("drag a note between zones; drag a URL from another tab onto Links; drag text from another app anywhere");
+  </script>
+</body>
+</html>
