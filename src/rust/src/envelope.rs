@@ -106,7 +106,9 @@ impl DndDropResult {
         wire::check_safe_id(&self.drag_id, "dragId")?;
         wire::check_opt_safe_id(self.target_id.as_deref(), "targetId")?;
         match self.error_code.as_deref() {
-            Some(code) if !wire::is_error_code(code) => Err(DndError("errorCode must be lowercase kebab-case (1..=64)".into())),
+            Some(code) if !wire::is_error_code(code) => Err(DndError(
+                "errorCode must be lowercase kebab-case (1..=64)".into(),
+            )),
             _ => Ok(()),
         }
     }
@@ -173,7 +175,9 @@ impl DndItem {
     /// The structural rules both schema authorities check for an item.
     pub fn structural(&self) -> Result<(), DndError> {
         if !wire::is_media_type(&self.media_type) {
-            return Err(DndError("mediaType must be a canonical lowercase type/subtype".into()));
+            return Err(DndError(
+                "mediaType must be a canonical lowercase type/subtype".into(),
+            ));
         }
         if self.data.chars().count() > wire::ITEM_DATA_MAX_CHARS {
             return Err(DndError("data exceeds the contract maximum length".into()));
@@ -193,18 +197,29 @@ impl DndEnvelope {
     /// except the protocol *version* this runtime accepts.
     pub fn structural(&self) -> Result<(), DndError> {
         if !wire::is_protocol_id(&self.protocol) {
-            return Err(DndError(format!("malformed drag protocol tag: {}", self.protocol)));
+            return Err(DndError(format!(
+                "malformed drag protocol tag: {}",
+                self.protocol
+            )));
         }
         wire::check_safe_id(&self.drag_id, "dragId")?;
         wire::check_safe_id(&self.source_runtime, "sourceRuntime")?;
-        wire::check_len(self.allowed_operations.len(), 1, wire::OPERATIONS_MAX, "allowedOperations")?;
+        wire::check_len(
+            self.allowed_operations.len(),
+            1,
+            wire::OPERATIONS_MAX,
+            "allowedOperations",
+        )?;
         wire::check_len(self.items.len(), 1, wire::ENVELOPE_ITEMS_MAX, "items")?;
         for (index, item) in self.items.iter().enumerate() {
-            item.structural().map_err(|e| DndError(format!("items[{index}]: {e}")))?;
+            item.structural()
+                .map_err(|e| DndError(format!("items[{index}]: {e}")))?;
         }
         if let Some(traceparent) = self.traceparent.as_deref() {
             if !wire::is_traceparent(traceparent) {
-                return Err(DndError("traceparent must be a W3C trace-context value".into()));
+                return Err(DndError(
+                    "traceparent must be a W3C trace-context value".into(),
+                ));
             }
         }
         wire::check_opt_safe_id(self.form_id.as_deref(), "formId")
@@ -215,7 +230,10 @@ impl DndEnvelope {
     pub fn validate(&self, options: ValidationOptions) -> Result<(), DndError> {
         self.structural()?;
         if self.protocol != ORES_DND_PROTOCOL {
-            return Err(DndError(format!("unsupported drag protocol: {}", self.protocol)));
+            return Err(DndError(format!(
+                "unsupported drag protocol: {}",
+                self.protocol
+            )));
         }
         if self.items.len() > options.max_items {
             return Err(DndError(format!(
@@ -241,7 +259,10 @@ impl DndEnvelope {
     }
 }
 
-pub fn decode_envelope_json(input: &str, options: ValidationOptions) -> Result<DndEnvelope, DndError> {
+pub fn decode_envelope_json(
+    input: &str,
+    options: ValidationOptions,
+) -> Result<DndEnvelope, DndError> {
     if input.len() > options.max_payload_bytes {
         return Err(DndError(format!(
             "drag payload too large: {} > {} bytes",

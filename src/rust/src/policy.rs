@@ -55,7 +55,11 @@ pub struct DndDropPolicy {
 
 impl DndDropPolicy {
     /// A policy accepting the given kinds with every operation and no limits.
-    pub fn new(target_id: impl Into<String>, operations: &[DndOperation], kinds: &[DndItemKind]) -> Self {
+    pub fn new(
+        target_id: impl Into<String>,
+        operations: &[DndOperation],
+        kinds: &[DndItemKind],
+    ) -> Self {
         Self {
             target_id: target_id.into(),
             allowed_operations: operations.to_vec(),
@@ -67,7 +71,10 @@ impl DndDropPolicy {
         }
     }
 
-    pub fn with_media_types<I: IntoIterator<Item = S>, S: Into<String>>(mut self, media_types: I) -> Self {
+    pub fn with_media_types<I: IntoIterator<Item = S>, S: Into<String>>(
+        mut self,
+        media_types: I,
+    ) -> Self {
         self.accepted_media_types = Some(media_types.into_iter().map(Into::into).collect());
         self
     }
@@ -90,15 +97,35 @@ impl DndDropPolicy {
     /// The structural rules both schema authorities check for a policy.
     pub fn structural(&self) -> Result<(), DndError> {
         wire::check_safe_id(&self.target_id, "targetId")?;
-        wire::check_len(self.allowed_operations.len(), 1, wire::OPERATIONS_MAX, "allowedOperations")?;
-        wire::check_len(self.accepted_kinds.len(), 1, wire::KINDS_MAX, "acceptedKinds")?;
+        wire::check_len(
+            self.allowed_operations.len(),
+            1,
+            wire::OPERATIONS_MAX,
+            "allowedOperations",
+        )?;
+        wire::check_len(
+            self.accepted_kinds.len(),
+            1,
+            wire::KINDS_MAX,
+            "acceptedKinds",
+        )?;
         if let Some(patterns) = self.accepted_media_types.as_deref() {
-            wire::check_len(patterns.len(), 1, wire::MEDIA_PATTERNS_MAX, "acceptedMediaTypes")?;
+            wire::check_len(
+                patterns.len(),
+                1,
+                wire::MEDIA_PATTERNS_MAX,
+                "acceptedMediaTypes",
+            )?;
             if let Some(bad) = patterns.iter().find(|p| !wire::is_media_type_pattern(p)) {
-                return Err(DndError(format!("acceptedMediaTypes entry is not a canonical media type pattern: {bad}")));
+                return Err(DndError(format!(
+                    "acceptedMediaTypes entry is not a canonical media type pattern: {bad}"
+                )));
             }
         }
-        if self.max_items.is_some_and(|v| !(1..=wire::POLICY_MAX_ITEMS_MAX).contains(&v)) {
+        if self
+            .max_items
+            .is_some_and(|v| !(1..=wire::POLICY_MAX_ITEMS_MAX).contains(&v))
+        {
             return Err(DndError("maxItems must be 1..=64".into()));
         }
         if self.max_total_bytes.is_some_and(|v| v < 1) {
@@ -109,7 +136,8 @@ impl DndDropPolicy {
 
     /// Structural sanity as a reject code (the session ignores invalid policies).
     pub fn validate(&self) -> Result<(), DndRejectCode> {
-        self.structural().map_err(|_| DndRejectCode::InvalidEnvelope)
+        self.structural()
+            .map_err(|_| DndRejectCode::InvalidEnvelope)
     }
 }
 
@@ -135,16 +163,25 @@ pub fn evaluate_policy(
     policy: &DndDropPolicy,
     preferred: Option<DndOperation>,
 ) -> Result<DndOperation, DndRejectCode> {
-    let operation = negotiate_operation(&envelope.allowed_operations, &policy.allowed_operations, preferred)
-        .ok_or(DndRejectCode::NoCommonOperation)?;
-    if envelope.items.iter().any(|item| !policy.accepted_kinds.contains(&item.kind)) {
+    let operation = negotiate_operation(
+        &envelope.allowed_operations,
+        &policy.allowed_operations,
+        preferred,
+    )
+    .ok_or(DndRejectCode::NoCommonOperation)?;
+    if envelope
+        .items
+        .iter()
+        .any(|item| !policy.accepted_kinds.contains(&item.kind))
+    {
         return Err(DndRejectCode::ItemKindNotAccepted);
     }
     if let Some(patterns) = policy.accepted_media_types.as_deref() {
-        let all_match = envelope
-            .items
-            .iter()
-            .all(|item| patterns.iter().any(|pattern| media_type_matches(pattern, &item.media_type)));
+        let all_match = envelope.items.iter().all(|item| {
+            patterns
+                .iter()
+                .any(|pattern| media_type_matches(pattern, &item.media_type))
+        });
         if !all_match {
             return Err(DndRejectCode::MediaTypeNotAccepted);
         }
@@ -159,7 +196,9 @@ pub fn evaluate_policy(
             return Err(DndRejectCode::PayloadTooLarge);
         }
     }
-    if let (Some(policy_form), Some(envelope_form)) = (policy.form_id.as_deref(), envelope.form_id.as_deref()) {
+    if let (Some(policy_form), Some(envelope_form)) =
+        (policy.form_id.as_deref(), envelope.form_id.as_deref())
+    {
         if policy_form != envelope_form {
             return Err(DndRejectCode::FormMismatch);
         }
@@ -173,7 +212,10 @@ mod tests {
 
     #[test]
     fn media_type_matching_is_case_insensitive_and_supports_wildcards() {
-        assert!(media_type_matches("text/plain", "TEXT/Plain; charset=utf-8"));
+        assert!(media_type_matches(
+            "text/plain",
+            "TEXT/Plain; charset=utf-8"
+        ));
         assert!(media_type_matches("text/*", "text/markdown"));
         assert!(!media_type_matches("text/*", "image/png"));
         assert!(!media_type_matches("text/plain", "text/markdown"));

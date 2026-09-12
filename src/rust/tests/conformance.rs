@@ -9,9 +9,15 @@ fn all_session_traces_replay_identically() {
     let traces: Vec<DndSessionTrace> = common::corpus()
         .into_iter()
         .filter(|(d, e, _, _)| d == "DndSessionTrace" && *e == "accepted")
-        .map(|(_, _, file, json)| serde_json::from_str(&json).unwrap_or_else(|e| panic!("{file}: {e}")))
+        .map(|(_, _, file, json)| {
+            serde_json::from_str(&json).unwrap_or_else(|e| panic!("{file}: {e}"))
+        })
         .collect();
-    assert!(traces.len() >= 20, "expected the full trace corpus, got {}", traces.len());
+    assert!(
+        traces.len() >= 20,
+        "expected the full trace corpus, got {}",
+        traces.len()
+    );
     let divergences: Vec<String> = traces
         .iter()
         .filter_map(|trace| DndSession::replay(trace).err().map(|d| d.to_string()))

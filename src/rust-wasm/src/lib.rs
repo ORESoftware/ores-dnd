@@ -21,12 +21,22 @@ fn js_error(error: impl ToString) -> JsValue {
 pub mod api {
     use super::*;
 
-    pub fn evaluate_policy_json(envelope_json: &str, policy_json: &str, preferred: Option<&str>) -> Result<String, String> {
-        let envelope = decode_envelope_json(envelope_json, ValidationOptions::default()).map_err(|e| e.to_string())?;
+    pub fn evaluate_policy_json(
+        envelope_json: &str,
+        policy_json: &str,
+        preferred: Option<&str>,
+    ) -> Result<String, String> {
+        let envelope = decode_envelope_json(envelope_json, ValidationOptions::default())
+            .map_err(|e| e.to_string())?;
         let policy: DndDropPolicy = serde_json::from_str(policy_json).map_err(|e| e.to_string())?;
-        policy.validate().map_err(|code| format!("invalid policy: {}", code.wire()))?;
+        policy
+            .validate()
+            .map_err(|code| format!("invalid policy: {}", code.wire()))?;
         let preferred = match preferred {
-            Some(value) => Some(DndOperation::parse(value).ok_or_else(|| format!("unsupported drag operation: {value}"))?),
+            Some(value) => Some(
+                DndOperation::parse(value)
+                    .ok_or_else(|| format!("unsupported drag operation: {value}"))?,
+            ),
             None => None,
         };
         let verdict = match evaluate_policy(&envelope, &policy, preferred) {
@@ -36,11 +46,20 @@ pub mod api {
         Ok(verdict.to_string())
     }
 
-    pub fn negotiate_operation_json(source_json: &str, target_json: &str, preferred: Option<&str>) -> Result<Option<String>, String> {
-        let source: Vec<DndOperation> = serde_json::from_str(source_json).map_err(|e| e.to_string())?;
-        let target: Vec<DndOperation> = serde_json::from_str(target_json).map_err(|e| e.to_string())?;
+    pub fn negotiate_operation_json(
+        source_json: &str,
+        target_json: &str,
+        preferred: Option<&str>,
+    ) -> Result<Option<String>, String> {
+        let source: Vec<DndOperation> =
+            serde_json::from_str(source_json).map_err(|e| e.to_string())?;
+        let target: Vec<DndOperation> =
+            serde_json::from_str(target_json).map_err(|e| e.to_string())?;
         let preferred = match preferred {
-            Some(value) => Some(DndOperation::parse(value).ok_or_else(|| format!("unsupported drag operation: {value}"))?),
+            Some(value) => Some(
+                DndOperation::parse(value)
+                    .ok_or_else(|| format!("unsupported drag operation: {value}"))?,
+            ),
             None => None,
         };
         Ok(negotiate_operation(&source, &target, preferred).map(|op| op.wire().to_owned()))
@@ -59,17 +78,25 @@ pub mod api {
 
     impl JsonSession {
         pub fn apply(&mut self, input_json: &str) -> Result<String, String> {
-            let input: DndSessionInput = serde_json::from_str(input_json).map_err(|e| e.to_string())?;
+            let input: DndSessionInput =
+                serde_json::from_str(input_json).map_err(|e| e.to_string())?;
             serde_json::to_string(self.inner.apply(&input)).map_err(|e| e.to_string())
         }
         pub fn snapshot(&self) -> Result<String, String> {
             serde_json::to_string(self.inner.snapshot()).map_err(|e| e.to_string())
         }
         pub fn envelope(&self) -> Result<Option<String>, String> {
-            self.inner.envelope().map(|e| serde_json::to_string(e).map_err(|e| e.to_string())).transpose()
+            self.inner
+                .envelope()
+                .map(|e| serde_json::to_string(e).map_err(|e| e.to_string()))
+                .transpose()
         }
         pub fn result(&self) -> Result<Option<String>, String> {
-            self.inner.snapshot().result().map(|r| serde_json::to_string(&r).map_err(|e| e.to_string())).transpose()
+            self.inner
+                .snapshot()
+                .result()
+                .map(|r| serde_json::to_string(&r).map_err(|e| e.to_string()))
+                .transpose()
         }
     }
 }
@@ -150,7 +177,9 @@ impl Default for WasmDndSession {
 impl WasmDndSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { inner: api::JsonSession::default() }
+        Self {
+            inner: api::JsonSession::default(),
+        }
     }
 
     /// Apply one `DndSessionInput` (JSON) and return the new snapshot (JSON).
@@ -178,7 +207,8 @@ impl WasmDndSession {
 mod tests {
     use super::*;
 
-    const VALID: &str = include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
+    const VALID: &str =
+        include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
 
     #[test]
     fn wasm_session_speaks_json_end_to_end() {
@@ -187,10 +217,19 @@ mod tests {
         let snapshot = session.apply(&start).unwrap();
         assert!(snapshot.contains("\"state\":\"dragging\""));
         let enter = r#"{"kind":"enter","targetId":"zone-a","policy":{"targetId":"zone-a","allowedOperations":["copy"],"acceptedKinds":["text"]}}"#;
-        assert!(session.apply(enter).unwrap().contains("\"operation\":\"copy\""));
+        assert!(session
+            .apply(enter)
+            .unwrap()
+            .contains("\"operation\":\"copy\""));
         assert!(session.result().unwrap().is_none());
-        session.apply(r#"{"kind":"drop","targetId":"zone-a"}"#).unwrap();
-        assert!(session.result().unwrap().unwrap().contains("\"accepted\":true"));
+        session
+            .apply(r#"{"kind":"drop","targetId":"zone-a"}"#)
+            .unwrap();
+        assert!(session
+            .result()
+            .unwrap()
+            .unwrap()
+            .contains("\"accepted\":true"));
         assert!(session.envelope().unwrap().unwrap().contains("drag-0001"));
     }
 
@@ -204,8 +243,14 @@ mod tests {
         assert!(api::evaluate_policy_json(VALID, policy, Some("teleport")).is_err());
         assert!(decode_declaration("DndDropPolicy", policy).is_ok());
         assert!(decode_declaration("DndDropPolicy", r#"{"targetId":"z"}"#).is_err());
-        assert_eq!(api::negotiate_operation_json(r#"["copy","move"]"#, r#"["move"]"#, None).unwrap().as_deref(), Some("move"));
-        let trace = include_str!("../../../contracts/instances/DndSessionTrace/valid/basic-drop.json");
+        assert_eq!(
+            api::negotiate_operation_json(r#"["copy","move"]"#, r#"["move"]"#, None)
+                .unwrap()
+                .as_deref(),
+            Some("move")
+        );
+        let trace =
+            include_str!("../../../contracts/instances/DndSessionTrace/valid/basic-drop.json");
         assert_eq!(api::replay_trace_json(trace).unwrap(), None);
     }
 }

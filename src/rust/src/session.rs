@@ -50,11 +50,20 @@ pub struct DndSessionInput {
 
 impl DndSessionInput {
     fn bare(kind: DndSessionInputKind) -> Self {
-        Self { kind, envelope: None, target_id: None, policy: None, preferred_operation: None }
+        Self {
+            kind,
+            envelope: None,
+            target_id: None,
+            policy: None,
+            preferred_operation: None,
+        }
     }
 
     pub fn start(envelope: DndEnvelope) -> Self {
-        Self { envelope: Some(envelope), ..Self::bare(DndSessionInputKind::Start) }
+        Self {
+            envelope: Some(envelope),
+            ..Self::bare(DndSessionInputKind::Start)
+        }
     }
 
     pub fn enter(policy: DndDropPolicy, preferred: Option<DndOperation>) -> Self {
@@ -67,11 +76,17 @@ impl DndSessionInput {
     }
 
     pub fn leave(target_id: impl Into<String>) -> Self {
-        Self { target_id: Some(target_id.into()), ..Self::bare(DndSessionInputKind::Leave) }
+        Self {
+            target_id: Some(target_id.into()),
+            ..Self::bare(DndSessionInputKind::Leave)
+        }
     }
 
     pub fn drop(target_id: impl Into<String>) -> Self {
-        Self { target_id: Some(target_id.into()), ..Self::bare(DndSessionInputKind::Drop) }
+        Self {
+            target_id: Some(target_id.into()),
+            ..Self::bare(DndSessionInputKind::Drop)
+        }
     }
 
     pub fn cancel() -> Self {
@@ -121,7 +136,11 @@ impl DndSessionSnapshot {
     };
 
     fn dragging(drag_id: &str) -> Self {
-        Self { state: DndSessionState::Dragging, drag_id: Some(drag_id.to_owned()), ..Self::IDLE }
+        Self {
+            state: DndSessionState::Dragging,
+            drag_id: Some(drag_id.to_owned()),
+            ..Self::IDLE
+        }
     }
 
     /// True while the pointer is over a target that accepts the payload.
@@ -178,15 +197,23 @@ pub struct DndSessionTrace {
 impl DndSessionTrace {
     pub fn structural(&self) -> Result<(), DndError> {
         if !wire::is_trace_id(&self.id) {
-            return Err(DndError("trace id must match ^[a-z0-9][a-z0-9._-]{0,127}$".into()));
+            return Err(DndError(
+                "trace id must match ^[a-z0-9][a-z0-9._-]{0,127}$".into(),
+            ));
         }
-        if self.description.as_deref().is_some_and(|d| d.chars().count() > wire::TRACE_DESCRIPTION_MAX) {
+        if self
+            .description
+            .as_deref()
+            .is_some_and(|d| d.chars().count() > wire::TRACE_DESCRIPTION_MAX)
+        {
             return Err(DndError("description exceeds 512 characters".into()));
         }
         wire::check_len(self.inputs.len(), 1, wire::TRACE_STEPS_MAX, "inputs")?;
         wire::check_len(self.expected.len(), 1, wire::TRACE_STEPS_MAX, "expected")?;
         if self.inputs.len() != self.expected.len() {
-            return Err(DndError("trace inputs and expected must have the same length".into()));
+            return Err(DndError(
+                "trace inputs and expected must have the same length".into(),
+            ));
         }
         for input in &self.inputs {
             input.structural()?;
@@ -213,7 +240,10 @@ impl DndSession {
     }
 
     pub fn with_options(options: ValidationOptions) -> Self {
-        Self { options, ..Self::default() }
+        Self {
+            options,
+            ..Self::default()
+        }
     }
 
     pub fn snapshot(&self) -> &DndSessionSnapshot {
@@ -257,15 +287,25 @@ impl DndSession {
                     }
                 }
             }
-            _ if current.state == DndSessionState::Idle || current.state.is_terminal() || input.structural().is_err() => current.clone(),
+            _ if current.state == DndSessionState::Idle
+                || current.state.is_terminal()
+                || input.structural().is_err() =>
+            {
+                current.clone()
+            }
             DndSessionInputKind::Enter => {
-                let (Some(policy), Some(envelope)) = (input.policy.as_ref(), self.envelope.as_ref()) else {
+                let (Some(policy), Some(envelope)) =
+                    (input.policy.as_ref(), self.envelope.as_ref())
+                else {
                     return current.clone();
                 };
                 if policy.validate().is_err() {
                     return current.clone();
                 }
-                let target_id = input.target_id.clone().unwrap_or_else(|| policy.target_id.clone());
+                let target_id = input
+                    .target_id
+                    .clone()
+                    .unwrap_or_else(|| policy.target_id.clone());
                 let drag_id = current.drag_id.clone();
                 match evaluate_policy(envelope, policy, input.preferred_operation) {
                     Ok(operation) => DndSessionSnapshot {
@@ -304,7 +344,10 @@ impl DndSession {
                 match (&current.target_id, &dropped_on) {
                     (Some(active), Some(target)) if active == target => {
                         if current.state == DndSessionState::OverTarget {
-                            DndSessionSnapshot { state: DndSessionState::Dropped, ..current.clone() }
+                            DndSessionSnapshot {
+                                state: DndSessionState::Dropped,
+                                ..current.clone()
+                            }
                         } else {
                             cancelled(current.error_code.unwrap_or(DndRejectCode::NoActiveTarget))
                         }

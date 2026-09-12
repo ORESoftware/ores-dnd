@@ -8,12 +8,12 @@
 //! `start`); external drags are evaluated provisionally until `drop`, when the
 //! payload becomes readable.
 
-use dioxus::html::{ModifiersInteraction, Modifiers};
+use dioxus::html::{Modifiers, ModifiersInteraction};
 use dioxus::prelude::*;
 use ores_dnd_core::{
-    decode_envelope_json, effect_allowed_for, encode_envelope_json, DndDropPolicy, DndDropResult, DndEnvelope,
-    DndItem, DndItemKind, DndOperation, DndSession, DndSessionInput, DndSessionSnapshot, DndSessionState,
-    ValidationOptions, ORES_DND_MIME, ORES_DND_PROTOCOL,
+    decode_envelope_json, effect_allowed_for, encode_envelope_json, DndDropPolicy, DndDropResult,
+    DndEnvelope, DndItem, DndItemKind, DndOperation, DndSession, DndSessionInput,
+    DndSessionSnapshot, DndSessionState, ValidationOptions, ORES_DND_MIME, ORES_DND_PROTOCOL,
 };
 
 pub use ores_dnd_core;
@@ -75,7 +75,10 @@ pub fn use_dnd_context() -> DndSessionHandle {
 /// The `data-ores-dnd-state` value for a zone: reflects the session only while
 /// this zone is the active target.
 pub fn zone_state_attribute(snapshot: &DndSessionSnapshot, target_id: &str) -> &'static str {
-    match (&snapshot.state, snapshot.target_id.as_deref() == Some(target_id)) {
+    match (
+        &snapshot.state,
+        snapshot.target_id.as_deref() == Some(target_id),
+    ) {
         (DndSessionState::OverTarget, true) => "accepting",
         (DndSessionState::Dragging, true) => "rejecting",
         (DndSessionState::Dragging | DndSessionState::OverTarget, false) => "dragging",
@@ -106,7 +109,12 @@ pub fn provisional_envelope(drag_id: &str) -> DndEnvelope {
         drag_id: drag_id.to_owned(),
         source_runtime: "external".to_owned(),
         allowed_operations: vec![DndOperation::Copy],
-        items: vec![DndItem { kind: DndItemKind::Text, media_type: "text/plain".into(), data: String::new(), name: None }],
+        items: vec![DndItem {
+            kind: DndItemKind::Text,
+            media_type: "text/plain".into(),
+            data: String::new(),
+            name: None,
+        }],
         traceparent: None,
         form_id: None,
     }
@@ -114,7 +122,10 @@ pub fn provisional_envelope(drag_id: &str) -> DndEnvelope {
 
 /// Read the ores envelope from a portable DataTransfer, or synthesize one from
 /// its `text/plain` content.
-pub fn read_envelope(dt: &dioxus::html::DataTransfer, options: ValidationOptions) -> Option<DndEnvelope> {
+pub fn read_envelope(
+    dt: &dioxus::html::DataTransfer,
+    options: ValidationOptions,
+) -> Option<DndEnvelope> {
     if let Some(json) = dt.get_data(ORES_DND_MIME).filter(|s| !s.is_empty()) {
         return decode_envelope_json(&json, options).ok();
     }
@@ -124,7 +135,12 @@ pub fn read_envelope(dt: &dioxus::html::DataTransfer, options: ValidationOptions
         drag_id: format!("external-text-{}", text.len()),
         source_runtime: "external".to_owned(),
         allowed_operations: vec![DndOperation::Copy],
-        items: vec![DndItem { kind: DndItemKind::Text, media_type: "text/plain".into(), data: text, name: None }],
+        items: vec![DndItem {
+            kind: DndItemKind::Text,
+            media_type: "text/plain".into(),
+            data: text,
+            name: None,
+        }],
         traceparent: None,
         form_id: None,
     };
@@ -153,7 +169,9 @@ pub fn DropZone(
             handle.apply(&DndSessionInput::start(provisional_envelope("external")));
         }
         let next = handle.apply(&DndSessionInput::enter(enter_policy.clone(), preferred));
-        if next.state == DndSessionState::OverTarget && next.target_id.as_deref() == Some(enter_target.as_str()) {
+        if next.state == DndSessionState::OverTarget
+            && next.target_id.as_deref() == Some(enter_target.as_str())
+        {
             evt.prevent_default();
             if let Some(op) = next.operation {
                 evt.data().data_transfer().set_drop_effect(op.wire());
@@ -170,15 +188,21 @@ pub fn DropZone(
     let drop = move |evt: DragEvent| {
         evt.prevent_default();
         let preferred = preferred_operation(evt.data().modifiers());
-        if let Some(envelope) = read_envelope(&evt.data().data_transfer(), ValidationOptions::default()) {
-            let current_is_real = handle.envelope().is_some_and(|e| e.drag_id == envelope.drag_id);
+        if let Some(envelope) =
+            read_envelope(&evt.data().data_transfer(), ValidationOptions::default())
+        {
+            let current_is_real = handle
+                .envelope()
+                .is_some_and(|e| e.drag_id == envelope.drag_id);
             if !current_is_real {
                 handle.apply(&DndSessionInput::start(envelope));
                 handle.apply(&DndSessionInput::enter(drop_policy.clone(), preferred));
             }
         }
         let snapshot = handle.apply(&DndSessionInput::drop(drop_target.clone()));
-        if let (Some(cb), Some(result), Some(envelope)) = (on_drop, snapshot.result(), handle.envelope()) {
+        if let (Some(cb), Some(result), Some(envelope)) =
+            (on_drop, snapshot.result(), handle.envelope())
+        {
             cb.call((envelope, result));
         }
     };
@@ -207,7 +231,8 @@ pub fn DragSource(
     #[props(optional)] class: Option<String>,
     children: Element,
 ) -> Element {
-    let source_json = encode_envelope_json(&envelope, ValidationOptions::default()).unwrap_or_default();
+    let source_json =
+        encode_envelope_json(&envelope, ValidationOptions::default()).unwrap_or_default();
     let start_envelope = envelope.clone();
     let start = move |evt: DragEvent| {
         let dt = evt.data().data_transfer();
@@ -245,7 +270,8 @@ mod tests {
     use ores_dnd_core::decode_envelope_json;
     use std::cell::RefCell;
 
-    const VALID: &str = include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
+    const VALID: &str =
+        include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
 
     thread_local! {
         static HANDLE: RefCell<Option<DndSessionHandle>> = const { RefCell::new(None) };
@@ -285,11 +311,22 @@ mod tests {
 
     #[test]
     fn modifier_preferences_and_provisional_envelopes() {
-        assert_eq!(preferred_operation(Modifiers::CONTROL), Some(DndOperation::Copy));
-        assert_eq!(preferred_operation(Modifiers::SHIFT), Some(DndOperation::Move));
-        assert_eq!(preferred_operation(Modifiers::META), Some(DndOperation::Link));
+        assert_eq!(
+            preferred_operation(Modifiers::CONTROL),
+            Some(DndOperation::Copy)
+        );
+        assert_eq!(
+            preferred_operation(Modifiers::SHIFT),
+            Some(DndOperation::Move)
+        );
+        assert_eq!(
+            preferred_operation(Modifiers::META),
+            Some(DndOperation::Link)
+        );
         assert_eq!(preferred_operation(Modifiers::empty()), None);
-        assert!(provisional_envelope("external").validate(ValidationOptions::default()).is_ok());
+        assert!(provisional_envelope("external")
+            .validate(ValidationOptions::default())
+            .is_ok());
         assert_eq!(zone_state_attribute(&DndSessionSnapshot::IDLE, "z"), "idle");
     }
 }

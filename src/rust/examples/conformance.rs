@@ -40,17 +40,37 @@ fn main() {
     let mut args = std::env::args().skip(1);
     let cases_path = args.next().expect("cases.json path");
     let out_path = args.next().expect("output path");
-    let root = std::path::Path::new(&cases_path).parent().map(|p| p.to_path_buf()).unwrap_or_default();
-    let cases: Cases = serde_json::from_str(&std::fs::read_to_string(&cases_path).expect("read cases")).expect("parse cases");
+    let root = std::path::Path::new(&cases_path)
+        .parent()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_default();
+    let cases: Cases =
+        serde_json::from_str(&std::fs::read_to_string(&cases_path).expect("read cases"))
+            .expect("parse cases");
     let mut results = Vec::new();
     for case in cases.cases {
-        let path = if std::path::Path::new(&case.path).is_absolute() { case.path.clone().into() } else { root.join(&case.path) };
-        let json = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
-        let verdict = match decode_declaration(case.declaration.rsplit('.').next().unwrap_or(&case.declaration), &json) {
+        let path = if std::path::Path::new(&case.path).is_absolute() {
+            case.path.clone().into()
+        } else {
+            root.join(&case.path)
+        };
+        let json = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        let verdict = match decode_declaration(
+            case.declaration
+                .rsplit('.')
+                .next()
+                .unwrap_or(&case.declaration),
+            &json,
+        ) {
             Ok(()) => "accepted",
             Err(_) => "rejected",
         };
-        results.push(ResultRow { case_id: case.id, declaration: case.declaration, verdict });
+        results.push(ResultRow {
+            case_id: case.id,
+            declaration: case.declaration,
+            verdict,
+        });
     }
     let rustc = option_env!("ORES_DND_RUSTC_VERSION").unwrap_or("rustc");
     let adapter = Adapter {
@@ -58,10 +78,17 @@ fn main() {
         language: "rust",
         runtime: rustc.to_owned(),
         validator: "serde@1",
-        toolchain: format!("cargo@{}", option_env!("CARGO_PKG_RUST_VERSION").unwrap_or("stable")),
+        toolchain: format!(
+            "cargo@{}",
+            option_env!("CARGO_PKG_RUST_VERSION").unwrap_or("stable")
+        ),
         status: "passed",
         results,
     };
-    std::fs::write(&out_path, serde_json::to_string_pretty(&adapter).unwrap()).expect("write evidence");
-    eprintln!("rust adapter: {} cases -> {out_path}", adapter.results.len());
+    std::fs::write(&out_path, serde_json::to_string_pretty(&adapter).unwrap())
+        .expect("write evidence");
+    eprintln!(
+        "rust adapter: {} cases -> {out_path}",
+        adapter.results.len()
+    );
 }

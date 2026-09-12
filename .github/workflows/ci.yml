@@ -40,6 +40,8 @@ jobs:
       - run: mkdir -p artifacts
       - name: Check independent TypeSpec and JSON Schema authorities
         run: npm run contracts:check
+      - name: Verify contract tooling did not mutate tracked source
+        run: git diff --exit-code
 
   typescript:
     runs-on: ubuntu-24.04
@@ -59,6 +61,8 @@ jobs:
           package-manager-cache: false
       - run: npm install --prefix src/ts --ignore-scripts --no-audit --no-fund
       - run: npm --prefix src/ts test
+      - name: Verify TypeScript tooling did not mutate tracked source
+        run: git diff --exit-code
 
   rust:
     runs-on: ubuntu-24.04
@@ -75,11 +79,15 @@ jobs:
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
         with:
           toolchain: stable
-          components: clippy
-      - name: Test every crate (core, wasm ABI, mash, leptos, dioxus)
+          components: rustfmt,clippy
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+      - name: Test every crate (core, wasm ABI, mash, leptos, dioxus, example)
         run: cargo test --workspace --all-features
       - name: Lint every crate
         run: cargo clippy --workspace --all-features --all-targets -- -D warnings
+      - name: Verify Rust tooling did not mutate tracked source
+        run: git diff --exit-code
 
   wasm:
     runs-on: ubuntu-24.04
@@ -119,8 +127,12 @@ jobs:
         with:
           sdk: stable
       - run: dart pub get
+      - name: Check canonical Dart formatting
+        run: dart format --output=none --set-exit-if-changed lib test bin
       - run: dart analyze --fatal-infos
       - run: dart test
+      - name: Verify Dart tooling did not mutate tracked source
+        run: git diff --exit-code
 
   flutter:
     runs-on: ubuntu-24.04
@@ -144,8 +156,12 @@ jobs:
           flutter-version: 3.47.4
           cache: true
       - run: flutter pub get
+      - name: Check canonical Flutter/Dart formatting
+        run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
+      - name: Verify Flutter tooling did not mutate tracked source
+        run: git diff --exit-code
 
   conformance:
     # Cross-runtime gate: parity receipt → Contract IR → per-language runtime

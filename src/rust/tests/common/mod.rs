@@ -6,7 +6,8 @@ pub fn contracts_dir() -> PathBuf {
 }
 
 pub fn read(path: impl AsRef<Path>) -> String {
-    std::fs::read_to_string(path.as_ref()).unwrap_or_else(|e| panic!("read {}: {e}", path.as_ref().display()))
+    std::fs::read_to_string(path.as_ref())
+        .unwrap_or_else(|e| panic!("read {}: {e}", path.as_ref().display()))
 }
 
 /// (declaration, expectation, file name, json) for every corpus instance.
@@ -19,11 +20,22 @@ pub fn corpus() -> Vec<(String, &'static str, String, String)> {
         let name = decl.file_name().to_string_lossy().into_owned();
         for (lane, expectation) in [("valid", "accepted"), ("invalid", "rejected")] {
             let dir = decl.path().join(lane);
-            let Ok(entries) = std::fs::read_dir(&dir) else { continue };
-            let mut files: Vec<_> = entries.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "json")).collect();
+            let Ok(entries) = std::fs::read_dir(&dir) else {
+                continue;
+            };
+            let mut files: Vec<_> = entries
+                .flatten()
+                .map(|e| e.path())
+                .filter(|p| p.extension().is_some_and(|x| x == "json"))
+                .collect();
             files.sort();
             for file in files {
-                out.push((name.clone(), expectation, file.file_name().unwrap().to_string_lossy().into_owned(), read(&file)));
+                out.push((
+                    name.clone(),
+                    expectation,
+                    file.file_name().unwrap().to_string_lossy().into_owned(),
+                    read(&file),
+                ));
             }
         }
     }
