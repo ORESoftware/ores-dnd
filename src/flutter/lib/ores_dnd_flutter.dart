@@ -8,7 +8,6 @@ library;
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:ores_dnd/ores_dnd.dart';
 
