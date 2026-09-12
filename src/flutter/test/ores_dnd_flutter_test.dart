@@ -16,6 +16,25 @@ void main() {
   final validText = File('../../contracts/instances/DndEnvelope/valid/text-copy.json').readAsStringSync();
   final valid = codec.decode(validText);
 
+  test('Flutter package re-exports the RxDart reactive lifecycle surface', () async {
+    final bus = OresDndReactiveBus();
+    final states = <DndReactiveState>[];
+    final subscription = bus.state.listen(states.add);
+
+    bus.emit(DndLifecyclePhase.dragStart, valid);
+    bus.emit(DndLifecyclePhase.dragEnd, valid);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(states.first.active, isFalse);
+    expect(states.any((state) => state.active), isTrue);
+    expect(states.last.phase, DndLifecyclePhase.dragEnd);
+    expect(states.last.active, isFalse);
+
+    await subscription.cancel();
+    await bus.dispose();
+    expect(bus.isClosed, isTrue);
+  });
+
   testWidgets('Flutter draggable carries the shared JSON envelope', (tester) async {
     await tester.pumpWidget(testHost(
       OresDraggable(
