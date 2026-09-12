@@ -61,6 +61,7 @@ model DndTelemetryEvent {
   phase: DndLifecyclePhase;
   dragId: string;
   sourceRuntime: string;
+  @minValue(0)
   itemCount: int32;
   operation?: DndOperation;
   targetId?: string;
