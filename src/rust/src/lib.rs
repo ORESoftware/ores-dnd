@@ -130,12 +130,17 @@ fn require_non_empty(value: &str, label: &str) -> Result<(), DndError> {
 impl DndEnvelope {
     pub fn validate(&self, options: ValidationOptions) -> Result<(), DndError> {
         if self.protocol != ORES_DND_PROTOCOL {
-            return Err(DndError(format!("unsupported drag protocol: {}", self.protocol)));
+            return Err(DndError(format!(
+                "unsupported drag protocol: {}",
+                self.protocol
+            )));
         }
         require_non_empty(&self.drag_id, "dragId")?;
         require_non_empty(&self.source_runtime, "sourceRuntime")?;
         if self.allowed_operations.is_empty() {
-            return Err(DndError("allowedOperations must contain at least one operation".into()));
+            return Err(DndError(
+                "allowedOperations must contain at least one operation".into(),
+            ));
         }
         if self.items.is_empty() {
             return Err(DndError("items must contain at least one drag item".into()));
@@ -143,7 +148,8 @@ impl DndEnvelope {
         if self.items.len() > options.max_items {
             return Err(DndError(format!(
                 "too many drag items: {} > {}",
-                self.items.len(), options.max_items
+                self.items.len(),
+                options.max_items
             )));
         }
         for (index, item) in self.items.iter().enumerate() {
@@ -162,11 +168,15 @@ impl DndEnvelope {
     }
 }
 
-pub fn decode_envelope_json(input: &str, options: ValidationOptions) -> Result<DndEnvelope, DndError> {
+pub fn decode_envelope_json(
+    input: &str,
+    options: ValidationOptions,
+) -> Result<DndEnvelope, DndError> {
     if input.len() > options.max_payload_bytes {
         return Err(DndError(format!(
             "drag payload too large: {} > {} bytes",
-            input.len(), options.max_payload_bytes
+            input.len(),
+            options.max_payload_bytes
         )));
     }
     let envelope: DndEnvelope = serde_json::from_str(input)?;
@@ -183,7 +193,8 @@ pub fn encode_envelope_json(
     if json.len() > options.max_payload_bytes {
         return Err(DndError(format!(
             "drag payload too large: {} > {} bytes",
-            json.len(), options.max_payload_bytes
+            json.len(),
+            options.max_payload_bytes
         )));
     }
     Ok(json)
@@ -253,7 +264,9 @@ pub fn commit_accepted_drop(
 ) -> Result<(), DndError> {
     envelope.validate(ValidationOptions::default())?;
     if result.drag_id != envelope.drag_id {
-        return Err(DndError("drop result dragId does not match envelope".into()));
+        return Err(DndError(
+            "drop result dragId does not match envelope".into(),
+        ));
     }
     if !result.accepted {
         return Ok(());
@@ -262,7 +275,9 @@ pub fn commit_accepted_drop(
         .operation
         .ok_or_else(|| DndError("accepted drop requires an operation".into()))?;
     if !envelope.allowed_operations.contains(&operation) {
-        return Err(DndError("accepted drop operation is not source-allowed".into()));
+        return Err(DndError(
+            "accepted drop operation is not source-allowed".into(),
+        ));
     }
     if let Some(forms) = ports.forms {
         forms.apply_accepted_drop(envelope, result)?;
@@ -342,8 +357,10 @@ pub mod dioxus {
 mod tests {
     use super::*;
 
-    const VALID: &str = include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
-    const INVALID_OP: &str = include_str!("../../../contracts/instances/DndEnvelope/invalid/unknown-op.json");
+    const VALID: &str =
+        include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
+    const INVALID_OP: &str =
+        include_str!("../../../contracts/instances/DndEnvelope/invalid/unknown-op.json");
 
     #[test]
     fn shared_fixture_round_trips() {
@@ -366,8 +383,14 @@ mod tests {
 
     #[test]
     fn payload_limit_is_checked_before_parse() {
-        let options = ValidationOptions { max_payload_bytes: 8, max_items: 64 };
-        assert!(decode_envelope_json("this is not json", options).unwrap_err().0.contains("too large"));
+        let options = ValidationOptions {
+            max_payload_bytes: 8,
+            max_items: 64,
+        };
+        assert!(decode_envelope_json("this is not json", options)
+            .unwrap_err()
+            .0
+            .contains("too large"));
     }
 
     #[test]
@@ -389,7 +412,12 @@ mod tests {
     #[test]
     fn telemetry_does_not_contain_item_data() {
         let env = decode_envelope_json(VALID, ValidationOptions::default()).unwrap();
-        let event = telemetry_for(DndLifecyclePhase::Drop, &env, Some(DndOperation::Copy), None);
+        let event = telemetry_for(
+            DndLifecyclePhase::Drop,
+            &env,
+            Some(DndOperation::Copy),
+            None,
+        );
         let json = serde_json::to_string(&event).unwrap();
         assert!(!json.contains("hello"));
         assert_eq!(event.item_count, 1);
