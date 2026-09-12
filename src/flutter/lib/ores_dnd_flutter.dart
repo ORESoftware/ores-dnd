@@ -13,6 +13,8 @@ import 'package:flutter/widgets.dart';
 import 'package:ores_dnd/ores_dnd.dart';
 
 export 'package:ores_dnd/ores_dnd.dart';
+export 'package:ores_dnd/ores_dnd_reactive.dart';
+export 'package:ores_dnd/ores_dnd_reactive_effects.dart';
 
 /// A zone's view of the session — the Flutter twin of the `data-ores-dnd-state`
 /// attribute browser adapters keep on drop-zone elements.
