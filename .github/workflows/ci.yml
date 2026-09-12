@@ -108,7 +108,7 @@ jobs:
           ref: ${{ env.EXPECTED_SHA }}
           persist-credentials: false
       - name: Verify exact contributor head
-        working-directory: ../..
+        working-directory: .
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
       - name: Set up Dart
         uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
@@ -131,7 +131,7 @@ jobs:
           ref: ${{ env.EXPECTED_SHA }}
           persist-credentials: false
       - name: Verify exact contributor head
-        working-directory: ../..
+        working-directory: .
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
