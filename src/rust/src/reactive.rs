@@ -443,32 +443,26 @@ mod tests {
 
     #[test]
     fn drop_requires_source_allowed_operation_and_target() {
-        assert!(
-            DndReactiveEvent::new(
-                DndLifecyclePhase::Drop,
-                envelope(),
-                None,
-                Some("zone-a".to_owned()),
-            )
-            .is_err()
-        );
-        assert!(
-            DndReactiveEvent::new(
-                DndLifecyclePhase::Drop,
-                envelope(),
-                Some(DndOperation::Copy),
-                None,
-            )
-            .is_err()
-        );
-        assert!(
-            DndReactiveEvent::new(
-                DndLifecyclePhase::DragOver,
-                envelope(),
-                Some(DndOperation::Link),
-                None,
-            )
-            .is_err()
-        );
+        assert!(DndReactiveEvent::new(
+            DndLifecyclePhase::Drop,
+            envelope(),
+            None,
+            Some("zone-a".to_owned()),
+        )
+        .is_err());
+        assert!(DndReactiveEvent::new(
+            DndLifecyclePhase::Drop,
+            envelope(),
+            Some(DndOperation::Copy),
+            None,
+        )
+        .is_err());
+        assert!(DndReactiveEvent::new(
+            DndLifecyclePhase::DragOver,
+            envelope(),
+            Some(DndOperation::Link),
+            None,
+        )
+        .is_err());
     }
 }
