@@ -8,7 +8,8 @@
   "exports": {
     ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
     "./reactive": { "types": "./dist/reactive.d.ts", "default": "./dist/reactive.js" },
-    "./rxts": { "types": "./dist/reactive.d.ts", "default": "./dist/reactive.js" }
+    "./rxts": { "types": "./dist/reactive.d.ts", "default": "./dist/reactive.js" },
+    "./supabase-sync": { "types": "./dist/supabase_sync.d.ts", "default": "./dist/supabase_sync.js" }
   },
   "files": ["dist"],
   "scripts": {
