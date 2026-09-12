@@ -24,6 +24,11 @@ entry below is additive or tightens what was already invalid.
 - Dart/Flutter: `ores_dnd` policy/session/corpus/wire; `ores_dnd_flutter`
   controller-driven widgets.
 
+### MASH endpoint hardening
+- `RouterOptions`: body limit (413), bounded `dragId` replay window + durable
+  `already_committed` (409 `duplicate-drag`), `HX-Request` requirement (403
+  `missing-hx-request`), `Cache-Control: no-store`.
+
 ### Enforcement
 - tjsv runtime-conformance gate (`npm run conformance`) across all three
   languages, retained as a CI artifact; 23 session traces replayed by every
