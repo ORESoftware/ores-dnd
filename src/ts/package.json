@@ -5,11 +5,19 @@
   "description": "Browser and webview drag-and-drop adapters for the ores.dnd/v1 protocol",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./reactive": { "types": "./dist/reactive.d.ts", "default": "./dist/reactive.js" },
+    "./rxts": { "types": "./dist/reactive.d.ts", "default": "./dist/reactive.js" },
+    "./reactive-effects": { "types": "./dist/reactive_effects.d.ts", "default": "./dist/reactive_effects.js" }
+  },
   "files": ["dist"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "rxjs": "7.8.2"
   },
   "devDependencies": {
     "typescript": "5.9.2"
