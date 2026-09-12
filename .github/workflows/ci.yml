@@ -11,27 +11,33 @@ permissions:
 jobs:
   contracts:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.9.0
-      - run: npm install --ignore-scripts --no-audit --no-fund
+          node-version: 22.16.0
+      - name: Install contract toolchain without implicit lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Rebuild the reviewed flags-2-env native parser only
+        run: npm rebuild @oresoftware/f2e --foreground-scripts --no-audit --no-fund
       - run: mkdir -p artifacts
       - run: npm run contracts:check
 
   typescript:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.9.0
+          node-version: 22.16.0
       - run: npm install --prefix src/ts --ignore-scripts --no-audit --no-fund
       - run: npm --prefix src/ts test
 
   rust:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -39,6 +45,7 @@ jobs:
 
   wasm:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -48,6 +55,7 @@ jobs:
 
   dart:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: src/dart
@@ -62,6 +70,7 @@ jobs:
 
   flutter:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: src/flutter
