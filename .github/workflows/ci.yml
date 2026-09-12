@@ -16,7 +16,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.9.0
-      - run: npm install --ignore-scripts --no-audit --no-fund
+      # tjsv depends on @oresoftware/f2e, a node-gyp addon: install scripts must run,
+      # otherwise `tjsv check` dies with "Cannot find module './build/Release/flags2env.node'".
+      - run: npm install --no-audit --no-fund
       - run: mkdir -p artifacts
       - run: npm run contracts:check
 
