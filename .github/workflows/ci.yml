@@ -93,7 +93,10 @@ jobs:
         with:
           toolchain: stable
           targets: wasm32-unknown-unknown
-      - run: cargo check -p ores-dnd-wasm --target wasm32-unknown-unknown
+      - name: Test guarded WASM host projections natively
+        run: cargo test -p ores-dnd-wasm
+      - name: Check WASM target compatibility
+        run: cargo check -p ores-dnd-wasm --target wasm32-unknown-unknown
 
   dart:
     runs-on: ubuntu-24.04
