@@ -27,7 +27,7 @@ The contract also carries the drag *session* semantics: `DndDropPolicy` (what a 
 | MASH (`ores-dnd-mash`) | `src/rust-mash` | maud drop-zone/drag-source markup, htmx wiring, axum drop-commit endpoint that re-verifies every drop server-side |
 | Leptos (`ores-dnd-leptos`) | `src/rust-leptos` | Leptos 0.8 islands/CSR: session signal, `DropZone`/`DragSource`, `web_sys` DataTransfer glue |
 | Dioxus (`ores-dnd-dioxus`) | `src/rust-dioxus` | Dioxus 0.7 web + desktop + mobile over the portable `DataTransfer` |
-| Dart/Flutter | `src/dart`, `src/flutter` | `*-flutter` iOS/Android/desktop/web clients |
+| Dart (`ores_dnd`) + Flutter (`ores_dnd_flutter`) | `src/dart`, `src/flutter` | `*-flutter` iOS/Android/desktop/web clients: pure-Dart core (codec, policy, session, conformance adapter) and `OresDndController` / `OresDraggable` / `OresDragTarget` widgets |
 
 The browser MIME type is `application/vnd.ores.dnd+json`. Plain-text fallback is emitted only for text items.
 
@@ -65,11 +65,9 @@ cargo clippy --workspace --all-features --all-targets -- -D warnings
 rustup target add wasm32-unknown-unknown
 cargo check -p ores-dnd-wasm --target wasm32-unknown-unknown
 
-# Flutter
-cd src/dart
-flutter pub get
-flutter analyze
-flutter test
+# Dart (pure core) and Flutter (widgets)
+(cd src/dart && dart pub get && dart analyze --fatal-infos && dart test)
+(cd src/flutter && flutter pub get && flutter analyze && flutter test)
 ```
 
 CI runs all four lanes plus contract parity and shared fixture conformance.
