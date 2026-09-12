@@ -13,7 +13,8 @@ final class _Journal implements DndEffectJournalPort {
   Future<bool> hasCompleted(
     String idempotencyKey,
     DndEffectStage stage,
-  ) async => completed.contains(_key(idempotencyKey, stage));
+  ) async =>
+      completed.contains(_key(idempotencyKey, stage));
 
   @override
   Future<void> markCompleted(
@@ -96,11 +97,11 @@ void main() {
   );
 
   DndDropResult drop() => DndDropResult(
-    dragId: envelope.dragId,
-    accepted: true,
-    operation: DndOperation.copy,
-    targetId: 'field-1',
-  );
+        dragId: envelope.dragId,
+        accepted: true,
+        operation: DndOperation.copy,
+        targetId: 'field-1',
+      );
 
   test(
     'RxDart effects share a stable idempotency key and redact payloads',
@@ -159,14 +160,14 @@ void main() {
       final otel = _Otel(calls, keys, failRemoteOnce: true);
 
       Future<void> attempt() => commitAcceptedDropEffects(
-        envelope,
-        result,
-        forms: _Forms(calls),
-        optoSync: _Opto(calls, keys),
-        otel: otel,
-        journal: journal,
-        receipts: bus,
-      );
+            envelope,
+            result,
+            forms: _Forms(calls),
+            optoSync: _Opto(calls, keys),
+            otel: otel,
+            journal: journal,
+            receipts: bus,
+          );
 
       await expectLater(attempt(), throwsA(isA<StateError>()));
       await attempt();

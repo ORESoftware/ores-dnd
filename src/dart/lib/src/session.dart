@@ -50,18 +50,18 @@ final class DndSessionInput {
   });
 
   const DndSessionInput.start(DndEnvelope envelope)
-    : this(kind: DndSessionInputKind.start, envelope: envelope);
+      : this(kind: DndSessionInputKind.start, envelope: envelope);
   DndSessionInput.enter(DndDropPolicy policy, {DndOperation? preferred})
-    : this(
-        kind: DndSessionInputKind.enter,
-        targetId: policy.targetId,
-        policy: policy,
-        preferredOperation: preferred,
-      );
+      : this(
+          kind: DndSessionInputKind.enter,
+          targetId: policy.targetId,
+          policy: policy,
+          preferredOperation: preferred,
+        );
   const DndSessionInput.leave(String targetId)
-    : this(kind: DndSessionInputKind.leave, targetId: targetId);
+      : this(kind: DndSessionInputKind.leave, targetId: targetId);
   const DndSessionInput.drop(String targetId)
-    : this(kind: DndSessionInputKind.drop, targetId: targetId);
+      : this(kind: DndSessionInputKind.drop, targetId: targetId);
   const DndSessionInput.cancel() : this(kind: DndSessionInputKind.cancel);
   const DndSessionInput.end() : this(kind: DndSessionInputKind.end);
 
@@ -72,13 +72,16 @@ final class DndSessionInput {
   final DndOperation? preferredOperation;
 
   factory DndSessionInput.fromJson(Map<String, Object?> json) {
-    _rejectUnknown(json, const {
-      'kind',
-      'envelope',
-      'targetId',
-      'policy',
-      'preferredOperation',
-    }, 'session input');
+    _rejectUnknown(
+        json,
+        const {
+          'kind',
+          'envelope',
+          'targetId',
+          'policy',
+          'preferredOperation',
+        },
+        'session input');
     final envelope = json['envelope'];
     if (envelope != null && envelope is! Map)
       throw const FormatException('envelope must be an object');
@@ -98,20 +101,19 @@ final class DndSessionInput {
       policy: policy == null
           ? null
           : DndDropPolicy.fromJson((policy as Map).cast<String, Object?>()),
-      preferredOperation: preferred == null
-          ? null
-          : DndOperationWire.parse(preferred),
+      preferredOperation:
+          preferred == null ? null : DndOperationWire.parse(preferred),
     );
   }
 
   Map<String, Object?> toJson() => {
-    'kind': kind.wire,
-    if (envelope != null) 'envelope': envelope!.toJson(),
-    if (targetId != null) 'targetId': targetId,
-    if (policy != null) 'policy': policy!.toJson(),
-    if (preferredOperation != null)
-      'preferredOperation': preferredOperation!.wire,
-  };
+        'kind': kind.wire,
+        if (envelope != null) 'envelope': envelope!.toJson(),
+        if (targetId != null) 'targetId': targetId,
+        if (policy != null) 'policy': policy!.toJson(),
+        if (preferredOperation != null)
+          'preferredOperation': preferredOperation!.wire,
+      };
 }
 
 final class DndSessionSnapshot {
@@ -134,13 +136,16 @@ final class DndSessionSnapshot {
   bool get isOverAcceptingTarget => state == DndSessionState.overTarget;
 
   factory DndSessionSnapshot.fromJson(Map<String, Object?> json) {
-    _rejectUnknown(json, const {
-      'state',
-      'dragId',
-      'targetId',
-      'operation',
-      'errorCode',
-    }, 'session snapshot');
+    _rejectUnknown(
+        json,
+        const {
+          'state',
+          'dragId',
+          'targetId',
+          'operation',
+          'errorCode',
+        },
+        'session snapshot');
     final operation = json['operation'];
     final errorCode = json['errorCode'];
     return DndSessionSnapshot(
@@ -153,12 +158,12 @@ final class DndSessionSnapshot {
   }
 
   Map<String, Object?> toJson() => {
-    'state': state.wire,
-    if (dragId != null) 'dragId': dragId,
-    if (targetId != null) 'targetId': targetId,
-    if (operation != null) 'operation': operation!.wire,
-    if (errorCode != null) 'errorCode': errorCode!.wire,
-  };
+        'state': state.wire,
+        if (dragId != null) 'dragId': dragId,
+        if (targetId != null) 'targetId': targetId,
+        if (operation != null) 'operation': operation!.wire,
+        if (errorCode != null) 'errorCode': errorCode!.wire,
+      };
 
   /// The terminal [DndDropResult], or null while the session runs.
   DndDropResult? get result {
@@ -166,17 +171,17 @@ final class DndSessionSnapshot {
     if (id == null) return null;
     return switch (state) {
       DndSessionState.dropped => DndDropResult(
-        dragId: id,
-        accepted: true,
-        operation: operation,
-        targetId: targetId,
-      ),
+          dragId: id,
+          accepted: true,
+          operation: operation,
+          targetId: targetId,
+        ),
       DndSessionState.cancelled => DndDropResult(
-        dragId: id,
-        accepted: false,
-        targetId: targetId,
-        errorCode: errorCode?.wire,
-      ),
+          dragId: id,
+          accepted: false,
+          targetId: targetId,
+          errorCode: errorCode?.wire,
+        ),
       _ => null,
     };
   }
@@ -213,12 +218,15 @@ final class DndSessionTrace {
   final List<DndSessionSnapshot> expected;
 
   factory DndSessionTrace.fromJson(Map<String, Object?> json) {
-    _rejectUnknown(json, const {
-      'id',
-      'description',
-      'inputs',
-      'expected',
-    }, 'session trace');
+    _rejectUnknown(
+        json,
+        const {
+          'id',
+          'description',
+          'inputs',
+          'expected',
+        },
+        'session trace');
     final inputs = json['inputs'];
     final expected = json['expected'];
     if (inputs is! List || expected is! List)
@@ -265,8 +273,8 @@ final class DndSessionTrace {
   }
 }
 
-typedef DndSessionListener =
-    void Function(DndSessionSnapshot snapshot, DndSessionInput input);
+typedef DndSessionListener = void Function(
+    DndSessionSnapshot snapshot, DndSessionInput input);
 
 /// One drag session: a pure `apply(snapshot, input) → snapshot` (docs/DESIGN.md
 /// §Session). Hosts keep one per drag source or one per app.
@@ -342,17 +350,17 @@ final class DndSession {
           preferred: input.preferredOperation,
         )) {
           PolicyAccepted(:final operation) => DndSessionSnapshot(
-            state: DndSessionState.overTarget,
-            dragId: current.dragId,
-            targetId: targetId,
-            operation: operation,
-          ),
+              state: DndSessionState.overTarget,
+              dragId: current.dragId,
+              targetId: targetId,
+              operation: operation,
+            ),
           PolicyRejected(:final errorCode) => DndSessionSnapshot(
-            state: DndSessionState.dragging,
-            dragId: current.dragId,
-            targetId: targetId,
-            errorCode: errorCode,
-          ),
+              state: DndSessionState.dragging,
+              dragId: current.dragId,
+              targetId: targetId,
+              errorCode: errorCode,
+            ),
         };
       case DndSessionInputKind.leave:
         return input.targetId != null && current.targetId == input.targetId
@@ -363,11 +371,11 @@ final class DndSession {
             : current;
       case DndSessionInputKind.drop:
         DndSessionSnapshot cancelled(DndRejectCode code) => DndSessionSnapshot(
-          state: DndSessionState.cancelled,
-          dragId: current.dragId,
-          targetId: input.targetId,
-          errorCode: code,
-        );
+              state: DndSessionState.cancelled,
+              dragId: current.dragId,
+              targetId: input.targetId,
+              errorCode: code,
+            );
         if (current.targetId == null)
           return cancelled(DndRejectCode.noActiveTarget);
         if (input.targetId != current.targetId)

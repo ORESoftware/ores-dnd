@@ -5,7 +5,8 @@ part of '../ores_dnd.dart';
 /// Not for `dart2js`, where ints are doubles; the fuzz tooling runs on the VM.
 final class Xorshift64 {
   Xorshift64(int seed)
-    : _state = seed == 0 ? -7046029254386353131 /* 0x9E3779B97F4A7C15 */ : seed;
+      : _state =
+            seed == 0 ? -7046029254386353131 /* 0x9E3779B97F4A7C15 */ : seed;
 
   int _state;
 

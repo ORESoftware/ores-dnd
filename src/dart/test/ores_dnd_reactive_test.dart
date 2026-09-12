@@ -6,18 +6,18 @@ import 'package:ores_dnd/ores_dnd_reactive.dart';
 import 'package:test/test.dart';
 
 DndEnvelope envelope([String dragId = 'drag-rx-1']) => DndEnvelope(
-  protocol: oresDndProtocol,
-  dragId: dragId,
-  sourceRuntime: 'dart-test',
-  allowedOperations: const [DndOperation.copy, DndOperation.move],
-  items: const [
-    DndItem(
-      kind: DndItemKind.text,
-      mediaType: 'text/plain',
-      data: 'TOP-SECRET-DRAG-DATA',
-    ),
-  ],
-);
+      protocol: oresDndProtocol,
+      dragId: dragId,
+      sourceRuntime: 'dart-test',
+      allowedOperations: const [DndOperation.copy, DndOperation.move],
+      items: const [
+        DndItem(
+          kind: DndItemKind.text,
+          mediaType: 'text/plain',
+          data: 'TOP-SECRET-DRAG-DATA',
+        ),
+      ],
+    );
 
 void main() {
   test(

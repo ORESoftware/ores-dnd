@@ -46,14 +46,14 @@ final class DndReactiveState {
   final String? targetId;
 
   Map<String, Object?> toJson() => {
-    'active': active,
-    'phase': phase?.wire,
-    'dragId': dragId,
-    'sourceRuntime': sourceRuntime,
-    'itemCount': itemCount,
-    'operation': operation?.wire,
-    'targetId': targetId,
-  };
+        'active': active,
+        'phase': phase?.wire,
+        'dragId': dragId,
+        'sourceRuntime': sourceRuntime,
+        'itemCount': itemCount,
+        'operation': operation?.wire,
+        'targetId': targetId,
+      };
 }
 
 DndReactiveState reactiveStateFor(DndReactiveEvent event, {bool? active}) =>
@@ -129,9 +129,10 @@ final class DndLifecycleGuard {
 
 final class OresDndReactiveBus {
   OresDndReactiveBus({DndLifecycleMode lifecycleMode = DndLifecycleMode.strict})
-    : _events = PublishSubject<DndReactiveEvent>(),
-      _state = BehaviorSubject<DndReactiveState>.seeded(DndReactiveState.idle),
-      _guard = DndLifecycleGuard(mode: lifecycleMode);
+      : _events = PublishSubject<DndReactiveEvent>(),
+        _state =
+            BehaviorSubject<DndReactiveState>.seeded(DndReactiveState.idle),
+        _guard = DndLifecycleGuard(mode: lifecycleMode);
 
   final PublishSubject<DndReactiveEvent> _events;
   final BehaviorSubject<DndReactiveState> _state;
@@ -143,13 +144,13 @@ final class OresDndReactiveBus {
   Stream<DndReactiveEvent> get drops =>
       events.where((event) => event.phase == DndLifecyclePhase.drop);
   Stream<DndTelemetryEvent> get telemetry => events.map(
-    (event) => telemetryFor(
-      event.phase,
-      event.envelope,
-      operation: event.operation,
-      targetId: event.targetId,
-    ),
-  );
+        (event) => telemetryFor(
+          event.phase,
+          event.envelope,
+          operation: event.operation,
+          targetId: event.targetId,
+        ),
+      );
 
   bool get isClosed => _events.isClosed && _state.isClosed;
 

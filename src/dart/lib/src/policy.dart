@@ -18,9 +18,9 @@ enum DndRejectCode {
   final String wire;
 
   static DndRejectCode parse(Object? value) => DndRejectCode.values.firstWhere(
-    (candidate) => candidate.wire == value,
-    orElse: () => throw FormatException('unsupported reject code: $value'),
-  );
+        (candidate) => candidate.wire == value,
+        orElse: () => throw FormatException('unsupported reject code: $value'),
+      );
 }
 
 const int _int32Max = 2147483647;
@@ -58,15 +58,18 @@ final class DndDropPolicy {
   final String? formId;
 
   factory DndDropPolicy.fromJson(Map<String, Object?> json) {
-    _rejectUnknown(json, const {
-      'targetId',
-      'allowedOperations',
-      'acceptedKinds',
-      'acceptedMediaTypes',
-      'maxItems',
-      'maxTotalBytes',
-      'formId',
-    }, 'drop policy');
+    _rejectUnknown(
+        json,
+        const {
+          'targetId',
+          'allowedOperations',
+          'acceptedKinds',
+          'acceptedMediaTypes',
+          'maxItems',
+          'maxTotalBytes',
+          'formId',
+        },
+        'drop policy');
     final rawOps = json['allowedOperations'];
     if (rawOps is! List)
       throw const FormatException('allowedOperations must be an array');
@@ -110,18 +113,17 @@ final class DndDropPolicy {
   }
 
   Map<String, Object?> toJson() => {
-    'targetId': targetId,
-    'allowedOperations': allowedOperations
-        .map((op) => op.wire)
-        .toList(growable: false),
-    'acceptedKinds': acceptedKinds
-        .map((kind) => kind.wire)
-        .toList(growable: false),
-    if (acceptedMediaTypes != null) 'acceptedMediaTypes': acceptedMediaTypes,
-    if (maxItems != null) 'maxItems': maxItems,
-    if (maxTotalBytes != null) 'maxTotalBytes': maxTotalBytes,
-    if (formId != null) 'formId': formId,
-  };
+        'targetId': targetId,
+        'allowedOperations':
+            allowedOperations.map((op) => op.wire).toList(growable: false),
+        'acceptedKinds':
+            acceptedKinds.map((kind) => kind.wire).toList(growable: false),
+        if (acceptedMediaTypes != null)
+          'acceptedMediaTypes': acceptedMediaTypes,
+        if (maxItems != null) 'maxItems': maxItems,
+        if (maxTotalBytes != null) 'maxTotalBytes': maxTotalBytes,
+        if (formId != null) 'formId': formId,
+      };
 
   /// Structural sanity beyond what decoding checks: the contract bounds.
   bool get isValid {

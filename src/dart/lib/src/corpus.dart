@@ -59,18 +59,18 @@ Object? decodeDeclaration(String declaration, String json) {
     'DndEnvelope' => DndEnvelope.fromJson(_object(value, 'drag envelope')),
     'DndDropResult' => DndDropResult.fromJson(_object(value, 'drop result')),
     'DndTelemetryEvent' => DndTelemetryEvent.fromJson(
-      _object(value, 'telemetry event'),
-    ),
+        _object(value, 'telemetry event'),
+      ),
     'DndDropPolicy' => DndDropPolicy.fromJson(_object(value, 'drop policy')),
     'DndSessionInput' => DndSessionInput.fromJson(
-      _object(value, 'session input'),
-    ),
+        _object(value, 'session input'),
+      ),
     'DndSessionSnapshot' => DndSessionSnapshot.fromJson(
-      _object(value, 'session snapshot'),
-    ),
+        _object(value, 'session snapshot'),
+      ),
     'DndSessionTrace' => DndSessionTrace.fromJson(
-      _object(value, 'session trace'),
-    ),
+        _object(value, 'session trace'),
+      ),
     _ => throw FormatException('unknown declaration: $declaration'),
   };
 }

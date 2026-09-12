@@ -23,13 +23,12 @@ List<CorpusCase> corpus() {
     ]) {
       final dir = Directory('${decl.path}/$lane');
       if (!dir.existsSync()) continue;
-      final files =
-          dir
-              .listSync()
-              .whereType<File>()
-              .where((f) => f.path.endsWith('.json'))
-              .toList()
-            ..sort((a, b) => a.path.compareTo(b.path));
+      final files = dir
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.json'))
+          .toList()
+        ..sort((a, b) => a.path.compareTo(b.path));
       for (final file in files) {
         out.add((
           declaration: name,

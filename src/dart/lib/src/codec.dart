@@ -21,28 +21,30 @@ enum DndLifecyclePhase {
 extension DndOperationWire on DndOperation {
   String get wire => name;
   static DndOperation parse(Object? value) => DndOperation.values.firstWhere(
-    (candidate) => candidate.wire == value,
-    orElse: () => throw FormatException('unsupported drag operation: $value'),
-  );
+        (candidate) => candidate.wire == value,
+        orElse: () =>
+            throw FormatException('unsupported drag operation: $value'),
+      );
 }
 
 extension DndItemKindWire on DndItemKind {
   String get wire => name;
   static DndItemKind parse(Object? value) => DndItemKind.values.firstWhere(
-    (candidate) => candidate.wire == value,
-    orElse: () => throw FormatException('unsupported drag item kind: $value'),
-  );
+        (candidate) => candidate.wire == value,
+        orElse: () =>
+            throw FormatException('unsupported drag item kind: $value'),
+      );
 }
 
 extension DndLifecyclePhaseWire on DndLifecyclePhase {
   String get wire => switch (this) {
-    DndLifecyclePhase.dragStart => 'drag-start',
-    DndLifecyclePhase.dragEnter => 'drag-enter',
-    DndLifecyclePhase.dragOver => 'drag-over',
-    DndLifecyclePhase.dragLeave => 'drag-leave',
-    DndLifecyclePhase.drop => 'drop',
-    DndLifecyclePhase.dragEnd => 'drag-end',
-  };
+        DndLifecyclePhase.dragStart => 'drag-start',
+        DndLifecyclePhase.dragEnter => 'drag-enter',
+        DndLifecyclePhase.dragOver => 'drag-over',
+        DndLifecyclePhase.dragLeave => 'drag-leave',
+        DndLifecyclePhase.drop => 'drop',
+        DndLifecyclePhase.dragEnd => 'drag-end',
+      };
   static DndLifecyclePhase parse(Object? value) =>
       DndLifecyclePhase.values.firstWhere(
         (candidate) => candidate.wire == value,
@@ -74,9 +76,8 @@ void _rejectUnknown(
   Set<String> allowed,
   String label,
 ) {
-  final unknown = value.keys
-      .where((key) => !allowed.contains(key))
-      .toList(growable: false);
+  final unknown =
+      value.keys.where((key) => !allowed.contains(key)).toList(growable: false);
   if (unknown.isNotEmpty) {
     throw FormatException(
       '$label contains unsupported properties: ${unknown.join(', ')}',
@@ -99,12 +100,15 @@ final class DndItem {
 
   /// Decode an item: closed enums, canonical media type, bounded data/name.
   factory DndItem.fromJson(Map<String, Object?> json) {
-    _rejectUnknown(json, const {
-      'kind',
-      'mediaType',
-      'data',
-      'name',
-    }, 'drag item');
+    _rejectUnknown(
+        json,
+        const {
+          'kind',
+          'mediaType',
+          'data',
+          'name',
+        },
+        'drag item');
     final mediaType = json['mediaType'];
     if (!Wire.isMediaType(mediaType))
       throw const FormatException(
@@ -131,11 +135,11 @@ final class DndItem {
   }
 
   Map<String, Object?> toJson() => {
-    'kind': kind.wire,
-    'mediaType': mediaType,
-    'data': data,
-    if (name != null) 'name': name,
-  };
+        'kind': kind.wire,
+        'mediaType': mediaType,
+        'data': data,
+        if (name != null) 'name': name,
+      };
 }
 
 final class DndEnvelope {
@@ -167,15 +171,18 @@ final class DndEnvelope {
     int maxItems = defaultMaxItems,
     bool structural = false,
   }) {
-    _rejectUnknown(json, const {
-      'protocol',
-      'dragId',
-      'sourceRuntime',
-      'allowedOperations',
-      'items',
-      'traceparent',
-      'formId',
-    }, 'drag envelope');
+    _rejectUnknown(
+        json,
+        const {
+          'protocol',
+          'dragId',
+          'sourceRuntime',
+          'allowedOperations',
+          'items',
+          'traceparent',
+          'formId',
+        },
+        'drag envelope');
     final protocol = json['protocol'];
     if (!Wire.isProtocolId(protocol))
       throw FormatException('malformed drag protocol tag: $protocol');
@@ -206,13 +213,11 @@ final class DndEnvelope {
         'too many drag items: ${rawItems.length} > $maxItems',
       );
     }
-    final items = rawItems
-        .map((value) {
-          if (value is! Map)
-            throw const FormatException('drag item must be an object');
-          return DndItem.fromJson(value.cast<String, Object?>());
-        })
-        .toList(growable: false);
+    final items = rawItems.map((value) {
+      if (value is! Map)
+        throw const FormatException('drag item must be an object');
+      return DndItem.fromJson(value.cast<String, Object?>());
+    }).toList(growable: false);
 
     final traceparent = json['traceparent'];
     if (traceparent != null && !Wire.isTraceparent(traceparent)) {
@@ -245,16 +250,15 @@ final class DndEnvelope {
   }
 
   Map<String, Object?> toJson() => {
-    'protocol': protocol,
-    'dragId': dragId,
-    'sourceRuntime': sourceRuntime,
-    'allowedOperations': allowedOperations
-        .map((op) => op.wire)
-        .toList(growable: false),
-    'items': items.map((item) => item.toJson()).toList(growable: false),
-    if (traceparent != null) 'traceparent': traceparent,
-    if (formId != null) 'formId': formId,
-  };
+        'protocol': protocol,
+        'dragId': dragId,
+        'sourceRuntime': sourceRuntime,
+        'allowedOperations':
+            allowedOperations.map((op) => op.wire).toList(growable: false),
+        'items': items.map((item) => item.toJson()).toList(growable: false),
+        if (traceparent != null) 'traceparent': traceparent,
+        if (formId != null) 'formId': formId,
+      };
 }
 
 final class DndDropResult {
@@ -273,13 +277,16 @@ final class DndDropResult {
   final String? errorCode;
 
   factory DndDropResult.fromJson(Map<String, Object?> json) {
-    _rejectUnknown(json, const {
-      'dragId',
-      'accepted',
-      'operation',
-      'targetId',
-      'errorCode',
-    }, 'drop result');
+    _rejectUnknown(
+        json,
+        const {
+          'dragId',
+          'accepted',
+          'operation',
+          'targetId',
+          'errorCode',
+        },
+        'drop result');
     final accepted = json['accepted'];
     if (accepted is! bool)
       throw const FormatException('accepted must be a boolean');
@@ -299,12 +306,12 @@ final class DndDropResult {
   }
 
   Map<String, Object?> toJson() => {
-    'dragId': dragId,
-    'accepted': accepted,
-    if (operation != null) 'operation': operation!.wire,
-    if (targetId != null) 'targetId': targetId,
-    if (errorCode != null) 'errorCode': errorCode,
-  };
+        'dragId': dragId,
+        'accepted': accepted,
+        if (operation != null) 'operation': operation!.wire,
+        if (targetId != null) 'targetId': targetId,
+        if (errorCode != null) 'errorCode': errorCode,
+      };
 
   @override
   bool operator ==(Object other) =>
@@ -341,14 +348,17 @@ final class DndTelemetryEvent {
   final String? targetId;
 
   factory DndTelemetryEvent.fromJson(Map<String, Object?> json) {
-    _rejectUnknown(json, const {
-      'phase',
-      'dragId',
-      'sourceRuntime',
-      'itemCount',
-      'operation',
-      'targetId',
-    }, 'telemetry event');
+    _rejectUnknown(
+        json,
+        const {
+          'phase',
+          'dragId',
+          'sourceRuntime',
+          'itemCount',
+          'operation',
+          'targetId',
+        },
+        'telemetry event');
     final itemCount = json['itemCount'];
     if (itemCount is! int || itemCount < 0 || itemCount > 2147483647) {
       throw const FormatException('itemCount must be an int32 >= 0');
@@ -365,13 +375,13 @@ final class DndTelemetryEvent {
   }
 
   Map<String, Object?> toJson() => {
-    'phase': phase.wire,
-    'dragId': dragId,
-    'sourceRuntime': sourceRuntime,
-    'itemCount': itemCount,
-    if (operation != null) 'operation': operation!.wire,
-    if (targetId != null) 'targetId': targetId,
-  };
+        'phase': phase.wire,
+        'dragId': dragId,
+        'sourceRuntime': sourceRuntime,
+        'itemCount': itemCount,
+        if (operation != null) 'operation': operation!.wire,
+        if (targetId != null) 'targetId': targetId,
+      };
 }
 
 final class OresDndCodec {
@@ -444,8 +454,7 @@ DndOperation? negotiateOperation(
 }) {
   if (preferred != null &&
       source.contains(preferred) &&
-      target.contains(preferred))
-    return preferred;
+      target.contains(preferred)) return preferred;
   for (final op in negotiationOrder) {
     if (source.contains(op) && target.contains(op)) return op;
   }
@@ -457,11 +466,12 @@ DndTelemetryEvent telemetryFor(
   DndEnvelope envelope, {
   DndOperation? operation,
   String? targetId,
-}) => DndTelemetryEvent(
-  phase: phase,
-  dragId: envelope.dragId,
-  sourceRuntime: envelope.sourceRuntime,
-  itemCount: envelope.items.length,
-  operation: operation,
-  targetId: targetId,
-);
+}) =>
+    DndTelemetryEvent(
+      phase: phase,
+      dragId: envelope.dragId,
+      sourceRuntime: envelope.sourceRuntime,
+      itemCount: envelope.items.length,
+      operation: operation,
+      targetId: targetId,
+    );

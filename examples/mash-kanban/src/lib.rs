@@ -9,7 +9,10 @@
 
 use axum::{extract::State, response::IntoResponse, routing::get, Router};
 use maud::{html, Markup, DOCTYPE};
-use ores_dnd_core::{DndDropPolicy, DndDropResult, DndEnvelope, DndError, DndItem, DndItemKind, DndOperation, ORES_DND_PROTOCOL};
+use ores_dnd_core::{
+    DndDropPolicy, DndDropResult, DndEnvelope, DndError, DndItem, DndItemKind, DndOperation,
+    ORES_DND_PROTOCOL,
+};
 use ores_dnd_mash::html::{boot_script, drag_source, drop_zone, DropZoneWiring};
 use ores_dnd_mash::server::{router_with, DropCommitBackend, RouterOptions, DEFAULT_COMMIT_PATH};
 use std::sync::{Arc, Mutex};
@@ -37,8 +40,20 @@ impl Board {
     pub fn seeded() -> Self {
         let board = Self::default();
         let mut cards = board.cards.lock().unwrap();
-        for (i, title) in ["Write contract", "Replay traces", "Ship adapters", "Roll out to pub-lib-cores"].iter().enumerate() {
-            cards.push(Card { id: format!("card-{}", i + 1), title: (*title).to_owned(), column: if i < 2 { "todo".into() } else { "doing".into() } });
+        for (i, title) in [
+            "Write contract",
+            "Replay traces",
+            "Ship adapters",
+            "Roll out to pub-lib-cores",
+        ]
+        .iter()
+        .enumerate()
+        {
+            cards.push(Card {
+                id: format!("card-{}", i + 1),
+                title: (*title).to_owned(),
+                column: if i < 2 { "todo".into() } else { "doing".into() },
+            });
         }
         drop(cards);
         board
@@ -55,7 +70,12 @@ impl Board {
             drag_id: format!("drag-{}", card.id),
             source_runtime: "mash-kanban".to_owned(),
             allowed_operations: vec![DndOperation::Move],
-            items: vec![DndItem { kind: DndItemKind::Json, media_type: CARD_MEDIA.to_owned(), data: serde_json::to_string(card).unwrap(), name: Some(card.title.clone()) }],
+            items: vec![DndItem {
+                kind: DndItemKind::Json,
+                media_type: CARD_MEDIA.to_owned(),
+                data: serde_json::to_string(card).unwrap(),
+                name: Some(card.title.clone()),
+            }],
             traceparent: None,
             form_id: None,
         }
@@ -63,23 +83,37 @@ impl Board {
 
     /// Every column accepts exactly one card payload by move.
     pub fn policy_for_column(column: &str) -> DndDropPolicy {
-        DndDropPolicy::new(format!("column-{column}"), &[DndOperation::Move], &[DndItemKind::Json])
-            .with_media_types([CARD_MEDIA])
-            .with_max_items(1)
+        DndDropPolicy::new(
+            format!("column-{column}"),
+            &[DndOperation::Move],
+            &[DndItemKind::Json],
+        )
+        .with_media_types([CARD_MEDIA])
+        .with_max_items(1)
     }
 }
 
 impl DropCommitBackend for Board {
     fn policy_for(&self, target_id: &str) -> Option<DndDropPolicy> {
         let column = target_id.strip_prefix("column-")?;
-        COLUMNS.contains(&column).then(|| Self::policy_for_column(column))
+        COLUMNS
+            .contains(&column)
+            .then(|| Self::policy_for_column(column))
     }
 
     fn commit(&self, envelope: &DndEnvelope, result: &DndDropResult) -> Result<(), DndError> {
-        let card: Card = serde_json::from_str(&envelope.items[0].data).map_err(|_| DndError("card-unreadable".into()))?;
-        let column = result.target_id.as_deref().and_then(|t| t.strip_prefix("column-")).ok_or_else(|| DndError("unknown-column".into()))?;
+        let card: Card = serde_json::from_str(&envelope.items[0].data)
+            .map_err(|_| DndError("card-unreadable".into()))?;
+        let column = result
+            .target_id
+            .as_deref()
+            .and_then(|t| t.strip_prefix("column-"))
+            .ok_or_else(|| DndError("unknown-column".into()))?;
         let mut cards = self.cards.lock().unwrap();
-        let existing = cards.iter_mut().find(|c| c.id == card.id).ok_or_else(|| DndError("unknown-card".into()))?;
+        let existing = cards
+            .iter_mut()
+            .find(|c| c.id == card.id)
+            .ok_or_else(|| DndError("unknown-card".into()))?;
         existing.column = column.to_owned();
         self.committed.lock().unwrap().push(result.drag_id.clone());
         Ok(())
@@ -118,7 +152,11 @@ pub fn render_board(board: &Board) -> Markup {
 
 fn column_markup<'a>(column: &str, cards: impl Iterator<Item = &'a Card>) -> Markup {
     let policy = Board::policy_for_column(column);
-    let wiring = DropZoneWiring { commit_url: DEFAULT_COMMIT_PATH, swap_target: Some("main.board"), class: Some("column") };
+    let wiring = DropZoneWiring {
+        commit_url: DEFAULT_COMMIT_PATH,
+        swap_target: Some("main.board"),
+        class: Some("column"),
+    };
     let inner = html! {
         h2 { (column) }
         @for card in cards {
@@ -147,5 +185,8 @@ pub fn app(board: Arc<Board>) -> Router {
     Router::new()
         .route("/", get(index))
         .with_state(board.clone())
-        .merge(router_with(board as Arc<dyn DropCommitBackend>, RouterOptions::default()))
+        .merge(router_with(
+            board as Arc<dyn DropCommitBackend>,
+            RouterOptions::default(),
+        ))
 }

@@ -14,10 +14,8 @@ Future<void> main(List<String> args) async {
   }
   final casesFile = File(args[0]);
   final root = casesFile.parent.path;
-  final cases =
-      (jsonDecode(await casesFile.readAsString())
-              as Map<String, Object?>)['cases']
-          as List;
+  final cases = (jsonDecode(await casesFile.readAsString())
+      as Map<String, Object?>)['cases'] as List;
   final results = <Map<String, Object?>>[];
   for (final raw in cases) {
     final c = (raw as Map).cast<String, Object?>();
