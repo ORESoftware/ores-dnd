@@ -92,7 +92,6 @@ fn operation_wire(operation: DndOperation) -> &'static str {
     }
 }
 
-/// Length-prefixed components avoid delimiter ambiguity without a URL/crypto dependency.
 #[must_use]
 pub fn dnd_effect_key(result: &DndDropResult) -> String {
     let target = result.target_id.as_deref().unwrap_or("-");
@@ -146,12 +145,18 @@ fn run_stage<F>(
 where
     F: FnOnce() -> Result<(), DndError>,
 {
-    if ports
-        .journal
-        .is_some_and(|journal| journal.has_completed(key, stage).unwrap_or(false))
-    {
-        publish(ports.receipts, key, result, stage, DndEffectStatus::Skipped);
-        return Ok(());
+    if let Some(journal) = ports.journal {
+        match journal.has_completed(key, stage) {
+            Ok(true) => {
+                publish(ports.receipts, key, result, stage, DndEffectStatus::Skipped);
+                return Ok(());
+            }
+            Ok(false) => {}
+            Err(error) => {
+                publish(ports.receipts, key, result, stage, DndEffectStatus::Failed);
+                return Err(error);
+            }
+        }
     }
 
     if let Err(error) = effect() {
@@ -168,12 +173,6 @@ where
     Ok(())
 }
 
-/// Retry-safe accepted-drop effect pipeline.
-///
-/// The canonical commit path is invoked with no side-effect ports first, so it
-/// remains the validation authority. The host journal suppresses completed
-/// stages on retry. Supabase-facing adapters also receive the stable idempotency
-/// key because an external write may succeed before its journal marker does.
 pub fn commit_accepted_drop_effects(
     envelope: &DndEnvelope,
     result: &DndDropResult,
@@ -245,8 +244,6 @@ impl DndEffectSink for BufferedEffectSink {
     }
 }
 
-/// Minimal in-memory journal for UI/session scopes and tests. Durable product
-/// retries should bind this trait to Opto-Sync/SQLite/IndexedDB state instead.
 #[derive(Default)]
 pub struct MemoryEffectJournal {
     completed: RefCell<BTreeSet<(String, DndEffectStage)>>,
@@ -328,6 +325,16 @@ mod tests {
         }
     }
 
+    struct BrokenJournal;
+    impl DndEffectJournalPort for BrokenJournal {
+        fn has_completed(&self, _: &str, _: DndEffectStage) -> Result<bool, DndError> {
+            Err(DndError("journal unavailable".to_owned()))
+        }
+        fn mark_completed(&self, _: &str, _: DndEffectStage) -> Result<(), DndError> {
+            Err(DndError("journal unavailable".to_owned()))
+        }
+    }
+
     fn fixture() -> Result<DndEnvelope, DndError> {
         decode_envelope_json(VALID, ValidationOptions::default())
     }
@@ -400,8 +407,7 @@ mod tests {
             journal: Some(&journal),
             receipts: Some(&sink),
         };
-        let first = commit_accepted_drop_effects(&envelope, &result, ports());
-        assert!(first.is_err());
+        assert!(commit_accepted_drop_effects(&envelope, &result, ports()).is_err());
         commit_accepted_drop_effects(&envelope, &result, ports())?;
 
         assert_eq!(calls.borrow().as_slice(), [
@@ -420,6 +426,32 @@ mod tests {
         assert!(!serialized.contains("provider-token"));
         assert!(!serialized.contains("sensitive-value"));
         assert!(!serialized.contains("hello"));
+        Ok(())
+    }
+
+    #[test]
+    fn journal_lookup_failure_executes_no_external_effect() -> Result<(), DndError> {
+        let envelope = fixture()?;
+        let result = result(&envelope);
+        let calls = Rc::new(RefCell::new(Vec::new()));
+        let forms = Forms(Rc::clone(&calls));
+        let sink = BufferedEffectSink::default();
+        let journal = BrokenJournal;
+        let outcome = commit_accepted_drop_effects(
+            &envelope,
+            &result,
+            ReactiveEffectPorts {
+                forms: Some(&forms),
+                opto_sync: None,
+                otel: None,
+                journal: Some(&journal),
+                receipts: Some(&sink),
+            },
+        );
+        assert!(outcome.is_err());
+        assert!(calls.borrow().is_empty());
+        assert_eq!(sink.snapshot().len(), 1);
+        assert_eq!(sink.snapshot()[0].status, DndEffectStatus::Failed);
         Ok(())
     }
 }
