@@ -14,7 +14,10 @@ Future<void> main(List<String> args) async {
   }
   final casesFile = File(args[0]);
   final root = casesFile.parent.path;
-  final cases = (jsonDecode(await casesFile.readAsString()) as Map<String, Object?>)['cases'] as List;
+  final cases =
+      (jsonDecode(await casesFile.readAsString())
+              as Map<String, Object?>)['cases']
+          as List;
   final results = <Map<String, Object?>>[];
   for (final raw in cases) {
     final c = (raw as Map).cast<String, Object?>();
@@ -27,7 +30,11 @@ Future<void> main(List<String> args) async {
     } on FormatException {
       verdict = 'rejected';
     }
-    results.add({'caseId': c['id'], 'declaration': c['declaration'], 'verdict': verdict});
+    results.add({
+      'caseId': c['id'],
+      'declaration': c['declaration'],
+      'verdict': verdict,
+    });
   }
   final adapter = {
     'id': 'dart-ores-dnd',
@@ -38,6 +45,8 @@ Future<void> main(List<String> args) async {
     'status': 'passed',
     'results': results,
   };
-  await File(args[1]).writeAsString('${const JsonEncoder.withIndent('  ').convert(adapter)}\n');
+  await File(
+    args[1],
+  ).writeAsString('${const JsonEncoder.withIndent('  ').convert(adapter)}\n');
   stderr.writeln('dart adapter: ${results.length} cases -> ${args[1]}');
 }

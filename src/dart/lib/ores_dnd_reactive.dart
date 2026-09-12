@@ -46,17 +46,18 @@ final class DndReactiveState {
   final String? targetId;
 
   Map<String, Object?> toJson() => {
-        'active': active,
-        'phase': phase?.wire,
-        'dragId': dragId,
-        'sourceRuntime': sourceRuntime,
-        'itemCount': itemCount,
-        'operation': operation?.wire,
-        'targetId': targetId,
-      };
+    'active': active,
+    'phase': phase?.wire,
+    'dragId': dragId,
+    'sourceRuntime': sourceRuntime,
+    'itemCount': itemCount,
+    'operation': operation?.wire,
+    'targetId': targetId,
+  };
 }
 
-DndReactiveState reactiveStateFor(DndReactiveEvent event, {bool? active}) => DndReactiveState(
+DndReactiveState reactiveStateFor(DndReactiveEvent event, {bool? active}) =>
+    DndReactiveState(
       active: active ?? event.phase != DndLifecyclePhase.dragEnd,
       phase: event.phase,
       dragId: event.envelope.dragId,
@@ -85,18 +86,23 @@ final class DndLifecycleGuard {
         _dropped = false;
         return;
       }
-      if (phase == DndLifecyclePhase.drop && mode == DndLifecycleMode.externalDropCompatible) {
+      if (phase == DndLifecyclePhase.drop &&
+          mode == DndLifecycleMode.externalDropCompatible) {
         return;
       }
       throw FormatException('${phase.wire} requires an active drag-start');
     }
 
     if (dragId != _activeDragId) {
-      throw const FormatException('reactive lifecycle dragId changed before drag-end');
+      throw const FormatException(
+        'reactive lifecycle dragId changed before drag-end',
+      );
     }
     if (_dropped) {
       if (phase != DndLifecyclePhase.dragEnd) {
-        throw FormatException('${phase.wire} is invalid after drop; expected drag-end');
+        throw FormatException(
+          '${phase.wire} is invalid after drop; expected drag-end',
+        );
       }
       _activeDragId = null;
       _dropped = false;
@@ -123,9 +129,9 @@ final class DndLifecycleGuard {
 
 final class OresDndReactiveBus {
   OresDndReactiveBus({DndLifecycleMode lifecycleMode = DndLifecycleMode.strict})
-      : _events = PublishSubject<DndReactiveEvent>(),
-        _state = BehaviorSubject<DndReactiveState>.seeded(DndReactiveState.idle),
-        _guard = DndLifecycleGuard(mode: lifecycleMode);
+    : _events = PublishSubject<DndReactiveEvent>(),
+      _state = BehaviorSubject<DndReactiveState>.seeded(DndReactiveState.idle),
+      _guard = DndLifecycleGuard(mode: lifecycleMode);
 
   final PublishSubject<DndReactiveEvent> _events;
   final BehaviorSubject<DndReactiveState> _state;
@@ -137,13 +143,13 @@ final class OresDndReactiveBus {
   Stream<DndReactiveEvent> get drops =>
       events.where((event) => event.phase == DndLifecyclePhase.drop);
   Stream<DndTelemetryEvent> get telemetry => events.map(
-        (event) => telemetryFor(
-          event.phase,
-          event.envelope,
-          operation: event.operation,
-          targetId: event.targetId,
-        ),
-      );
+    (event) => telemetryFor(
+      event.phase,
+      event.envelope,
+      operation: event.operation,
+      targetId: event.targetId,
+    ),
+  );
 
   bool get isClosed => _events.isClosed && _state.isClosed;
 
@@ -154,11 +160,16 @@ final class OresDndReactiveBus {
     String? targetId,
   }) {
     final safeEnvelope = DndEnvelope.fromJson(envelope.toJson());
-    if (operation != null && !safeEnvelope.allowedOperations.contains(operation)) {
-      throw const FormatException('reactive event operation is not source-allowed');
+    if (operation != null &&
+        !safeEnvelope.allowedOperations.contains(operation)) {
+      throw const FormatException(
+        'reactive event operation is not source-allowed',
+      );
     }
     if (targetId != null && targetId.isEmpty) {
-      throw const FormatException('reactive event targetId must be a non-empty string');
+      throw const FormatException(
+        'reactive event targetId must be a non-empty string',
+      );
     }
     _guard.accept(phase, safeEnvelope.dragId);
 
