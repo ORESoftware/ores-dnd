@@ -7,6 +7,8 @@
 //! - [`ports`]: ores-forms → opto-sync → ores-otel commit ports
 //! - [`bindings`]: stable DOM attribute/event names for HTML-first adapters
 //! - [`corpus`]: decode any declaration by name (tjsv runtime evidence)
+//! - [`reactive`] / [`reactive_effects`] (feature `reactive`): rxRust lifecycle streams and
+//!   retry-safe effect pipelines (DEN-3926) layered on the codec and ports
 //! - [`wire`]: the bounded scalars and array limits both schema authorities check
 //!
 //! Framework crates (`ores-dnd-mash`, `ores-dnd-leptos`, `ores-dnd-dioxus`,
@@ -19,6 +21,11 @@ pub mod policy;
 pub mod ports;
 pub mod session;
 pub mod wire;
+
+#[cfg(feature = "reactive")]
+pub mod reactive;
+#[cfg(feature = "reactive")]
+pub mod reactive_effects;
 
 pub use bindings::{DomBinding, ATTR_POLICY, ATTR_SOURCE, ATTR_STATE, ATTR_ZONE, EVENT_DROP, EVENT_STATE};
 #[cfg(feature = "dioxus")]
