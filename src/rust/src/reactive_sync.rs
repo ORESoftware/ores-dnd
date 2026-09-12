@@ -193,9 +193,8 @@ pub fn commit_accepted_drop_reactive(
 /// Live applications normally implement [DndReactiveSink] using their own
 /// `Local::subject()` or `Shared::subject()` so scheduler/threading policy stays
 /// with the host. This helper keeps batch/test composition first-class too.
-pub fn observe_reactive_events<I, F>(events: I, on_next: F)
+pub fn observe_reactive_events<F>(events: Vec<DndReactiveEvent>, on_next: F)
 where
-    I: IntoIterator<Item = DndReactiveEvent>,
     F: FnMut(DndReactiveEvent) + 'static,
 {
     Local::from_iter(events).subscribe(on_next);
@@ -337,7 +336,7 @@ mod tests {
         let seen = Rc::new(RefCell::new(Vec::new()));
         let capture = Rc::clone(&seen);
         observe_reactive_events(
-            [DndReactiveEvent::SupabaseSync {
+            vec![DndReactiveEvent::SupabaseSync {
                 drag_id: "drag-1".into(),
                 channel: DndSyncChannel::OresOtel,
                 ok: true,
