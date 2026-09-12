@@ -13,7 +13,7 @@ url = "https://github.com/ORESoftware/ores-dnd"
 [publish]
 include_readme = true
 tag_format = "v{version}"
-exclude = [".env", ".env.*", ".direnv/**", ".vendor/.zed/**", ".zed/**", ".zed-pack/**", "tmp/**", "**/*.log", ".DS_Store", "**/target/**", "**/node_modules/**", "**/dist/**", "**/.dart_tool/**", "**/build/**", "artifacts/**", ".typespec-json-schema-validator/**"]
+exclude = ["examples/**", ".env", ".env.*", ".direnv/**", ".vendor/.zed/**", ".zed/**", ".zed-pack/**", "tmp/**", "**/*.log", ".DS_Store", "**/target/**", "**/node_modules/**", "**/dist/**", "**/.dart_tool/**", "**/build/**", "artifacts/**", ".typespec-json-schema-validator/**"]
 
 [install]
 dir = ".vendor/.zed"

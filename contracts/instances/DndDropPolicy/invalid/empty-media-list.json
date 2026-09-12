@@ -1,0 +1,10 @@
+{
+  "targetId": "z",
+  "allowedOperations": [
+    "copy"
+  ],
+  "acceptedKinds": [
+    "text"
+  ],
+  "acceptedMediaTypes": []
+}

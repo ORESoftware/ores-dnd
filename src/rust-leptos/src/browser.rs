@@ -10,17 +10,26 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 static EXTERNAL_COUNTER: AtomicU64 = AtomicU64::new(0);
 
-/// The item kind implied by a DataTransfer type while the data is unreadable.
-pub fn kind_for_type(media_type: &str) -> Option<DndItemKind> {
-    let media = media_type.split(';').next().unwrap_or("").trim().to_ascii_lowercase();
-    match media.as_str() {
-        m if m == ORES_DND_MIME => None,
-        "text/uri-list" => Some(DndItemKind::Uri),
-        "application/json" => Some(DndItemKind::Json),
-        "files" => Some(DndItemKind::Bytes),
-        m if m.starts_with("text/") => Some(DndItemKind::Text),
-        _ => Some(DndItemKind::Bytes),
+/// The item kind and canonical media type implied by a DataTransfer format
+/// while the data is unreadable. Browser formats are not always media types
+/// (`Files`, `downloadurl`, …): anything that is not a canonical `type/subtype`
+/// is reported as `application/octet-stream` bytes. The ores MIME itself maps
+/// to `None` (its items are only known once the payload is readable).
+pub fn kind_for_type(format: &str) -> Option<(DndItemKind, String)> {
+    let media = format.split(';').next().unwrap_or("").trim().to_ascii_lowercase();
+    if media == ORES_DND_MIME {
+        return None;
     }
+    if !ores_dnd_core::wire::is_media_type(&media) {
+        return Some((DndItemKind::Bytes, "application/octet-stream".to_owned()));
+    }
+    let kind = match media.as_str() {
+        "text/uri-list" => DndItemKind::Uri,
+        "application/json" => DndItemKind::Json,
+        m if m.starts_with("text/") => DndItemKind::Text,
+        _ => DndItemKind::Bytes,
+    };
+    Some((kind, media))
 }
 
 /// An envelope describing an external drag by its advertised types only
@@ -30,8 +39,9 @@ pub fn provisional_envelope(types: &[String]) -> DndEnvelope {
     let n = EXTERNAL_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     let mut items: Vec<DndItem> = types
         .iter()
-        .filter_map(|t| kind_for_type(t).map(|kind| DndItem { kind, media_type: t.to_ascii_lowercase(), data: String::new(), name: None }))
+        .filter_map(|t| kind_for_type(t).map(|(kind, media_type)| DndItem { kind, media_type, data: String::new(), name: None }))
         .collect();
+    items.truncate(ores_dnd_core::wire::ENVELOPE_ITEMS_MAX);
     if items.is_empty() {
         items.push(DndItem { kind: DndItemKind::Text, media_type: "text/plain".into(), data: String::new(), name: None });
     }
@@ -113,6 +123,7 @@ mod tests {
         assert_eq!(env.items.len(), 2);
         assert_eq!(env.items[0].kind, DndItemKind::Uri);
         assert_eq!(env.items[1].kind, DndItemKind::Bytes);
+        assert_eq!(env.items[1].media_type, "application/octet-stream", "browser formats that are not media types are canonicalised");
         assert!(env.validate(ValidationOptions::default()).is_ok());
         assert!(env.drag_id.starts_with("external-"));
         let empty = provisional_envelope(&[]);
@@ -122,6 +133,8 @@ mod tests {
     #[test]
     fn drop_effects_match_operation_wire_names() {
         assert_eq!(drop_effect_for(DndOperation::Move), "move");
-        assert_eq!(kind_for_type("TEXT/Markdown; charset=utf-8"), Some(DndItemKind::Text));
+        assert_eq!(kind_for_type("TEXT/Markdown; charset=utf-8"), Some((DndItemKind::Text, "text/markdown".to_owned())));
+        assert_eq!(kind_for_type("downloadurl"), Some((DndItemKind::Bytes, "application/octet-stream".to_owned())));
+        assert_eq!(kind_for_type(ORES_DND_MIME), None);
     }
 }

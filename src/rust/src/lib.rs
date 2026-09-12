@@ -7,8 +7,10 @@
 //! - [`ports`]: ores-forms → opto-sync → ores-otel commit ports
 //! - [`bindings`]: stable DOM attribute/event names for HTML-first adapters
 //! - [`corpus`]: decode any declaration by name (tjsv runtime evidence)
+//! - [`fuzz`]: the seeded random session generator shared by the fuzz corpus and invariant tests
 //! - [`reactive`] / [`reactive_effects`] (feature `reactive`): rxRust lifecycle streams and
 //!   retry-safe effect pipelines (DEN-3926) layered on the codec and ports
+//! - [`wire`]: the bounded scalars and array limits both schema authorities check
 //!
 //! Framework crates (`ores-dnd-mash`, `ores-dnd-leptos`, `ores-dnd-dioxus`,
 //! `ores-dnd-wasm`) depend on this crate, never the other way round.
@@ -16,9 +18,11 @@
 pub mod bindings;
 pub mod corpus;
 pub mod envelope;
+pub mod fuzz;
 pub mod policy;
 pub mod ports;
 pub mod session;
+pub mod wire;
 
 #[cfg(feature = "reactive")]
 pub mod reactive;

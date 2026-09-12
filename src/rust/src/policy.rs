@@ -1,7 +1,8 @@
 //! Drop policies: what a target accepts, evaluated in the fixed order every
 //! runtime shares (see docs/DESIGN.md §Policy evaluation).
 
-use crate::envelope::{negotiate_operation, DndEnvelope, DndItemKind, DndOperation};
+use crate::envelope::{negotiate_operation, DndEnvelope, DndError, DndItemKind, DndOperation};
+use crate::wire;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -86,16 +87,29 @@ impl DndDropPolicy {
         self
     }
 
-    /// Structural sanity beyond what serde checks: the contract bounds.
-    pub fn validate(&self) -> Result<(), DndRejectCode> {
-        if self.target_id.is_empty()
-            || self.max_items.is_some_and(|value| value < 1)
-            || self.max_total_bytes.is_some_and(|value| value < 1)
-            || self.form_id.as_deref().is_some_and(str::is_empty)
-        {
-            return Err(DndRejectCode::InvalidEnvelope);
+    /// The structural rules both schema authorities check for a policy.
+    pub fn structural(&self) -> Result<(), DndError> {
+        wire::check_safe_id(&self.target_id, "targetId")?;
+        wire::check_len(self.allowed_operations.len(), 1, wire::OPERATIONS_MAX, "allowedOperations")?;
+        wire::check_len(self.accepted_kinds.len(), 1, wire::KINDS_MAX, "acceptedKinds")?;
+        if let Some(patterns) = self.accepted_media_types.as_deref() {
+            wire::check_len(patterns.len(), 1, wire::MEDIA_PATTERNS_MAX, "acceptedMediaTypes")?;
+            if let Some(bad) = patterns.iter().find(|p| !wire::is_media_type_pattern(p)) {
+                return Err(DndError(format!("acceptedMediaTypes entry is not a canonical media type pattern: {bad}")));
+            }
         }
-        Ok(())
+        if self.max_items.is_some_and(|v| !(1..=wire::POLICY_MAX_ITEMS_MAX).contains(&v)) {
+            return Err(DndError("maxItems must be 1..=64".into()));
+        }
+        if self.max_total_bytes.is_some_and(|v| v < 1) {
+            return Err(DndError("maxTotalBytes must be >= 1".into()));
+        }
+        wire::check_opt_safe_id(self.form_id.as_deref(), "formId")
+    }
+
+    /// Structural sanity as a reject code (the session ignores invalid policies).
+    pub fn validate(&self) -> Result<(), DndRejectCode> {
+        self.structural().map_err(|_| DndRejectCode::InvalidEnvelope)
     }
 }
 

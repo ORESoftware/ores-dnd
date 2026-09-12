@@ -2,6 +2,7 @@
 // specified by docs/DESIGN.md §Session and proven by the shared trace corpus.
 import { validateEnvelope, type DndDropResult, type DndEnvelope, type DndOperation, type ValidationOptions } from "./codec.js";
 import { evaluatePolicy, validatePolicy, type DndDropPolicy, type DndRejectCode } from "./policy.js";
+import { isSafeId } from "./wire.js";
 
 export type DndSessionState = "idle" | "dragging" | "over-target" | "dropped" | "cancelled";
 export type DndSessionInputKind = "start" | "enter" | "leave" | "drop" | "cancel" | "end";
@@ -135,6 +136,7 @@ export class DndSession {
       return envelope ? snapshot("dragging", { dragId: envelope.dragId }) : snapshot("idle", { errorCode: "invalid-envelope" });
     }
     if (current.state === "idle" || isTerminal(current.state)) return current;
+    if (input.targetId !== undefined && !isSafeId(input.targetId)) return current; // structurally invalid input: ignored
     switch (input.kind) {
       case "enter": {
         if (!input.policy || !this.#envelope) return current;

@@ -18,6 +18,7 @@ import {
 } from "./codec.js";
 import { validatePolicy, type DndDropPolicy } from "./policy.js";
 import { DndSession, inputs, type DndSessionSnapshot } from "./session.js";
+import { ENVELOPE_ITEMS_MAX, isMediaType } from "./wire.js";
 
 /** Attribute names shared with `ores_dnd_core::bindings` and `ores-dnd-mash`. */
 export const ATTR_ZONE = "data-ores-dnd-zone";
@@ -60,15 +61,20 @@ export function preferredOperation(event: { ctrlKey?: boolean; altKey?: boolean;
   return undefined;
 }
 
-/** The item kind implied by a DataTransfer type while its data is unreadable. */
-export function kindForType(mediaType: string): DndItemKind | null {
-  const media = (mediaType.split(";")[0] ?? "").trim().toLowerCase();
+/**
+ * The item kind and canonical media type implied by a DataTransfer format while
+ * its data is unreadable. Browser formats are not always media types (`Files`,
+ * `downloadurl`, …): anything that is not a canonical `type/subtype` is reported
+ * as `application/octet-stream` bytes. The ores MIME itself maps to null.
+ */
+export function kindForType(format: string): { kind: DndItemKind; mediaType: string } | null {
+  const media = (format.split(";")[0] ?? "").trim().toLowerCase();
   if (media === ORES_DND_MIME) return null;
-  if (media === "text/uri-list") return "uri";
-  if (media === "application/json") return "json";
-  if (media === "files") return "bytes";
-  if (media.startsWith("text/")) return "text";
-  return "bytes";
+  if (!isMediaType(media)) return { kind: "bytes", mediaType: "application/octet-stream" };
+  if (media === "text/uri-list") return { kind: "uri", mediaType: media };
+  if (media === "application/json") return { kind: "json", mediaType: media };
+  if (media.startsWith("text/")) return { kind: "text", mediaType: media };
+  return { kind: "bytes", mediaType: media };
 }
 
 let externalCounter = 0;
@@ -82,8 +88,8 @@ export function provisionalEnvelope(types: readonly string[]): DndEnvelope {
   externalCounter += 1;
   const items: DndItem[] = [];
   for (const type of types) {
-    const kind = kindForType(type);
-    if (kind) items.push({ kind, mediaType: type.toLowerCase(), data: "" });
+    const mapped = kindForType(type);
+    if (mapped && items.length < ENVELOPE_ITEMS_MAX) items.push({ kind: mapped.kind, mediaType: mapped.mediaType, data: "" });
   }
   if (items.length === 0) items.push({ kind: "text", mediaType: "text/plain", data: "" });
   return { protocol: ORES_DND_PROTOCOL, dragId: `external-${externalCounter}`, sourceRuntime: "external-browser", allowedOperations: ["copy"], items };

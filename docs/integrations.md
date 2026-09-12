@@ -57,7 +57,7 @@ The core calls them only after decode, validation, operation negotiation, and po
 
 Three adapter crates sit on top and never leak upward:
 
-- **`ores-dnd-mash`** — `html::drop_zone(policy, wiring, inner)` and `html::drag_source(envelope, …)` render maud markup with the stable `data-ores-dnd-*` attributes; `html::boot_script(url)` loads the TypeScript adapter (`autoBind`) that drives the drag in the browser; `server::router(backend, path)` mounts `POST /ores-dnd/drop`, which **re-runs the policy on the server** (`verify_drop_commit`) before calling the app's `DropCommitBackend::commit` — the browser reports, the server decides.
+- **`ores-dnd-mash`** — `html::drop_zone(policy, wiring, inner)` and `html::drag_source(envelope, …)` render maud markup with the stable `data-ores-dnd-*` attributes; `html::boot_script(url)` loads the TypeScript adapter (`autoBind`) that drives the drag in the browser; `server::router(backend, path)` (or `router_with(backend, RouterOptions)`) mounts `POST /ores-dnd/drop`, which **re-runs the policy on the server** (`verify_drop_commit`) before calling the app's `DropCommitBackend::commit` — the browser reports, the server decides. The endpoint is hardened by default: request bodies over 2 MiB are refused before parsing (413), a repeated `dragId` is refused with `duplicate-drag` (409, bounded in-memory window plus the backend's durable `already_committed`), the `HX-Request` header is required (403 `missing-hx-request` otherwise — the CSRF guard for cookie sessions), and responses are `Cache-Control: no-store`. Mount it behind shared-auth and ores-rate-limit like any other route.
 - **`ores-dnd-leptos`** — `use_dnd_session()` / `provide_dnd_session()` put the snapshot in a signal; `<DropZone handle policy on_drop>` and `<DragSource handle envelope>` bind `on:dragenter/dragover/dragleave/drop/dragstart/dragend`; `browser::*` is the `web_sys` DataTransfer glue (mirrors `src/ts/dom.ts`).
 - **`ores-dnd-dioxus`** — same shape (`use_dnd_session`, `DropZone`, `DragSource`) over Dioxus' portable `DataTransfer`, so one adapter serves web, desktop and mobile.
 
@@ -70,7 +70,14 @@ Desktop webviews and JS clients can instead call the `ores-dnd-wasm` exports, al
 
 ## Flutter / Dart + WASM
 
-`OresDraggable` serializes `DndEnvelope` as its `Draggable<String>.data`. `OresDragTarget` decodes and negotiates the operation before invoking application code.
+`ores_dnd` (`src/dart`, pure Dart, no Flutter dependency) mirrors the Rust and TypeScript cores: `OresDndCodec`, `DndDropPolicy` + `evaluatePolicy` (a sealed `PolicyVerdict`), `DndSession` (`apply` / `snapshot` / `envelope` / `result` / `subscribe`), `replayTrace`, `decodeDeclaration`, and the ports. `bin/conformance_adapter.dart` writes the tjsv runtime evidence for Dart.
+
+`ores_dnd_flutter` (`src/flutter`) wraps Flutter's `Draggable<String>` / `DragTarget<String>`:
+
+- `OresDndController` (a `ChangeNotifier`) owns one `DndSession`; share it between every source and target that may interact (`OresDndController.shared` is the default).
+- `OresDraggable(envelope: …)` serializes the envelope as the drag data and sends `start` / `end`.
+- `OresDragTarget(policy: …, builder: (context, zoneState, snapshot) => …, onAccepted: …)` sends `enter` from `onWillAcceptWithDetails` (so Flutter only highlights what the policy accepts), `leave` from `onLeave` and `drop` from `onAcceptWithDetails`; `onAccepted` runs only for a `dropped` session — wire it to `commitAcceptedDrop`. `OresZoneState` (`idle` / `dragging` / `accepting` / `rejecting` / `dropped`) is the Flutter twin of the browser's `data-ores-dnd-state`.
+- Drags from a plain `Draggable<String>` carrying `ores.dnd/v1` JSON are adopted on entry, so mixed trees work.
 
 The Dart `OresDndWasmPort` is dependency-injected so Flutter Web can call the `wasm-bindgen` JS glue while native Flutter desktop/mobile can use a Wasmtime/Wasmer/FFI host if desired. The app's existing wasm loader remains responsible for loading/caching/disposing modules.
 

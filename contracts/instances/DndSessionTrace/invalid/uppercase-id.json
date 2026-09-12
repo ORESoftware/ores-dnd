@@ -1,0 +1,13 @@
+{
+  "id": "Basic-Drop",
+  "inputs": [
+    {
+      "kind": "cancel"
+    }
+  ],
+  "expected": [
+    {
+      "state": "idle"
+    }
+  ]
+}

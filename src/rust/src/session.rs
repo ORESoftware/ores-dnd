@@ -2,8 +2,9 @@
 //! specified by docs/DESIGN.md §Session and proven by the shared trace corpus
 //! under `contracts/instances/DndSessionTrace/valid/`.
 
-use crate::envelope::{DndDropResult, DndEnvelope, DndOperation, ValidationOptions};
+use crate::envelope::{DndDropResult, DndEnvelope, DndError, DndOperation, ValidationOptions};
 use crate::policy::{evaluate_policy, DndDropPolicy, DndRejectCode};
+use crate::wire;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -80,6 +81,20 @@ impl DndSessionInput {
     pub fn end() -> Self {
         Self::bare(DndSessionInputKind::End)
     }
+
+    /// The structural rules both schema authorities check for an input. An
+    /// embedded envelope is checked structurally only (its protocol version
+    /// is the session's decision at `start`).
+    pub fn structural(&self) -> Result<(), DndError> {
+        if let Some(envelope) = &self.envelope {
+            envelope.structural()?;
+        }
+        wire::check_opt_safe_id(self.target_id.as_deref(), "targetId")?;
+        if let Some(policy) = &self.policy {
+            policy.structural()?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -137,6 +152,13 @@ impl DndSessionSnapshot {
     }
 }
 
+impl DndSessionSnapshot {
+    pub fn structural(&self) -> Result<(), DndError> {
+        wire::check_opt_safe_id(self.drag_id.as_deref(), "dragId")?;
+        wire::check_opt_safe_id(self.target_id.as_deref(), "targetId")
+    }
+}
+
 impl Default for DndSessionSnapshot {
     fn default() -> Self {
         Self::IDLE
@@ -151,6 +173,29 @@ pub struct DndSessionTrace {
     pub description: Option<String>,
     pub inputs: Vec<DndSessionInput>,
     pub expected: Vec<DndSessionSnapshot>,
+}
+
+impl DndSessionTrace {
+    pub fn structural(&self) -> Result<(), DndError> {
+        if !wire::is_trace_id(&self.id) {
+            return Err(DndError("trace id must match ^[a-z0-9][a-z0-9._-]{0,127}$".into()));
+        }
+        if self.description.as_deref().is_some_and(|d| d.chars().count() > wire::TRACE_DESCRIPTION_MAX) {
+            return Err(DndError("description exceeds 512 characters".into()));
+        }
+        wire::check_len(self.inputs.len(), 1, wire::TRACE_STEPS_MAX, "inputs")?;
+        wire::check_len(self.expected.len(), 1, wire::TRACE_STEPS_MAX, "expected")?;
+        if self.inputs.len() != self.expected.len() {
+            return Err(DndError("trace inputs and expected must have the same length".into()));
+        }
+        for input in &self.inputs {
+            input.structural()?;
+        }
+        for snapshot in &self.expected {
+            snapshot.structural()?;
+        }
+        Ok(())
+    }
 }
 
 /// One drag session. Hosts keep one per drag source (or one global one) and
@@ -212,7 +257,7 @@ impl DndSession {
                     }
                 }
             }
-            _ if current.state == DndSessionState::Idle || current.state.is_terminal() => current.clone(),
+            _ if current.state == DndSessionState::Idle || current.state.is_terminal() || input.structural().is_err() => current.clone(),
             DndSessionInputKind::Enter => {
                 let (Some(policy), Some(envelope)) = (input.policy.as_ref(), self.envelope.as_ref()) else {
                     return current.clone();

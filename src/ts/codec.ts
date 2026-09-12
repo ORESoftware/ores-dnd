@@ -1,4 +1,8 @@
 // Wire types and codec for the ores.dnd/v1 envelope (see docs/DESIGN.md).
+import {
+  ENVELOPE_ITEMS_MAX, ITEM_DATA_MAX_CHARS, ITEM_NAME_MAX, OPERATIONS_MAX, checkLength, codePoints, isMediaType, isProtocolId,
+  isTraceparent, optionalSafeId, requireSafeId,
+} from "./wire.js";
 export const ORES_DND_PROTOCOL = "ores.dnd/v1" as const;
 export const ORES_DND_MIME = "application/vnd.ores.dnd+json" as const;
 export const DEFAULT_MAX_PAYLOAD_BYTES = 1024 * 1024;
@@ -101,19 +105,20 @@ function asOperation(value: unknown): DndOperation {
   return value as DndOperation;
 }
 
-function asItem(value: unknown, semantic = true): DndItem {
+function asItem(value: unknown): DndItem {
   if (!isRecord(value)) throw new Error("drag item must be an object");
   assertExactKeys(value, ["kind", "mediaType", "data", "name"], "drag item");
   if (typeof value.kind !== "string" || !ITEM_KINDS.includes(value.kind as DndItemKind)) {
     throw new Error(`unsupported drag item kind: ${String(value.kind)}`);
   }
-  if (typeof value.mediaType !== "string") throw new Error("drag item mediaType must be a string");
+  if (!isMediaType(value.mediaType)) throw new Error("drag item mediaType must be a canonical lowercase type/subtype");
   if (typeof value.data !== "string") throw new Error("drag item data must be a string");
-  if (semantic && value.mediaType.length === 0) throw new Error("drag item mediaType must be a non-empty string");
+  if (codePoints(value.data) > ITEM_DATA_MAX_CHARS) throw new Error("drag item data exceeds the contract maximum length");
   const item: DndItem = { kind: value.kind as DndItemKind, mediaType: value.mediaType, data: value.data };
   if (value.name !== undefined) {
-    if (typeof value.name !== "string") throw new Error("drag item name must be a string");
-    if (semantic && value.name.length === 0) throw new Error("drag item name must be a non-empty string");
+    if (typeof value.name !== "string" || value.name.length === 0 || codePoints(value.name) > ITEM_NAME_MAX) {
+      throw new Error("drag item name must be 1..=255 characters");
+    }
     item.name = value.name;
   }
   return item;
@@ -134,36 +139,33 @@ export function validateEnvelope(value: unknown, options: ValidationOptions = {}
     "drag envelope",
   );
   const semantic = mode === "semantic";
-  const requireString = (v: unknown, label: string): string => {
-    if (typeof v !== "string") throw new Error(`${label} must be a string`);
-    if (semantic && v.length === 0) throw new Error(`${label} must be a non-empty string`);
-    return v;
-  };
-  const optionalString = (v: unknown, label: string): string | undefined => (v === undefined ? undefined : requireString(v, label));
 
+  if (!isProtocolId(value.protocol)) throw new Error(`malformed drag protocol tag: ${String(value.protocol)}`);
+  const protocol = value.protocol;
   const acceptedProtocols = options.acceptedProtocols ?? [ORES_DND_PROTOCOL];
-  const protocol = requireString(value.protocol, "protocol");
   if (semantic && !acceptedProtocols.includes(protocol)) throw new Error(`unsupported drag protocol: ${protocol}`);
 
   if (!Array.isArray(value.allowedOperations)) throw new Error("allowedOperations must be an array");
-  if (semantic && value.allowedOperations.length === 0) throw new Error("allowedOperations must contain at least one operation");
+  checkLength(value.allowedOperations.length, 1, OPERATIONS_MAX, "allowedOperations");
   const allowedOperations = [...new Set(value.allowedOperations.map(asOperation))];
 
   if (!Array.isArray(value.items)) throw new Error("items must be an array");
-  if (semantic && value.items.length === 0) throw new Error("items must contain at least one drag item");
+  checkLength(value.items.length, 1, ENVELOPE_ITEMS_MAX, "items");
   const maxItems = options.maxItems ?? DEFAULT_MAX_ITEMS;
   if (semantic && value.items.length > maxItems) throw new Error(`too many drag items: ${value.items.length} > ${maxItems}`);
 
   const envelope: DndEnvelope = {
     protocol,
-    dragId: requireString(value.dragId, "dragId"),
-    sourceRuntime: requireString(value.sourceRuntime, "sourceRuntime"),
+    dragId: requireSafeId(value.dragId, "dragId"),
+    sourceRuntime: requireSafeId(value.sourceRuntime, "sourceRuntime"),
     allowedOperations,
-    items: value.items.map((item) => asItem(item, semantic)),
+    items: value.items.map((item) => asItem(item)),
   };
-  const traceparent = optionalString(value.traceparent, "traceparent");
-  const formId = optionalString(value.formId, "formId");
-  if (traceparent !== undefined) envelope.traceparent = traceparent;
+  if (value.traceparent !== undefined) {
+    if (!isTraceparent(value.traceparent)) throw new Error("traceparent must be a W3C trace-context value");
+    envelope.traceparent = value.traceparent;
+  }
+  const formId = optionalSafeId(value.formId, "formId");
   if (formId !== undefined) envelope.formId = formId;
   return envelope;
 }

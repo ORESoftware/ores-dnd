@@ -53,6 +53,10 @@
     "./reactive-effects": {
       "types": "./dist/reactive_effects.d.ts",
       "default": "./dist/reactive_effects.js"
+    },
+    "./fuzz": {
+      "types": "./dist/fuzz.d.ts",
+      "default": "./dist/fuzz.js"
     }
   },
   "files": [
