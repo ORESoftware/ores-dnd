@@ -4,7 +4,8 @@ use crate::{
     telemetry_for, DndEnvelope, DndError, DndLifecyclePhase, DndOperation, DndTelemetryEvent,
     ValidationOptions,
 };
-use rxrust::prelude::{Local, Observer};
+use rxrust::prelude::Local;
+use rxrust::ObservableFactory;
 
 /// Re-export rxRust's operator/context prelude from the ORES reactive surface.
 /// UI/WASM callers normally choose `Local`; cross-thread native callers may
