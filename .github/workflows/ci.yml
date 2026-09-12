@@ -80,3 +80,36 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
+
+  conformance:
+    # Cross-runtime gate: parity receipt → Contract IR → per-language runtime
+    # evidence (TypeScript, Rust, Dart) admitted only against the exact IR id,
+    # run id and corpus digest. See docs/DESIGN.md §6.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.9.0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: npm install --no-audit --no-fund
+      - run: npm install --prefix src/ts --ignore-scripts --no-audit --no-fund
+      - run: npm --prefix src/ts run build
+      - run: cd src/dart && dart pub get
+      - run: npm run conformance
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: runtime-conformance-evidence
+          path: |
+            artifacts/conformance/cases.json
+            artifacts/conformance/parity-report.json
+            artifacts/conformance/contract-ir.json
+            artifacts/conformance/evidence-*.json
+            artifacts/conformance/runtime-evidence.json
+            artifacts/conformance/runtime-conformance-report.json
+          if-no-files-found: warn

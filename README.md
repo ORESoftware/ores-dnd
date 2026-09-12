@@ -70,4 +70,13 @@ cargo check -p ores-dnd-wasm --target wasm32-unknown-unknown
 (cd src/flutter && flutter pub get && flutter analyze && flutter test)
 ```
 
-CI runs all four lanes plus contract parity and shared fixture conformance.
+## Cross-runtime conformance
+
+```bash
+npm run conformance              # corpus → TypeScript, Rust and Dart adapters → tjsv verifier
+npm run conformance -- --skip dart
+```
+
+`scripts/conformance/` turns the tjsv parity receipt into a Contract IR, runs the same 76-instance corpus through each language's decoder (`src/ts/conformance-adapter.mjs`, `cargo run --example conformance`, `dart run bin/conformance_adapter.dart`) and admits the evidence only when it names the exact IR id, parity run id and corpus digest and every adapter's verdicts match the declared expectations — a flipped verdict or a missing adapter stops the gate. The session traces are replayed separately by every language's own test suite.
+
+CI runs contracts, typescript, rust (workspace + clippy), wasm, dart, flutter and the conformance gate; the conformance evidence is retained as a workflow artifact.
