@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:ores_dnd/ores_dnd.dart';
 
 export 'package:ores_dnd/ores_dnd.dart';
+export 'package:ores_dnd/reactive_sync.dart';
 
 class OresDraggable extends StatelessWidget {
   const OresDraggable({
