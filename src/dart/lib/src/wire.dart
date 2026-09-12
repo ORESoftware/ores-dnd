@@ -47,10 +47,11 @@ abstract final class Wire {
   static bool isTraceId(Object? v) => v is String && _traceId.hasMatch(v);
 
   static String requireSafeId(Object? value, String label) {
-    if (!isSafeId(value))
+    if (!isSafeId(value)) {
       throw FormatException(
         '$label must match ^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\$',
       );
+    }
     return value as String;
   }
 
@@ -58,7 +59,8 @@ abstract final class Wire {
       value == null ? null : requireSafeId(value, label);
 
   static void checkLength(int length, int min, int max, String label) {
-    if (length < min || length > max)
+    if (length < min || length > max) {
       throw FormatException('$label must have between $min and $max entries');
+    }
   }
 }

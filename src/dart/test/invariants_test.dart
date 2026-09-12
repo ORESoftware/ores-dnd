@@ -69,8 +69,9 @@ void main() {
           reason: ctx,
         );
         if (previous.state.isTerminal &&
-            input.kind != DndSessionInputKind.start)
+            input.kind != DndSessionInputKind.start) {
           expect(snapshot, previous, reason: ctx);
+        }
         switch (snapshot.state) {
           case DndSessionState.idle:
             expect(

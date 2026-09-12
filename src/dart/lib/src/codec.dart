@@ -110,22 +110,25 @@ final class DndItem {
         },
         'drag item');
     final mediaType = json['mediaType'];
-    if (!Wire.isMediaType(mediaType))
+    if (!Wire.isMediaType(mediaType)) {
       throw const FormatException(
         'drag item mediaType must be a canonical lowercase type/subtype',
       );
+    }
     final data = _requiredString(
       json['data'],
       'drag item data',
       allowEmpty: true,
     );
-    if (Wire.codePoints(data) > Wire.itemDataMaxChars)
+    if (Wire.codePoints(data) > Wire.itemDataMaxChars) {
       throw const FormatException(
         'drag item data exceeds the contract maximum length',
       );
+    }
     final name = _optionalString(json['name'], 'drag item name');
-    if (name != null && Wire.codePoints(name) > Wire.itemNameMax)
+    if (name != null && Wire.codePoints(name) > Wire.itemNameMax) {
       throw const FormatException('drag item name must be 1..=255 characters');
+    }
     return DndItem(
       kind: DndItemKindWire.parse(json['kind']),
       mediaType: mediaType as String,
@@ -184,14 +187,17 @@ final class DndEnvelope {
         },
         'drag envelope');
     final protocol = json['protocol'];
-    if (!Wire.isProtocolId(protocol))
+    if (!Wire.isProtocolId(protocol)) {
       throw FormatException('malformed drag protocol tag: $protocol');
-    if (!structural && protocol != oresDndProtocol)
+    }
+    if (!structural && protocol != oresDndProtocol) {
       throw FormatException('unsupported drag protocol: $protocol');
+    }
 
     final rawOperations = json['allowedOperations'];
-    if (rawOperations is! List)
+    if (rawOperations is! List) {
       throw const FormatException('allowedOperations must be an array');
+    }
     Wire.checkLength(
       rawOperations.length,
       1,
@@ -205,8 +211,9 @@ final class DndEnvelope {
     }
 
     final rawItems = json['items'];
-    if (rawItems is! List)
+    if (rawItems is! List) {
       throw const FormatException('items must be an array');
+    }
     Wire.checkLength(rawItems.length, 1, Wire.envelopeItemsMax, 'items');
     if (!structural && rawItems.length > maxItems) {
       throw FormatException(
@@ -214,8 +221,9 @@ final class DndEnvelope {
       );
     }
     final items = rawItems.map((value) {
-      if (value is! Map)
+      if (value is! Map) {
         throw const FormatException('drag item must be an object');
+      }
       return DndItem.fromJson(value.cast<String, Object?>());
     }).toList(growable: false);
 
@@ -243,8 +251,9 @@ final class DndEnvelope {
   /// The plain-text fallback emitted next to the ores MIME type, if any.
   String? get textFallback {
     for (final item in items) {
-      if (item.kind == DndItemKind.text && item.mediaType == 'text/plain')
+      if (item.kind == DndItemKind.text && item.mediaType == 'text/plain') {
         return item.data;
+      }
     }
     return null;
   }
@@ -288,14 +297,16 @@ final class DndDropResult {
         },
         'drop result');
     final accepted = json['accepted'];
-    if (accepted is! bool)
+    if (accepted is! bool) {
       throw const FormatException('accepted must be a boolean');
+    }
     final operation = json['operation'];
     final errorCode = json['errorCode'];
-    if (errorCode != null && !Wire.isErrorCode(errorCode))
+    if (errorCode != null && !Wire.isErrorCode(errorCode)) {
       throw const FormatException(
         'errorCode must be lowercase kebab-case (1..=64)',
       );
+    }
     return DndDropResult(
       dragId: Wire.requireSafeId(json['dragId'], 'dragId'),
       accepted: accepted,
@@ -401,8 +412,9 @@ final class OresDndCodec {
       );
     }
     final decoded = jsonDecode(payload);
-    if (decoded is! Map)
+    if (decoded is! Map) {
       throw const FormatException('drag envelope must be an object');
+    }
     return DndEnvelope.fromJson(
       decoded.cast<String, Object?>(),
       maxItems: maxItems,
@@ -454,7 +466,9 @@ DndOperation? negotiateOperation(
 }) {
   if (preferred != null &&
       source.contains(preferred) &&
-      target.contains(preferred)) return preferred;
+      target.contains(preferred)) {
+    return preferred;
+  }
   for (final op in negotiationOrder) {
     if (source.contains(op) && target.contains(op)) return op;
   }

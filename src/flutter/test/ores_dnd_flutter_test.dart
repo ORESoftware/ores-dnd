@@ -12,9 +12,9 @@ class _Recorder implements OresOtelPort {
 }
 
 Widget testHost(Widget child) => Directionality(
-  textDirection: TextDirection.ltr,
-  child: Overlay(initialEntries: [OverlayEntry(builder: (_) => child)]),
-);
+      textDirection: TextDirection.ltr,
+      child: Overlay(initialEntries: [OverlayEntry(builder: (_) => child)]),
+    );
 
 void main() {
   const codec = OresDndCodec();
@@ -39,34 +39,35 @@ void main() {
     required OresDropAccepted onAccepted,
     OresDropRejected? onRejected,
     List<OresZoneState>? states,
-  }) => testHost(
-    Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        OresDraggable(
-          controller: controller,
-          envelope: valid,
-          feedback: const SizedBox(width: 10, height: 10),
-          child: const SizedBox(width: 50, height: 50, child: Text('drag')),
+  }) =>
+      testHost(
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            OresDraggable(
+              controller: controller,
+              envelope: valid,
+              feedback: const SizedBox(width: 10, height: 10),
+              child: const SizedBox(width: 50, height: 50, child: Text('drag')),
+            ),
+            const SizedBox(height: 100),
+            OresDragTarget(
+              controller: controller,
+              policy: policy,
+              onAccepted: onAccepted,
+              onRejected: onRejected,
+              builder: (context, state, snapshot) {
+                states?.add(state);
+                return SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: Text('zone:${state.name}'),
+                );
+              },
+            ),
+          ],
         ),
-        const SizedBox(height: 100),
-        OresDragTarget(
-          controller: controller,
-          policy: policy,
-          onAccepted: onAccepted,
-          onRejected: onRejected,
-          builder: (context, state, snapshot) {
-            states?.add(state);
-            return SizedBox(
-              width: 100,
-              height: 100,
-              child: Text('zone:${state.name}'),
-            );
-          },
-        ),
-      ],
-    ),
-  );
+      );
 
   test(
     'Flutter package re-exports the RxDart reactive lifecycle surface',

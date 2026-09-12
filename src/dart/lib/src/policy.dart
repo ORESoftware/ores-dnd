@@ -27,8 +27,9 @@ const int _int32Max = 2147483647;
 
 int? _optionalPositiveInt(Object? value, String label) {
   if (value == null) return null;
-  if (value is! int || value < 1 || value > _int32Max)
+  if (value is! int || value < 1 || value > _int32Max) {
     throw FormatException('$label must be an integer >= 1');
+  }
   return value;
 }
 
@@ -71,12 +72,14 @@ final class DndDropPolicy {
         },
         'drop policy');
     final rawOps = json['allowedOperations'];
-    if (rawOps is! List)
+    if (rawOps is! List) {
       throw const FormatException('allowedOperations must be an array');
+    }
     Wire.checkLength(rawOps.length, 1, Wire.operationsMax, 'allowedOperations');
     final rawKinds = json['acceptedKinds'];
-    if (rawKinds is! List)
+    if (rawKinds is! List) {
       throw const FormatException('acceptedKinds must be an array');
+    }
     Wire.checkLength(rawKinds.length, 1, Wire.kindsMax, 'acceptedKinds');
     final rawMedia = json['acceptedMediaTypes'];
     if (rawMedia != null) {
@@ -94,8 +97,9 @@ final class DndDropPolicy {
       );
     }
     final maxItems = _optionalPositiveInt(json['maxItems'], 'maxItems');
-    if (maxItems != null && maxItems > Wire.policyMaxItemsMax)
+    if (maxItems != null && maxItems > Wire.policyMaxItemsMax) {
       throw const FormatException('maxItems must be an integer in 1..=64');
+    }
     return DndDropPolicy(
       targetId: Wire.requireSafeId(json['targetId'], 'targetId'),
       allowedOperations: List.unmodifiable(rawOps.map(DndOperationWire.parse)),
@@ -175,8 +179,9 @@ PolicyVerdict evaluatePolicy(
     policy.allowedOperations,
     preferred: preferred,
   );
-  if (operation == null)
+  if (operation == null) {
     return const PolicyRejected(DndRejectCode.noCommonOperation);
+  }
   if (envelope.items.any((item) => !policy.acceptedKinds.contains(item.kind))) {
     return const PolicyRejected(DndRejectCode.itemKindNotAccepted);
   }

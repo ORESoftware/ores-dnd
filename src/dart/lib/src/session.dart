@@ -83,11 +83,13 @@ final class DndSessionInput {
         },
         'session input');
     final envelope = json['envelope'];
-    if (envelope != null && envelope is! Map)
+    if (envelope != null && envelope is! Map) {
       throw const FormatException('envelope must be an object');
+    }
     final policy = json['policy'];
-    if (policy != null && policy is! Map)
+    if (policy != null && policy is! Map) {
       throw const FormatException('policy must be an object');
+    }
     final preferred = json['preferredOperation'];
     return DndSessionInput(
       kind: DndSessionInputKind.parse(json['kind']),
@@ -229,12 +231,14 @@ final class DndSessionTrace {
         'session trace');
     final inputs = json['inputs'];
     final expected = json['expected'];
-    if (inputs is! List || expected is! List)
+    if (inputs is! List || expected is! List) {
       throw const FormatException('inputs and expected must be arrays');
-    if (!Wire.isTraceId(json['id']))
+    }
+    if (!Wire.isTraceId(json['id'])) {
       throw const FormatException(
         r'trace id must match ^[a-z0-9][a-z0-9._-]{0,127}$',
       );
+    }
     Wire.checkLength(inputs.length, 1, Wire.traceStepsMax, 'inputs');
     Wire.checkLength(expected.length, 1, Wire.traceStepsMax, 'expected');
     final description = _optionalString(
@@ -251,15 +255,17 @@ final class DndSessionTrace {
       description: description,
       inputs: List.unmodifiable(
         inputs.map((v) {
-          if (v is! Map)
+          if (v is! Map) {
             throw const FormatException('session input must be an object');
+          }
           return DndSessionInput.fromJson(v.cast<String, Object?>());
         }),
       ),
       expected: List.unmodifiable(
         expected.map((v) {
-          if (v is! Map)
+          if (v is! Map) {
             throw const FormatException('session snapshot must be an object');
+          }
           return DndSessionSnapshot.fromJson(v.cast<String, Object?>());
         }),
       ),
@@ -333,16 +339,19 @@ final class DndSession {
               dragId: valid.dragId,
             );
     }
-    if (current.state == DndSessionState.idle || current.state.isTerminal)
+    if (current.state == DndSessionState.idle || current.state.isTerminal) {
       return current;
-    if (input.targetId != null && !Wire.isSafeId(input.targetId))
+    }
+    if (input.targetId != null && !Wire.isSafeId(input.targetId)) {
       return current; // structurally invalid input: ignored
+    }
     switch (input.kind) {
       case DndSessionInputKind.enter:
         final policy = input.policy;
         final envelope = _envelope;
-        if (policy == null || envelope == null || !policy.isValid)
+        if (policy == null || envelope == null || !policy.isValid) {
           return current;
+        }
         final targetId = input.targetId ?? policy.targetId;
         return switch (evaluatePolicy(
           envelope,
@@ -376,10 +385,12 @@ final class DndSession {
               targetId: input.targetId,
               errorCode: code,
             );
-        if (current.targetId == null)
+        if (current.targetId == null) {
           return cancelled(DndRejectCode.noActiveTarget);
-        if (input.targetId != current.targetId)
+        }
+        if (input.targetId != current.targetId) {
           return cancelled(DndRejectCode.targetMismatch);
+        }
         if (current.state == DndSessionState.overTarget) {
           return DndSessionSnapshot(
             state: DndSessionState.dropped,

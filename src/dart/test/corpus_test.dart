@@ -23,10 +23,11 @@ void main() {
         } on FormatException {
           verdict = 'rejected';
         }
-        if (verdict != c.expectation)
+        if (verdict != c.expectation) {
           failures.add(
             '${c.declaration}/${c.expectation}/${c.file}: dart said $verdict',
           );
+        }
       }
       expect(failures, isEmpty);
     },

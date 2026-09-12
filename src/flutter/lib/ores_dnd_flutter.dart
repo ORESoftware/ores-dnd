@@ -37,7 +37,7 @@ OresZoneState zoneStateFor(DndSessionSnapshot snapshot, String targetId) {
 /// Share one controller between every source and target that may interact.
 class OresDndController extends ChangeNotifier {
   OresDndController({OresDndCodec codec = const OresDndCodec(), this.otel})
-    : _session = DndSession(codec: codec);
+      : _session = DndSession(codec: codec);
 
   /// The default controller used when widgets are given none.
   static final OresDndController shared = OresDndController();
@@ -98,32 +98,31 @@ class OresDraggable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Draggable<String>(
-    data: codec.encode(envelope),
-    feedback: feedback,
-    childWhenDragging: childWhenDragging,
-    onDragStarted: () {
-      _controller.apply(DndSessionInput.start(envelope));
-      _controller.emit(DndLifecyclePhase.dragStart);
-    },
-    onDragEnd: (_) {
-      final wasRunning = !_controller.snapshot.state.isTerminal;
-      _controller.apply(const DndSessionInput.end());
-      if (wasRunning) _controller.emit(DndLifecyclePhase.dragEnd);
-    },
-    child: child,
-  );
+        data: codec.encode(envelope),
+        feedback: feedback,
+        childWhenDragging: childWhenDragging,
+        onDragStarted: () {
+          _controller.apply(DndSessionInput.start(envelope));
+          _controller.emit(DndLifecyclePhase.dragStart);
+        },
+        onDragEnd: (_) {
+          final wasRunning = !_controller.snapshot.state.isTerminal;
+          _controller.apply(const DndSessionInput.end());
+          if (wasRunning) _controller.emit(DndLifecyclePhase.dragEnd);
+        },
+        child: child,
+      );
 }
 
-typedef OresDropAccepted =
-    Future<void> Function(DndEnvelope envelope, DndDropResult result);
-typedef OresDropRejected =
-    void Function(DndEnvelope? envelope, DndDropResult result);
-typedef OresZoneBuilder =
-    Widget Function(
-      BuildContext context,
-      OresZoneState state,
-      DndSessionSnapshot snapshot,
-    );
+typedef OresDropAccepted = Future<void> Function(
+    DndEnvelope envelope, DndDropResult result);
+typedef OresDropRejected = void Function(
+    DndEnvelope? envelope, DndDropResult result);
+typedef OresZoneBuilder = Widget Function(
+  BuildContext context,
+  OresZoneState state,
+  DndSessionSnapshot snapshot,
+);
 
 /// A drop target governed by a [DndDropPolicy]. Decodes the dragged envelope,
 /// evaluates the policy through the shared state machine, and calls
@@ -167,60 +166,61 @@ class OresDragTarget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: _controller,
-    builder: (context, _) => DragTarget<String>(
-      onWillAcceptWithDetails: (details) {
-        final envelope = _decode(details.data);
-        if (envelope == null) return false;
-        _adopt(envelope);
-        final wasAccepting =
-            _controller.snapshot.isOverAcceptingTarget &&
-            _controller.snapshot.targetId == policy.targetId;
-        final next = _controller.apply(DndSessionInput.enter(policy));
-        final accepting =
-            next.isOverAcceptingTarget && next.targetId == policy.targetId;
-        if (accepting && !wasAccepting)
-          _controller.emit(
-            DndLifecyclePhase.dragEnter,
-            operation: next.operation,
-            targetId: policy.targetId,
-          );
-        return accepting;
-      },
-      onLeave: (_) {
-        final wasAccepting =
-            _controller.snapshot.isOverAcceptingTarget &&
-            _controller.snapshot.targetId == policy.targetId;
-        _controller.apply(DndSessionInput.leave(policy.targetId));
-        if (wasAccepting)
-          _controller.emit(
-            DndLifecyclePhase.dragLeave,
-            targetId: policy.targetId,
-          );
-      },
-      onAcceptWithDetails: (details) async {
-        final envelope = _decode(details.data);
-        if (envelope != null) _adopt(envelope);
-        final next = _controller.apply(DndSessionInput.drop(policy.targetId));
-        final result = next.result;
-        if (result == null) return;
-        final current = _controller.envelope;
-        if (next.state == DndSessionState.dropped && current != null) {
-          _controller.emit(
-            DndLifecyclePhase.drop,
-            operation: result.operation,
-            targetId: policy.targetId,
-          );
-          await onAccepted(current, result);
-        } else {
-          onRejected?.call(current, result);
-        }
-      },
-      builder: (context, candidates, rejected) => builder(
-        context,
-        zoneStateFor(_controller.snapshot, policy.targetId),
-        _controller.snapshot,
-      ),
-    ),
-  );
+        listenable: _controller,
+        builder: (context, _) => DragTarget<String>(
+          onWillAcceptWithDetails: (details) {
+            final envelope = _decode(details.data);
+            if (envelope == null) return false;
+            _adopt(envelope);
+            final wasAccepting = _controller.snapshot.isOverAcceptingTarget &&
+                _controller.snapshot.targetId == policy.targetId;
+            final next = _controller.apply(DndSessionInput.enter(policy));
+            final accepting =
+                next.isOverAcceptingTarget && next.targetId == policy.targetId;
+            if (accepting && !wasAccepting) {
+              _controller.emit(
+                DndLifecyclePhase.dragEnter,
+                operation: next.operation,
+                targetId: policy.targetId,
+              );
+            }
+            return accepting;
+          },
+          onLeave: (_) {
+            final wasAccepting = _controller.snapshot.isOverAcceptingTarget &&
+                _controller.snapshot.targetId == policy.targetId;
+            _controller.apply(DndSessionInput.leave(policy.targetId));
+            if (wasAccepting) {
+              _controller.emit(
+                DndLifecyclePhase.dragLeave,
+                targetId: policy.targetId,
+              );
+            }
+          },
+          onAcceptWithDetails: (details) async {
+            final envelope = _decode(details.data);
+            if (envelope != null) _adopt(envelope);
+            final next =
+                _controller.apply(DndSessionInput.drop(policy.targetId));
+            final result = next.result;
+            if (result == null) return;
+            final current = _controller.envelope;
+            if (next.state == DndSessionState.dropped && current != null) {
+              _controller.emit(
+                DndLifecyclePhase.drop,
+                operation: result.operation,
+                targetId: policy.targetId,
+              );
+              await onAccepted(current, result);
+            } else {
+              onRejected?.call(current, result);
+            }
+          },
+          builder: (context, candidates, rejected) => builder(
+            context,
+            zoneStateFor(_controller.snapshot, policy.targetId),
+            _controller.snapshot,
+          ),
+        ),
+      );
 }
