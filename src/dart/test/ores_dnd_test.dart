@@ -20,6 +20,13 @@ void main() {
     expect(() => codec.decode(invalid), throwsFormatException);
   });
 
+  test('structural decode accepts what the schema accepts and nothing more', () {
+    final map = (jsonDecode(validText) as Map<String, Object?>)..['protocol'] = 'ores.dnd/v9';
+    expect(() => DndEnvelope.fromJson(map), throwsFormatException);
+    expect(DndEnvelope.fromJson(map, structural: true).protocol, 'ores.dnd/v9');
+    expect(() => DndEnvelope.fromJson(map..['secret'] = 'x', structural: true), throwsFormatException);
+  });
+
   test('unknown property fails closed', () {
     final map = (jsonDecode(validText) as Map<String, Object?>)..['secret'] = 'x';
     expect(() => codec.decode(jsonEncode(map)), throwsFormatException);

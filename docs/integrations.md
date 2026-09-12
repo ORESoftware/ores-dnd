@@ -15,9 +15,35 @@ zed-pkg then exposes the runtime target appropriate to the consuming app (`rust`
 
 ## TypeScript / browser / webview
 
-Use `writeToDataTransfer()` in `dragstart`, `readFromDataTransfer()` in `drop`, and `negotiateOperation()` against the target's allowed operations. HTML-first MASH pages can load the compiled TypeScript adapter as a tiny module; no React/JSX is required.
+`@oresoftware/ores-dnd` (`src/ts`) is ESM with subpath exports; no React/JSX, no runtime dependencies.
 
-The TypeScript `DropCommitPorts` map directly onto the fleet components:
+| Module | What it gives a `*-web-server.rs` page or JS client |
+| --- | --- |
+| `codec` | `validateEnvelope`, `encodeEnvelope`/`decodeEnvelope`, `writeToDataTransfer`/`readFromDataTransfer`, `negotiateOperation`, `telemetryFor`, `commitAcceptedDrop` |
+| `policy` | `DndDropPolicy`, `validatePolicy`, `evaluatePolicy` (fleet-wide order), `mediaTypeMatches` |
+| `session` | `DndSession` (`apply`, `snapshot`, `envelope`, `result`, `subscribe`), `inputs.*`, `replayTrace` |
+| `dom` | `bindDragSource(el, envelope, session)`, `bindDropZone(el, policy, session, { onDrop })`, `autoBind(root)` for HTML-first pages; keeps `data-ores-dnd-state` (`idle` / `dragging` / `accepting` / `rejecting` / `dropped`) on every zone and dispatches `ores-dnd:state` / `ores-dnd:drop` |
+| `pointer` | `ZoneRegistry` + `bindPointerDragSource` — the same session inputs from pointer events for touch surfaces and webviews without native DnD |
+| `htmx` | `commitDrop(url, envelope, result)` / `commitFromZone(zone, …)` — POST the `DropCommitRequest` to the `ores-dnd-mash` endpoint, take the **server's** verdict (JSON) or swap an HTML partial and `htmx.process` it |
+| `wasm` | `WasmSession`, `evaluatePolicyWasm`, `crossCheckPolicy`, `crossCheckTrace` over the `ores-dnd-wasm` exports |
+
+Minimal wiring:
+
+```ts
+import { DndSession, bindDragSource, bindDropZone, commitAcceptedDrop } from "@oresoftware/ores-dnd";
+
+const session = new DndSession();
+bindDragSource(card, envelope, session, { otel });
+bindDropZone(list, { targetId: "list", allowedOperations: ["move"], acceptedKinds: ["json"] }, session, {
+  onDrop: (envelope, result) => commitAcceptedDrop(envelope, result, { forms, optoSync, otel }),
+});
+```
+
+External drags (from another page or app) are evaluated provisionally on `DataTransfer.types` during `dragover` — browsers hide the data then — and definitively on `drop`, when the real payload replaces the provisional session before the drop is applied. Modifier keys map to a preferred operation the way native file managers do (Ctrl/⌥ copy, Shift move, Ctrl+Shift/⌘ link).
+
+For MASH pages nothing is hand-wired: the server renders zones/sources with `ores-dnd-mash` and `autoBind(document)` (loaded by `boot_script`) binds them, commits accepted drops to `data-ores-dnd-commit` and lets the server decide.
+
+The `DropCommitPorts` map directly onto the fleet components:
 
 - `OresFormsPort.applyAcceptedDrop` → `ores-forms/ores-forms-clients` form action/field adapter.
 - `OptoSyncPort.persistAcceptedDrop` → `opto-sync/opto-sync-clients` IndexedDB/SQLite mutation + sync path.
@@ -27,21 +53,31 @@ The core calls them only after decode, validation, operation negotiation, and po
 
 ## Rust desktop + MASH / Leptos / Dioxus
 
-`ores-dnd-core` is UI-framework neutral. Feature modules expose stable binding metadata for MASH, Leptos, and Dioxus, while `ores-dnd-wasm` owns the browser/WASM codec.
+`ores-dnd-core` is UI-framework neutral and owns three things every adapter reuses: the codec, `evaluate_policy` (the fixed-order accept/reject rules) and `DndSession` (the state machine). Native desktop hosts (`*-desktop-app.rs`) map OS drag events straight onto `DndSessionInput`s.
 
-This split is deliberate: Dioxus and Leptos can move release versions without forcing a protocol release, and MASH can stay HTML/HTMX-first. Desktop webviews can invoke the same WASM exports used by browser clients:
+Three adapter crates sit on top and never leak upward:
 
-- `normalize_envelope_json`
-- `validate_envelope_json`
-- `negotiate_operation_json`
-- `protocol_version`
-- `mime_type`
+- **`ores-dnd-mash`** — `html::drop_zone(policy, wiring, inner)` and `html::drag_source(envelope, …)` render maud markup with the stable `data-ores-dnd-*` attributes; `html::boot_script(url)` loads the TypeScript adapter (`autoBind`) that drives the drag in the browser; `server::router(backend, path)` (or `router_with(backend, RouterOptions)`) mounts `POST /ores-dnd/drop`, which **re-runs the policy on the server** (`verify_drop_commit`) before calling the app's `DropCommitBackend::commit` — the browser reports, the server decides. The endpoint is hardened by default: request bodies over 2 MiB are refused before parsing (413), a repeated `dragId` is refused with `duplicate-drag` (409, bounded in-memory window plus the backend's durable `already_committed`), the `HX-Request` header is required (403 `missing-hx-request` otherwise — the CSRF guard for cookie sessions), and responses are `Cache-Control: no-store`. Mount it behind shared-auth and ores-rate-limit like any other route.
+- **`ores-dnd-leptos`** — `use_dnd_session()` / `provide_dnd_session()` put the snapshot in a signal; `<DropZone handle policy on_drop>` and `<DragSource handle envelope>` bind `on:dragenter/dragover/dragleave/drop/dragstart/dragend`; `browser::*` is the `web_sys` DataTransfer glue (mirrors `src/ts/dom.ts`).
+- **`ores-dnd-dioxus`** — same shape (`use_dnd_session`, `DropZone`, `DragSource`) over Dioxus' portable `DataTransfer`, so one adapter serves web, desktop and mobile.
 
-Native desktop hosts that do not use a DOM can use `ores-dnd-core` directly and map OS drag/drop events into `DndEnvelope`.
+Desktop webviews and JS clients can instead call the `ores-dnd-wasm` exports, all JSON strings so the ABI is identical across hosts:
+
+- `normalize_envelope_json`, `validate_envelope_json`, `validate_declaration_json`
+- `negotiate_operation_json`, `evaluate_policy_json`, `replay_trace_json`
+- `WasmDndSession` (`apply`, `snapshot`, `envelope`, `result`)
+- `protocol_version`, `mime_type`
 
 ## Flutter / Dart + WASM
 
-`OresDraggable` serializes `DndEnvelope` as its `Draggable<String>.data`. `OresDragTarget` decodes and negotiates the operation before invoking application code.
+`ores_dnd` (`src/dart`, pure Dart, no Flutter dependency) mirrors the Rust and TypeScript cores: `OresDndCodec`, `DndDropPolicy` + `evaluatePolicy` (a sealed `PolicyVerdict`), `DndSession` (`apply` / `snapshot` / `envelope` / `result` / `subscribe`), `replayTrace`, `decodeDeclaration`, and the ports. `bin/conformance_adapter.dart` writes the tjsv runtime evidence for Dart.
+
+`ores_dnd_flutter` (`src/flutter`) wraps Flutter's `Draggable<String>` / `DragTarget<String>`:
+
+- `OresDndController` (a `ChangeNotifier`) owns one `DndSession`; share it between every source and target that may interact (`OresDndController.shared` is the default).
+- `OresDraggable(envelope: …)` serializes the envelope as the drag data and sends `start` / `end`.
+- `OresDragTarget(policy: …, builder: (context, zoneState, snapshot) => …, onAccepted: …)` sends `enter` from `onWillAcceptWithDetails` (so Flutter only highlights what the policy accepts), `leave` from `onLeave` and `drop` from `onAcceptWithDetails`; `onAccepted` runs only for a `dropped` session — wire it to `commitAcceptedDrop`. `OresZoneState` (`idle` / `dragging` / `accepting` / `rejecting` / `dropped`) is the Flutter twin of the browser's `data-ores-dnd-state`.
+- Drags from a plain `Draggable<String>` carrying `ores.dnd/v1` JSON are adopted on entry, so mixed trees work.
 
 The Dart `OresDndWasmPort` is dependency-injected so Flutter Web can call the `wasm-bindgen` JS glue while native Flutter desktop/mobile can use a Wasmtime/Wasmer/FFI host if desired. The app's existing wasm loader remains responsible for loading/caching/disposing modules.
 

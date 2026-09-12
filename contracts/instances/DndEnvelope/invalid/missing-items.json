@@ -1,0 +1,8 @@
+{
+  "protocol": "ores.dnd/v1",
+  "dragId": "drag-bad",
+  "sourceRuntime": "fixture",
+  "allowedOperations": [
+    "copy"
+  ]
+}

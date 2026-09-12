@@ -1,5 +1,10 @@
 package oresoftware:ores-dnd@0.1.0;
 
+// The component-model view of the ores.dnd/v1 core. Mirrors the wasm-bindgen
+// exports of src/rust-wasm: every function speaks JSON strings so a host with
+// nothing but string passing (Flutter, a Rust desktop webview, a JS worker)
+// gets the same behaviour as the in-process runtimes.
+
 interface protocol {
   enum operation {
     copy,
@@ -31,9 +36,34 @@ interface protocol {
     form-id: option<string>,
   }
 
+  protocol-version: func() -> string;
+  mime-type: func() -> string;
   normalize-envelope-json: func(payload: string) -> result<string, string>;
+  validate-envelope-json: func(payload: string) -> result<_, string>;
+  /// Structural + semantic decode of any contract declaration by name.
+  validate-declaration-json: func(declaration: string, payload: string) -> result<_, string>;
+  /// JSON arrays of operations in, negotiated operation (or none) out.
+  negotiate-operation-json: func(source: string, target: string, preferred: option<string>) -> result<option<string>, string>;
+  /// DndEnvelope + DndDropPolicy in; `{"accepted":true,"operation":..}` or
+  /// `{"accepted":false,"errorCode":..}` out.
+  evaluate-policy-json: func(envelope: string, policy: string, preferred: option<string>) -> result<string, string>;
+  /// Replay a DndSessionTrace; none on success, the divergence otherwise.
+  replay-trace-json: func(trace: string) -> result<option<string>, string>;
+}
+
+interface session {
+  /// One drag session: feed DndSessionInput JSON, read DndSessionSnapshot JSON.
+  resource dnd-session {
+    constructor();
+    apply: func(input: string) -> result<string, string>;
+    snapshot: func() -> result<string, string>;
+    envelope: func() -> result<option<string>, string>;
+    /// The terminal DndDropResult, or none while the session runs.
+    result: func() -> result<option<string>, string>;
+  }
 }
 
 world ores-dnd {
   export protocol;
+  export session;
 }

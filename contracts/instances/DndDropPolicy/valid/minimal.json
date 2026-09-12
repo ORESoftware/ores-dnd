@@ -1,0 +1,10 @@
+{
+  "targetId": "zone-a",
+  "allowedOperations": [
+    "copy",
+    "move"
+  ],
+  "acceptedKinds": [
+    "text"
+  ]
+}

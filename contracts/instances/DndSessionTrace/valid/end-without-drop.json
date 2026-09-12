@@ -1,0 +1,39 @@
+{
+  "id": "end-without-drop",
+  "description": "dragend with no drop cancels",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "end"
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0001",
+      "errorCode": "cancelled"
+    }
+  ]
+}

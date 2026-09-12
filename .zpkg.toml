@@ -2,7 +2,6 @@
 org = "oresoftware"
 name = "ores-dnd"
 version = "0.1.0"
-kind = "pub-lib-core"
 description = "Cross-runtime drag-and-drop contracts and adapters"
 license = "MIT"
 keywords = ["drag-drop", "wasm", "typescript", "rust", "flutter", "dart"]
@@ -14,7 +13,7 @@ url = "https://github.com/ORESoftware/ores-dnd"
 [publish]
 include_readme = true
 tag_format = "v{version}"
-exclude = [".env", ".env.*", ".direnv/**", ".vendor/.zed/**", ".zed/**", ".zed-pack/**", "tmp/**", "**/*.log", ".DS_Store", "**/target/**", "**/node_modules/**", "**/dist/**", "**/.dart_tool/**", "**/build/**", "artifacts/**", ".typespec-json-schema-validator/**"]
+exclude = ["examples/**", ".env", ".env.*", ".direnv/**", ".vendor/.zed/**", ".zed/**", ".zed-pack/**", "tmp/**", "**/*.log", ".DS_Store", "**/target/**", "**/node_modules/**", "**/dist/**", "**/.dart_tool/**", "**/build/**", "artifacts/**", ".typespec-json-schema-validator/**"]
 
 [install]
 dir = ".vendor/.zed"
@@ -28,6 +27,23 @@ adapter = "rust"
 
 [targets.wasm]
 dir = "src/rust-wasm"
+adapter = "rust"
+
+# Framework adapters: each depends on ores-dnd-core, never the reverse, so a
+# Leptos/Dioxus/axum release is an adapter change and not a protocol change.
+[targets.mash]
+dir = "src/rust-mash"
+name = "ores-dnd-mash"
+adapter = "rust"
+
+[targets.leptos]
+dir = "src/rust-leptos"
+name = "ores-dnd-leptos"
+adapter = "rust"
+
+[targets.dioxus]
+dir = "src/rust-dioxus"
+name = "ores-dnd-dioxus"
 adapter = "rust"
 
 [targets.typescript]

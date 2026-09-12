@@ -1,0 +1,291 @@
+{
+  "id": "fuzz-5eed001a",
+  "description": "differential fuzz trace: xorshift64* seed 0x5eed001a, 14 steps, expected snapshots recorded by ores-dnd-core",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "copy"
+        ],
+        "items": [
+          {
+            "kind": "json",
+            "mediaType": "application/json",
+            "data": "xxxxxx"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "cancel"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-d",
+      "policy": {
+        "targetId": "zone-d",
+        "allowedOperations": [
+          "copy",
+          "link"
+        ],
+        "acceptedKinds": [
+          "uri",
+          "bytes"
+        ],
+        "acceptedMediaTypes": [
+          "image/*",
+          "application/*"
+        ],
+        "maxItems": 3
+      }
+    },
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0002",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "link"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "xxx"
+          },
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "xx"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "move"
+        ],
+        "acceptedKinds": [
+          "text"
+        ],
+        "acceptedMediaTypes": [
+          "text/*",
+          "application/json",
+          "image/*",
+          "application/*"
+        ]
+      },
+      "preferredOperation": "copy"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-c",
+      "policy": {
+        "targetId": "zone-c",
+        "allowedOperations": [
+          "move"
+        ],
+        "acceptedKinds": [
+          "uri",
+          "bytes"
+        ]
+      },
+      "preferredOperation": "link"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-d",
+      "policy": {
+        "targetId": "zone-d",
+        "allowedOperations": [
+          "move",
+          "link"
+        ],
+        "acceptedKinds": [
+          "uri",
+          "bytes"
+        ],
+        "maxTotalBytes": 7
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-a"
+    },
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0003",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "xxxx"
+          },
+          {
+            "kind": "json",
+            "mediaType": "application/json",
+            "data": "xxxxx"
+          },
+          {
+            "kind": "bytes",
+            "mediaType": "image/png",
+            "data": ""
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-c",
+      "policy": {
+        "targetId": "zone-c",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "acceptedKinds": [
+          "text",
+          "uri",
+          "json"
+        ],
+        "acceptedMediaTypes": [
+          "text/plain",
+          "image/*",
+          "application/*"
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "move"
+        ],
+        "acceptedKinds": [
+          "text",
+          "bytes"
+        ]
+      }
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-a"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-c",
+      "policy": {
+        "targetId": "zone-c",
+        "allowedOperations": [
+          "move",
+          "link"
+        ],
+        "acceptedKinds": [
+          "uri",
+          "json",
+          "bytes"
+        ],
+        "maxItems": 2,
+        "maxTotalBytes": 14
+      }
+    },
+    {
+      "kind": "cancel"
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0001",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0001",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0002"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0002",
+      "targetId": "zone-a",
+      "errorCode": "no-common-operation"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0002",
+      "targetId": "zone-c",
+      "errorCode": "no-common-operation"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0002",
+      "targetId": "zone-d",
+      "errorCode": "item-kind-not-accepted"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0002",
+      "targetId": "zone-d",
+      "errorCode": "item-kind-not-accepted"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0003"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0003",
+      "targetId": "zone-c",
+      "errorCode": "item-kind-not-accepted"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0003",
+      "targetId": "zone-a",
+      "errorCode": "item-kind-not-accepted"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0003",
+      "targetId": "zone-a",
+      "errorCode": "item-kind-not-accepted"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0003",
+      "targetId": "zone-a",
+      "errorCode": "item-kind-not-accepted"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0003",
+      "targetId": "zone-a",
+      "errorCode": "item-kind-not-accepted"
+    }
+  ]
+}

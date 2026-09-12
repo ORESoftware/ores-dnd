@@ -1,0 +1,216 @@
+{
+  "id": "fuzz-5eed0020",
+  "description": "differential fuzz trace: xorshift64* seed 0x5eed0020, 14 steps, expected snapshots recorded by ores-dnd-core",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "json",
+            "mediaType": "application/json",
+            "data": "xxx"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-a"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-d",
+      "policy": {
+        "targetId": "zone-d",
+        "allowedOperations": [
+          "copy"
+        ],
+        "acceptedKinds": [
+          "text",
+          "json",
+          "bytes"
+        ],
+        "formId": "form-x"
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "move"
+        ],
+        "acceptedKinds": [
+          "uri"
+        ],
+        "maxTotalBytes": 6
+      }
+    },
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0002",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "copy",
+          "move",
+          "link"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "xxxxxx"
+          },
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "xxxxxxx"
+          }
+        ],
+        "formId": "form-x"
+      }
+    },
+    {
+      "kind": "cancel"
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-c"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "acceptedKinds": [
+          "text",
+          "json",
+          "bytes"
+        ],
+        "acceptedMediaTypes": [
+          "image/*",
+          "application/*"
+        ]
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-d"
+    },
+    {
+      "kind": "end"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-c",
+      "policy": {
+        "targetId": "zone-c",
+        "allowedOperations": [
+          "move",
+          "link"
+        ],
+        "acceptedKinds": [
+          "bytes"
+        ],
+        "maxTotalBytes": 7
+      },
+      "preferredOperation": "copy"
+    },
+    {
+      "kind": "end"
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-c"
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-d"
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001",
+      "targetId": "zone-d",
+      "errorCode": "no-common-operation"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001",
+      "targetId": "zone-a",
+      "errorCode": "item-kind-not-accepted"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0002"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    }
+  ]
+}

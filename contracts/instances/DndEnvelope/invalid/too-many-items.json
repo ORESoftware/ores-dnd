@@ -1,0 +1,337 @@
+{
+  "protocol": "ores.dnd/v1",
+  "dragId": "drag-0001",
+  "sourceRuntime": "typescript-webview",
+  "allowedOperations": [
+    "copy",
+    "move"
+  ],
+  "items": [
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "0"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "1"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "2"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "3"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "4"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "5"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "6"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "7"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "8"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "9"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "10"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "11"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "12"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "13"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "14"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "15"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "16"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "17"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "18"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "19"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "20"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "21"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "22"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "23"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "24"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "25"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "26"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "27"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "28"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "29"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "30"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "31"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "32"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "33"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "34"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "35"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "36"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "37"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "38"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "39"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "40"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "41"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "42"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "43"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "44"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "45"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "46"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "47"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "48"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "49"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "50"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "51"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "52"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "53"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "54"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "55"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "56"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "57"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "58"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "59"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "60"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "61"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "62"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "63"
+    },
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "64"
+    }
+  ],
+  "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+}

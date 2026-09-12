@@ -1,0 +1,10 @@
+{
+  "name": "@oresoftware/ores-dnd-wasm-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Differential tests of the compiled ores-dnd-wasm module against the corpus, the traces and the TypeScript core",
+  "scripts": {
+    "build": "wasm-pack build . --target nodejs --out-dir pkg --out-name ores_dnd_wasm",
+    "test": "node --test test/*.test.mjs"
+  }
+}

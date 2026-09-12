@@ -2,24 +2,76 @@
   "name": "@oresoftware/ores-dnd",
   "version": "0.1.0",
   "type": "module",
-  "description": "Browser and webview drag-and-drop adapters for the ores.dnd/v1 protocol",
+  "description": "Browser and webview drag-and-drop for the ores.dnd/v1 protocol: codec, drop policy, session state machine, HTML5 DnD, pointer fallback, htmx/MASH commit, WASM shim, RxJS reactive lifecycle streams",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-    "./reactive": { "types": "./dist/reactive.d.ts", "default": "./dist/reactive.js" },
-    "./rxts": { "types": "./dist/reactive.d.ts", "default": "./dist/reactive.js" },
-    "./reactive-effects": { "types": "./dist/reactive_effects.d.ts", "default": "./dist/reactive_effects.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./policy": {
+      "types": "./dist/policy.d.ts",
+      "default": "./dist/policy.js"
+    },
+    "./session": {
+      "types": "./dist/session.d.ts",
+      "default": "./dist/session.js"
+    },
+    "./corpus": {
+      "types": "./dist/corpus.d.ts",
+      "default": "./dist/corpus.js"
+    },
+    "./dom": {
+      "types": "./dist/dom.d.ts",
+      "default": "./dist/dom.js"
+    },
+    "./pointer": {
+      "types": "./dist/pointer.d.ts",
+      "default": "./dist/pointer.js"
+    },
+    "./htmx": {
+      "types": "./dist/htmx.d.ts",
+      "default": "./dist/htmx.js"
+    },
+    "./wasm": {
+      "types": "./dist/wasm.d.ts",
+      "default": "./dist/wasm.js"
+    },
+    "./codec": {
+      "types": "./dist/codec.d.ts",
+      "default": "./dist/codec.js"
+    },
+    "./reactive": {
+      "types": "./dist/reactive.d.ts",
+      "default": "./dist/reactive.js"
+    },
+    "./rxts": {
+      "types": "./dist/reactive.d.ts",
+      "default": "./dist/reactive.js"
+    },
+    "./reactive-effects": {
+      "types": "./dist/reactive_effects.d.ts",
+      "default": "./dist/reactive_effects.js"
+    },
+    "./fuzz": {
+      "types": "./dist/fuzz.d.ts",
+      "default": "./dist/fuzz.js"
+    }
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "conformance-adapter.mjs"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test test/*.test.mjs"
-  },
-  "dependencies": {
-    "rxjs": "7.8.2"
+    "test": "npm run build && node --test test/*.test.mjs",
+    "conformance": "node conformance-adapter.mjs"
   },
   "devDependencies": {
     "typescript": "5.9.2"
+  },
+  "dependencies": {
+    "rxjs": "7.8.2"
   }
 }

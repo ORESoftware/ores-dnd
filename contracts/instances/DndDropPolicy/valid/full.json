@@ -1,0 +1,17 @@
+{
+  "targetId": "zone-files",
+  "allowedOperations": [
+    "copy"
+  ],
+  "acceptedKinds": [
+    "bytes",
+    "uri"
+  ],
+  "acceptedMediaTypes": [
+    "image/*",
+    "application/pdf"
+  ],
+  "maxItems": 10,
+  "maxTotalBytes": 1048576,
+  "formId": "upload-form"
+}

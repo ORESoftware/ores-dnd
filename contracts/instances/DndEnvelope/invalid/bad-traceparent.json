@@ -1,0 +1,17 @@
+{
+  "protocol": "ores.dnd/v1",
+  "dragId": "drag-0001",
+  "sourceRuntime": "typescript-webview",
+  "allowedOperations": [
+    "copy",
+    "move"
+  ],
+  "items": [
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "hello"
+    }
+  ],
+  "traceparent": "not-a-traceparent"
+}

@@ -1,0 +1,23 @@
+[package]
+name = "ores-dnd-mash"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "ores.dnd/v1 for MASH pages: maud drop-zone/drag-source markup, htmx wiring and an axum drop-commit endpoint"
+
+[features]
+default = ["axum"]
+axum = ["dep:axum"]
+
+[dependencies]
+ores-dnd-core = { path = "../rust", default-features = false }
+serde.workspace = true
+serde_json.workspace = true
+maud = "0.27"
+axum = { version = "0.8", default-features = false, features = ["json", "tokio", "http1"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"

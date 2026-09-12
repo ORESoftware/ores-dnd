@@ -1,0 +1,69 @@
+{
+  "id": "stale-leave-ignored",
+  "description": "a leave for a target that is not the current one changes nothing",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-a"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "acceptedKinds": [
+          "text"
+        ]
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-zzz"
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "over-target",
+      "dragId": "drag-0001",
+      "targetId": "zone-a",
+      "operation": "move"
+    },
+    {
+      "state": "over-target",
+      "dragId": "drag-0001",
+      "targetId": "zone-a",
+      "operation": "move"
+    }
+  ]
+}

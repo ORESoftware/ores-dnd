@@ -1,0 +1,61 @@
+{
+  "id": "basic-drop",
+  "description": "start \u2192 enter accepting target (move wins by default order) \u2192 drop",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "acceptedKinds": [
+          "text"
+        ]
+      }
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-a"
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "over-target",
+      "dragId": "drag-0001",
+      "targetId": "zone-a",
+      "operation": "move"
+    },
+    {
+      "state": "dropped",
+      "dragId": "drag-0001",
+      "targetId": "zone-a",
+      "operation": "move"
+    }
+  ]
+}

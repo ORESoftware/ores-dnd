@@ -1,36 +1,154 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "ores.dnd.authored.schema.json",
+  "$comment": "ores.dnd/v1. Independently authored peer of contracts/main.tsp; never generated from it.",
   "$defs": {
     "DndOperation": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "DndOperation",
       "type": "string",
-      "enum": ["copy", "move", "link"]
+      "enum": [
+        "copy",
+        "move",
+        "link"
+      ]
     },
     "DndItemKind": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "DndItemKind",
       "type": "string",
-      "enum": ["text", "uri", "json", "bytes"]
+      "enum": [
+        "text",
+        "uri",
+        "json",
+        "bytes"
+      ]
     },
     "DndLifecyclePhase": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "DndLifecyclePhase",
       "type": "string",
-      "enum": ["drag-start", "drag-enter", "drag-over", "drag-leave", "drop", "drag-end"]
+      "enum": [
+        "drag-start",
+        "drag-enter",
+        "drag-over",
+        "drag-leave",
+        "drop",
+        "drag-end"
+      ]
+    },
+    "DndRejectCode": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndRejectCode",
+      "type": "string",
+      "enum": [
+        "invalid-envelope",
+        "no-common-operation",
+        "item-kind-not-accepted",
+        "media-type-not-accepted",
+        "too-many-items",
+        "payload-too-large",
+        "form-mismatch",
+        "no-active-target",
+        "target-mismatch",
+        "cancelled"
+      ]
+    },
+    "DndSessionState": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndSessionState",
+      "type": "string",
+      "enum": [
+        "idle",
+        "dragging",
+        "over-target",
+        "dropped",
+        "cancelled"
+      ]
+    },
+    "DndSessionInputKind": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndSessionInputKind",
+      "type": "string",
+      "enum": [
+        "start",
+        "enter",
+        "leave",
+        "drop",
+        "cancel",
+        "end"
+      ]
+    },
+    "SafeId": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "SafeId",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "ProtocolId": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "ProtocolId",
+      "type": "string",
+      "pattern": "^ores\\.dnd/v[1-9][0-9]{0,2}$"
+    },
+    "MediaType": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "MediaType",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 255,
+      "pattern": "^[a-z0-9][a-z0-9!#$&^_.+-]{0,126}/[a-z0-9][a-z0-9!#$&^_.+-]{0,126}$"
+    },
+    "MediaTypePattern": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "MediaTypePattern",
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 255,
+      "pattern": "^[a-z0-9][a-z0-9!#$&^_.+-]{0,126}/(\\*|[a-z0-9][a-z0-9!#$&^_.+-]{0,126})$"
+    },
+    "Traceparent": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "Traceparent",
+      "type": "string",
+      "pattern": "^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$"
+    },
+    "ErrorCode": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "ErrorCode",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
     },
     "DndItem": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "DndItem",
       "type": "object",
       "properties": {
-        "kind": { "$ref": "DndItemKind" },
-        "mediaType": { "type": "string" },
-        "data": { "type": "string" },
-        "name": { "type": "string" }
+        "kind": {
+          "$ref": "DndItemKind"
+        },
+        "mediaType": {
+          "$ref": "MediaType"
+        },
+        "data": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        }
       },
-      "required": ["kind", "mediaType", "data"],
+      "required": [
+        "kind",
+        "mediaType",
+        "data"
+      ],
       "unevaluatedProperties": false
     },
     "DndEnvelope": {
@@ -38,15 +156,45 @@
       "$id": "DndEnvelope",
       "type": "object",
       "properties": {
-        "protocol": { "type": "string" },
-        "dragId": { "type": "string" },
-        "sourceRuntime": { "type": "string" },
-        "allowedOperations": { "type": "array", "items": { "$ref": "DndOperation" } },
-        "items": { "type": "array", "items": { "$ref": "DndItem" } },
-        "traceparent": { "type": "string" },
-        "formId": { "type": "string" }
+        "protocol": {
+          "$ref": "ProtocolId"
+        },
+        "dragId": {
+          "$ref": "SafeId"
+        },
+        "sourceRuntime": {
+          "$ref": "SafeId"
+        },
+        "allowedOperations": {
+          "type": "array",
+          "items": {
+            "$ref": "DndOperation"
+          },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "DndItem"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "traceparent": {
+          "$ref": "Traceparent"
+        },
+        "formId": {
+          "$ref": "SafeId"
+        }
       },
-      "required": ["protocol", "dragId", "sourceRuntime", "allowedOperations", "items"],
+      "required": [
+        "protocol",
+        "dragId",
+        "sourceRuntime",
+        "allowedOperations",
+        "items"
+      ],
       "unevaluatedProperties": false
     },
     "DndDropResult": {
@@ -54,13 +202,26 @@
       "$id": "DndDropResult",
       "type": "object",
       "properties": {
-        "dragId": { "type": "string" },
-        "accepted": { "type": "boolean" },
-        "operation": { "$ref": "DndOperation" },
-        "targetId": { "type": "string" },
-        "errorCode": { "type": "string" }
+        "dragId": {
+          "$ref": "SafeId"
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "operation": {
+          "$ref": "DndOperation"
+        },
+        "targetId": {
+          "$ref": "SafeId"
+        },
+        "errorCode": {
+          "$ref": "ErrorCode"
+        }
       },
-      "required": ["dragId", "accepted"],
+      "required": [
+        "dragId",
+        "accepted"
+      ],
       "unevaluatedProperties": false
     },
     "DndTelemetryEvent": {
@@ -68,18 +229,177 @@
       "$id": "DndTelemetryEvent",
       "type": "object",
       "properties": {
-        "phase": { "$ref": "DndLifecyclePhase" },
-        "dragId": { "type": "string" },
-        "sourceRuntime": { "type": "string" },
+        "phase": {
+          "$ref": "DndLifecyclePhase"
+        },
+        "dragId": {
+          "$ref": "SafeId"
+        },
+        "sourceRuntime": {
+          "$ref": "SafeId"
+        },
         "itemCount": {
           "type": "integer",
           "minimum": 0,
           "maximum": 2147483647
         },
-        "operation": { "$ref": "DndOperation" },
-        "targetId": { "type": "string" }
+        "operation": {
+          "$ref": "DndOperation"
+        },
+        "targetId": {
+          "$ref": "SafeId"
+        }
       },
-      "required": ["phase", "dragId", "sourceRuntime", "itemCount"],
+      "required": [
+        "phase",
+        "dragId",
+        "sourceRuntime",
+        "itemCount"
+      ],
+      "unevaluatedProperties": false
+    },
+    "DndDropPolicy": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndDropPolicy",
+      "type": "object",
+      "properties": {
+        "targetId": {
+          "$ref": "SafeId"
+        },
+        "allowedOperations": {
+          "type": "array",
+          "items": {
+            "$ref": "DndOperation"
+          },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "acceptedKinds": {
+          "type": "array",
+          "items": {
+            "$ref": "DndItemKind"
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "acceptedMediaTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "MediaTypePattern"
+          },
+          "minItems": 1,
+          "maxItems": 64
+        },
+        "maxItems": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "maxTotalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "formId": {
+          "$ref": "SafeId"
+        }
+      },
+      "required": [
+        "targetId",
+        "allowedOperations",
+        "acceptedKinds"
+      ],
+      "unevaluatedProperties": false
+    },
+    "DndSessionInput": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndSessionInput",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "DndSessionInputKind"
+        },
+        "envelope": {
+          "$ref": "DndEnvelope"
+        },
+        "targetId": {
+          "$ref": "SafeId"
+        },
+        "policy": {
+          "$ref": "DndDropPolicy"
+        },
+        "preferredOperation": {
+          "$ref": "DndOperation"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "unevaluatedProperties": false
+    },
+    "DndSessionSnapshot": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndSessionSnapshot",
+      "type": "object",
+      "properties": {
+        "state": {
+          "$ref": "DndSessionState"
+        },
+        "dragId": {
+          "$ref": "SafeId"
+        },
+        "targetId": {
+          "$ref": "SafeId"
+        },
+        "operation": {
+          "$ref": "DndOperation"
+        },
+        "errorCode": {
+          "$ref": "DndRejectCode"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "unevaluatedProperties": false
+    },
+    "DndSessionTrace": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndSessionTrace",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "DndSessionInput"
+          },
+          "minItems": 1,
+          "maxItems": 256
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "$ref": "DndSessionSnapshot"
+          },
+          "minItems": 1,
+          "maxItems": 256
+        }
+      },
+      "required": [
+        "id",
+        "inputs",
+        "expected"
+      ],
       "unevaluatedProperties": false
     }
   }

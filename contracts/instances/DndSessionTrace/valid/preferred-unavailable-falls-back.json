@@ -1,0 +1,51 @@
+{
+  "id": "preferred-unavailable-falls-back",
+  "description": "an unavailable preferred operation falls back to move \u2192 copy \u2192 link",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-b",
+      "policy": {
+        "targetId": "zone-b",
+        "allowedOperations": [
+          "copy"
+        ],
+        "acceptedKinds": [
+          "text"
+        ]
+      },
+      "preferredOperation": "move"
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "over-target",
+      "dragId": "drag-0001",
+      "targetId": "zone-b",
+      "operation": "copy"
+    }
+  ]
+}

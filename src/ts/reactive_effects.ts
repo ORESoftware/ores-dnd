@@ -9,7 +9,7 @@ import {
   type OresFormsPort,
   type OptoSyncPort,
   type OresOtelPort,
-} from "./index.js";
+} from "./codec.js";
 
 export type DndEffectStage =
   | "forms"
