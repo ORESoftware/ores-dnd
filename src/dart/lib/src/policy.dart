@@ -64,20 +64,27 @@ final class DndDropPolicy {
     );
     final rawOps = json['allowedOperations'];
     if (rawOps is! List) throw const FormatException('allowedOperations must be an array');
+    Wire.checkLength(rawOps.length, 1, Wire.operationsMax, 'allowedOperations');
     final rawKinds = json['acceptedKinds'];
     if (rawKinds is! List) throw const FormatException('acceptedKinds must be an array');
+    Wire.checkLength(rawKinds.length, 1, Wire.kindsMax, 'acceptedKinds');
     final rawMedia = json['acceptedMediaTypes'];
-    if (rawMedia != null && (rawMedia is! List || rawMedia.any((v) => v is! String))) {
-      throw const FormatException('acceptedMediaTypes must be an array of strings');
+    if (rawMedia != null) {
+      if (rawMedia is! List || rawMedia.any((v) => !Wire.isMediaTypePattern(v))) {
+        throw const FormatException('acceptedMediaTypes must be canonical media types or type/* wildcards');
+      }
+      Wire.checkLength(rawMedia.length, 1, Wire.mediaPatternsMax, 'acceptedMediaTypes');
     }
+    final maxItems = _optionalPositiveInt(json['maxItems'], 'maxItems');
+    if (maxItems != null && maxItems > Wire.policyMaxItemsMax) throw const FormatException('maxItems must be an integer in 1..=64');
     return DndDropPolicy(
-      targetId: _requiredString(json['targetId'], 'targetId'),
+      targetId: Wire.requireSafeId(json['targetId'], 'targetId'),
       allowedOperations: List.unmodifiable(rawOps.map(DndOperationWire.parse)),
       acceptedKinds: List.unmodifiable(rawKinds.map(DndItemKindWire.parse)),
       acceptedMediaTypes: rawMedia == null ? null : List.unmodifiable((rawMedia as List).cast<String>()),
-      maxItems: _optionalPositiveInt(json['maxItems'], 'maxItems'),
+      maxItems: maxItems,
       maxTotalBytes: _optionalPositiveInt(json['maxTotalBytes'], 'maxTotalBytes'),
-      formId: _optionalString(json['formId'], 'formId'),
+      formId: Wire.optionalSafeId(json['formId'], 'formId'),
     );
   }
 
@@ -92,8 +99,14 @@ final class DndDropPolicy {
       };
 
   /// Structural sanity beyond what decoding checks: the contract bounds.
-  bool get isValid =>
-      targetId.isNotEmpty && (maxItems == null || maxItems! >= 1) && (maxTotalBytes == null || maxTotalBytes! >= 1) && (formId == null || formId!.isNotEmpty);
+  bool get isValid {
+    try {
+      DndDropPolicy.fromJson(toJson());
+      return true;
+    } on FormatException {
+      return false;
+    }
+  }
 }
 
 /// `pattern` is an exact media type or a `type/*` wildcard; ASCII

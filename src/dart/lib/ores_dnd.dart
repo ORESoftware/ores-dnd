@@ -9,6 +9,7 @@ library;
 
 import 'dart:convert';
 
+part 'src/wire.dart';
 part 'src/codec.dart';
 part 'src/policy.dart';
 part 'src/session.dart';

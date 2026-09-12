@@ -67,17 +67,16 @@ final class DndItem {
   final String data;
   final String? name;
 
-  /// `structural: true` checks only what the schema authorities check (types,
-  /// closed enums, no unknown properties); the default also applies the
-  /// runtime rules (non-empty strings).
-  factory DndItem.fromJson(Map<String, Object?> json, {bool structural = false}) {
+  /// Decode an item: closed enums, canonical media type, bounded data/name.
+  factory DndItem.fromJson(Map<String, Object?> json) {
     _rejectUnknown(json, const {'kind', 'mediaType', 'data', 'name'}, 'drag item');
-    return DndItem(
-      kind: DndItemKindWire.parse(json['kind']),
-      mediaType: _requiredString(json['mediaType'], 'drag item mediaType', allowEmpty: structural),
-      data: _requiredString(json['data'], 'drag item data', allowEmpty: true),
-      name: _optionalString(json['name'], 'drag item name', allowEmpty: structural),
-    );
+    final mediaType = json['mediaType'];
+    if (!Wire.isMediaType(mediaType)) throw const FormatException('drag item mediaType must be a canonical lowercase type/subtype');
+    final data = _requiredString(json['data'], 'drag item data', allowEmpty: true);
+    if (Wire.codePoints(data) > Wire.itemDataMaxChars) throw const FormatException('drag item data exceeds the contract maximum length');
+    final name = _optionalString(json['name'], 'drag item name');
+    if (name != null && Wire.codePoints(name) > Wire.itemNameMax) throw const FormatException('drag item name must be 1..=255 characters');
+    return DndItem(kind: DndItemKindWire.parse(json['kind']), mediaType: mediaType as String, data: data, name: name);
   }
 
   Map<String, Object?> toJson() => {
@@ -118,14 +117,13 @@ final class DndEnvelope {
       const {'protocol', 'dragId', 'sourceRuntime', 'allowedOperations', 'items', 'traceparent', 'formId'},
       'drag envelope',
     );
-    final protocol = _requiredString(json['protocol'], 'protocol', allowEmpty: structural);
+    final protocol = json['protocol'];
+    if (!Wire.isProtocolId(protocol)) throw FormatException('malformed drag protocol tag: $protocol');
     if (!structural && protocol != oresDndProtocol) throw FormatException('unsupported drag protocol: $protocol');
 
     final rawOperations = json['allowedOperations'];
     if (rawOperations is! List) throw const FormatException('allowedOperations must be an array');
-    if (!structural && rawOperations.isEmpty) {
-      throw const FormatException('allowedOperations must contain at least one operation');
-    }
+    Wire.checkLength(rawOperations.length, 1, Wire.operationsMax, 'allowedOperations');
     final operations = <DndOperation>[];
     for (final value in rawOperations) {
       final op = DndOperationWire.parse(value);
@@ -134,25 +132,27 @@ final class DndEnvelope {
 
     final rawItems = json['items'];
     if (rawItems is! List) throw const FormatException('items must be an array');
-    if (!structural && rawItems.isEmpty) {
-      throw const FormatException('items must contain at least one drag item');
-    }
+    Wire.checkLength(rawItems.length, 1, Wire.envelopeItemsMax, 'items');
     if (!structural && rawItems.length > maxItems) {
       throw FormatException('too many drag items: ${rawItems.length} > $maxItems');
     }
     final items = rawItems.map((value) {
       if (value is! Map) throw const FormatException('drag item must be an object');
-      return DndItem.fromJson(value.cast<String, Object?>(), structural: structural);
+      return DndItem.fromJson(value.cast<String, Object?>());
     }).toList(growable: false);
 
+    final traceparent = json['traceparent'];
+    if (traceparent != null && !Wire.isTraceparent(traceparent)) {
+      throw const FormatException('traceparent must be a W3C trace-context value');
+    }
     return DndEnvelope(
-      protocol: protocol,
-      dragId: _requiredString(json['dragId'], 'dragId', allowEmpty: structural),
-      sourceRuntime: _requiredString(json['sourceRuntime'], 'sourceRuntime', allowEmpty: structural),
+      protocol: protocol as String,
+      dragId: Wire.requireSafeId(json['dragId'], 'dragId'),
+      sourceRuntime: Wire.requireSafeId(json['sourceRuntime'], 'sourceRuntime'),
       allowedOperations: List.unmodifiable(operations),
       items: List.unmodifiable(items),
-      traceparent: _optionalString(json['traceparent'], 'traceparent', allowEmpty: structural),
-      formId: _optionalString(json['formId'], 'formId', allowEmpty: structural),
+      traceparent: traceparent as String?,
+      formId: Wire.optionalSafeId(json['formId'], 'formId'),
     );
   }
 
@@ -198,12 +198,14 @@ final class DndDropResult {
     final accepted = json['accepted'];
     if (accepted is! bool) throw const FormatException('accepted must be a boolean');
     final operation = json['operation'];
+    final errorCode = json['errorCode'];
+    if (errorCode != null && !Wire.isErrorCode(errorCode)) throw const FormatException('errorCode must be lowercase kebab-case (1..=64)');
     return DndDropResult(
-      dragId: _requiredString(json['dragId'], 'dragId', allowEmpty: true),
+      dragId: Wire.requireSafeId(json['dragId'], 'dragId'),
       accepted: accepted,
       operation: operation == null ? null : DndOperationWire.parse(operation),
-      targetId: _optionalString(json['targetId'], 'targetId', allowEmpty: true),
-      errorCode: _optionalString(json['errorCode'], 'errorCode', allowEmpty: true),
+      targetId: Wire.optionalSafeId(json['targetId'], 'targetId'),
+      errorCode: errorCode as String?,
     );
   }
 
@@ -257,11 +259,11 @@ final class DndTelemetryEvent {
     final operation = json['operation'];
     return DndTelemetryEvent(
       phase: DndLifecyclePhaseWire.parse(json['phase']),
-      dragId: _requiredString(json['dragId'], 'dragId', allowEmpty: true),
-      sourceRuntime: _requiredString(json['sourceRuntime'], 'sourceRuntime', allowEmpty: true),
+      dragId: Wire.requireSafeId(json['dragId'], 'dragId'),
+      sourceRuntime: Wire.requireSafeId(json['sourceRuntime'], 'sourceRuntime'),
       itemCount: itemCount,
       operation: operation == null ? null : DndOperationWire.parse(operation),
-      targetId: _optionalString(json['targetId'], 'targetId', allowEmpty: true),
+      targetId: Wire.optionalSafeId(json['targetId'], 'targetId'),
     );
   }
 

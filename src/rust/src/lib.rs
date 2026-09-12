@@ -7,6 +7,7 @@
 //! - [`ports`]: ores-forms → opto-sync → ores-otel commit ports
 //! - [`bindings`]: stable DOM attribute/event names for HTML-first adapters
 //! - [`corpus`]: decode any declaration by name (tjsv runtime evidence)
+//! - [`wire`]: the bounded scalars and array limits both schema authorities check
 //!
 //! Framework crates (`ores-dnd-mash`, `ores-dnd-leptos`, `ores-dnd-dioxus`,
 //! `ores-dnd-wasm`) depend on this crate, never the other way round.
@@ -17,6 +18,7 @@ pub mod envelope;
 pub mod policy;
 pub mod ports;
 pub mod session;
+pub mod wire;
 
 pub use bindings::{DomBinding, ATTR_POLICY, ATTR_SOURCE, ATTR_STATE, ATTR_ZONE, EVENT_DROP, EVENT_STATE};
 #[cfg(feature = "dioxus")]

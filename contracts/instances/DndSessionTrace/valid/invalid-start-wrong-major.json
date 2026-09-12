@@ -1,0 +1,57 @@
+{
+  "id": "invalid-start-wrong-major",
+  "description": "a structurally valid envelope of another protocol major never starts a session",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v2",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "acceptedKinds": [
+          "text"
+        ]
+      }
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-a"
+    }
+  ],
+  "expected": [
+    {
+      "state": "idle",
+      "errorCode": "invalid-envelope"
+    },
+    {
+      "state": "idle",
+      "errorCode": "invalid-envelope"
+    },
+    {
+      "state": "idle",
+      "errorCode": "invalid-envelope"
+    }
+  ]
+}

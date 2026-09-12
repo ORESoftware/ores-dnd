@@ -1,5 +1,6 @@
 // @oresoftware/ores-dnd — browser and webview drag-and-drop for ores.dnd/v1.
 //
+// - wire:    the bounded scalars and array limits both schema authorities check
 // - codec:   wire types, validation, DataTransfer read/write, negotiation, telemetry
 // - policy:  what a target accepts, evaluated in the fleet-wide order
 // - session: the pure drag session state machine (shared trace corpus)
@@ -8,6 +9,7 @@
 // - pointer: pointer-events fallback for touch surfaces / webviews
 // - htmx:    MASH commit endpoint wiring (JSON verdict or HTML swap)
 // - wasm:    typed shim over the ores-dnd-wasm exports + cross-checks
+export * from "./wire.js";
 export * from "./codec.js";
 export * from "./policy.js";
 export * from "./session.js";

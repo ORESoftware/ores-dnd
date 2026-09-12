@@ -49,6 +49,12 @@ to the other fails the build.
 | `DndDropResult` | the outcome handed to the commit ports |
 | `DndTelemetryEvent` | content-free lifecycle telemetry for ores-otel |
 | `DndRejectCode` | the standard reasons a target refuses a payload |
+| `SafeId`, `ProtocolId`, `MediaType`, `MediaTypePattern`, `Traceparent`, `ErrorCode` | bounded scalars: every identifier that reaches a DOM attribute, log line or telemetry field is length-bounded and drawn from a safe charset; media types are canonical lowercase `type/subtype` |
+
+Array bounds are part of the contract too: 1–3 operations, 1–4 kinds, 1–64
+items, 1–64 media patterns, 1–256 trace steps. A runtime decoder checks all of
+this structurally (Rust `wire`, TypeScript `wire.ts`, Dart `Wire`) before any
+semantic rule; `docs/SECURITY.md` maps each bound to the threat it closes.
 
 ## 3. Session state machine
 
@@ -165,8 +171,10 @@ Two gates, both fail-closed:
 
 ## 7. Security defaults
 
+See `docs/SECURITY.md` for the threat model. In short:
+
 - Payloads are size-bounded before parsing; unknown properties, operations,
-  kinds and protocol versions are rejected.
+  kinds and protocol versions are rejected; identifiers are `SafeId`s.
 - A target only ever sees a payload that passed its own policy; the policy is
   data, so a server (MASH) can re-evaluate it for a client-reported drop.
 - Telemetry never carries `DndItem.data`, file contents or secret-bearing URIs.

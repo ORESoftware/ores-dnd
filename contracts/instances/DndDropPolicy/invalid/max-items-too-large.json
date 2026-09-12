@@ -1,0 +1,10 @@
+{
+  "targetId": "z",
+  "allowedOperations": [
+    "copy"
+  ],
+  "acceptedKinds": [
+    "text"
+  ],
+  "maxItems": 65
+}

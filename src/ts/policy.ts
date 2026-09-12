@@ -1,6 +1,7 @@
 // Drop policies: what a target accepts, evaluated in the fixed order every
 // runtime shares (docs/DESIGN.md §Policy evaluation).
 import { negotiateOperation, type DndEnvelope, type DndItemKind, type DndOperation } from "./codec.js";
+import { KINDS_MAX, MEDIA_PATTERNS_MAX, OPERATIONS_MAX, POLICY_MAX_ITEMS_MAX, checkLength, isMediaTypePattern, optionalSafeId, requireSafeId } from "./wire.js";
 
 export type DndRejectCode =
   | "invalid-envelope"
@@ -57,36 +58,37 @@ export function validatePolicy(value: unknown): DndDropPolicy {
   const allowed = ["targetId", "allowedOperations", "acceptedKinds", "acceptedMediaTypes", "maxItems", "maxTotalBytes", "formId"];
   const unknown = Object.keys(value).filter((key) => !allowed.includes(key));
   if (unknown.length > 0) throw new Error(`drop policy contains unsupported properties: ${unknown.join(", ")}`);
-  if (typeof value.targetId !== "string" || value.targetId.length === 0) throw new Error("targetId must be a non-empty string");
+  const targetId = requireSafeId(value.targetId, "targetId");
   if (!Array.isArray(value.allowedOperations) || !value.allowedOperations.every((op) => OPERATIONS.includes(op as DndOperation))) {
     throw new Error("allowedOperations must be an array of copy|move|link");
   }
+  checkLength(value.allowedOperations.length, 1, OPERATIONS_MAX, "allowedOperations");
   if (!Array.isArray(value.acceptedKinds) || !value.acceptedKinds.every((kind) => ITEM_KINDS.includes(kind as DndItemKind))) {
     throw new Error("acceptedKinds must be an array of text|uri|json|bytes");
   }
+  checkLength(value.acceptedKinds.length, 1, KINDS_MAX, "acceptedKinds");
   const policy: DndDropPolicy = {
-    targetId: value.targetId,
+    targetId,
     allowedOperations: [...(value.allowedOperations as DndOperation[])],
     acceptedKinds: [...(value.acceptedKinds as DndItemKind[])],
   };
   if (value.acceptedMediaTypes !== undefined) {
-    if (!Array.isArray(value.acceptedMediaTypes) || !value.acceptedMediaTypes.every((t) => typeof t === "string")) {
-      throw new Error("acceptedMediaTypes must be an array of strings");
+    if (!Array.isArray(value.acceptedMediaTypes) || !value.acceptedMediaTypes.every(isMediaTypePattern)) {
+      throw new Error("acceptedMediaTypes must be canonical media types or type/* wildcards");
     }
+    checkLength(value.acceptedMediaTypes.length, 1, MEDIA_PATTERNS_MAX, "acceptedMediaTypes");
     policy.acceptedMediaTypes = [...(value.acceptedMediaTypes as string[])];
   }
   if (value.maxItems !== undefined) {
-    if (!isInt(value.maxItems, 1)) throw new Error("maxItems must be an integer >= 1");
+    if (!isInt(value.maxItems, 1) || value.maxItems > POLICY_MAX_ITEMS_MAX) throw new Error("maxItems must be an integer in 1..=64");
     policy.maxItems = value.maxItems;
   }
   if (value.maxTotalBytes !== undefined) {
     if (!isInt(value.maxTotalBytes, 1)) throw new Error("maxTotalBytes must be an integer >= 1");
     policy.maxTotalBytes = value.maxTotalBytes;
   }
-  if (value.formId !== undefined) {
-    if (typeof value.formId !== "string" || value.formId.length === 0) throw new Error("formId must be a non-empty string");
-    policy.formId = value.formId;
-  }
+  const formId = optionalSafeId(value.formId, "formId");
+  if (formId !== undefined) policy.formId = formId;
   return policy;
 }
 

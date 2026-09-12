@@ -63,7 +63,7 @@ final class DndSessionInput {
     return DndSessionInput(
       kind: DndSessionInputKind.parse(json['kind']),
       envelope: envelope == null ? null : DndEnvelope.fromJson((envelope as Map).cast<String, Object?>(), structural: true),
-      targetId: _optionalString(json['targetId'], 'targetId', allowEmpty: true),
+      targetId: Wire.optionalSafeId(json['targetId'], 'targetId'),
       policy: policy == null ? null : DndDropPolicy.fromJson((policy as Map).cast<String, Object?>()),
       preferredOperation: preferred == null ? null : DndOperationWire.parse(preferred),
     );
@@ -97,8 +97,8 @@ final class DndSessionSnapshot {
     final errorCode = json['errorCode'];
     return DndSessionSnapshot(
       state: DndSessionState.parse(json['state']),
-      dragId: _optionalString(json['dragId'], 'dragId', allowEmpty: true),
-      targetId: _optionalString(json['targetId'], 'targetId', allowEmpty: true),
+      dragId: Wire.optionalSafeId(json['dragId'], 'dragId'),
+      targetId: Wire.optionalSafeId(json['targetId'], 'targetId'),
       operation: operation == null ? null : DndOperationWire.parse(operation),
       errorCode: errorCode == null ? null : DndRejectCode.parse(errorCode),
     );
@@ -153,9 +153,16 @@ final class DndSessionTrace {
     final inputs = json['inputs'];
     final expected = json['expected'];
     if (inputs is! List || expected is! List) throw const FormatException('inputs and expected must be arrays');
+    if (!Wire.isTraceId(json['id'])) throw const FormatException(r'trace id must match ^[a-z0-9][a-z0-9._-]{0,127}$');
+    Wire.checkLength(inputs.length, 1, Wire.traceStepsMax, 'inputs');
+    Wire.checkLength(expected.length, 1, Wire.traceStepsMax, 'expected');
+    final description = _optionalString(json['description'], 'description', allowEmpty: true);
+    if (description != null && Wire.codePoints(description) > Wire.traceDescriptionMax) {
+      throw const FormatException('description exceeds 512 characters');
+    }
     final trace = DndSessionTrace(
-      id: _requiredString(json['id'], 'id', allowEmpty: true),
-      description: _optionalString(json['description'], 'description', allowEmpty: true),
+      id: json['id'] as String,
+      description: description,
       inputs: List.unmodifiable(inputs.map((v) {
         if (v is! Map) throw const FormatException('session input must be an object');
         return DndSessionInput.fromJson(v.cast<String, Object?>());
@@ -223,6 +230,7 @@ final class DndSession {
           : DndSessionSnapshot(state: DndSessionState.dragging, dragId: valid.dragId);
     }
     if (current.state == DndSessionState.idle || current.state.isTerminal) return current;
+    if (input.targetId != null && !Wire.isSafeId(input.targetId)) return current; // structurally invalid input: ignored
     switch (input.kind) {
       case DndSessionInputKind.enter:
         final policy = input.policy;

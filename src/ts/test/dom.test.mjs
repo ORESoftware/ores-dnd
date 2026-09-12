@@ -133,7 +133,10 @@ test("provisional envelopes, kinds and modifier preferences", () => {
   const env = provisionalEnvelope(["text/uri-list", ORES_DND_MIME, "Files"]);
   assert.deepEqual(env.items.map((i) => i.kind), ["uri", "bytes"]);
   assert.equal(provisionalEnvelope([]).items[0].mediaType, "text/plain");
-  assert.equal(kindForType("TEXT/Markdown; charset=utf-8"), "text");
+  assert.deepEqual(kindForType("TEXT/Markdown; charset=utf-8"), { kind: "text", mediaType: "text/markdown" });
+  assert.deepEqual(kindForType("downloadurl"), { kind: "bytes", mediaType: "application/octet-stream" });
+  assert.equal(kindForType(ORES_DND_MIME), null);
+  assert.equal(env.items[1].mediaType, "application/octet-stream", "browser formats that are not media types are canonicalised");
   assert.equal(preferredOperation({ ctrlKey: true }), "copy");
   assert.equal(preferredOperation({ shiftKey: true }), "move");
   assert.equal(preferredOperation({ metaKey: true }), "link");

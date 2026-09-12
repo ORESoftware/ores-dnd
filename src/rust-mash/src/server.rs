@@ -69,6 +69,13 @@ pub fn verify_drop_commit(request: &DropCommitRequest, backend: &dyn DropCommitB
     }
 }
 
+/// Backends report failures as wire-safe `ErrorCode`s (lowercase kebab-case);
+/// anything else — an exception message, a path, a query — collapses to
+/// `commit-failed` so no internal detail leaks to the browser.
+pub fn commit_error_code(error: &DndError) -> String {
+    if ores_dnd_core::wire::is_error_code(&error.0) { error.0.clone() } else { "commit-failed".to_owned() }
+}
+
 async fn drop_commit_handler(
     State(backend): State<Arc<dyn DropCommitBackend>>,
     Json(request): Json<DropCommitRequest>,
@@ -81,7 +88,7 @@ async fn drop_commit_handler(
         Ok(()) => (StatusCode::OK, Json(verified)),
         Err(error) => (
             StatusCode::UNPROCESSABLE_ENTITY,
-            Json(DndDropResult { accepted: false, operation: None, error_code: Some(error.0), ..verified }),
+            Json(DndDropResult { accepted: false, operation: None, error_code: Some(commit_error_code(&error)), ..verified }),
         ),
     }
 }
@@ -205,6 +212,12 @@ mod tests {
             .unwrap();
         assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
         assert_eq!(backend.committed.lock().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn commit_errors_never_leak_internal_text() {
+        assert_eq!(commit_error_code(&DndError("storage-unavailable".into())), "storage-unavailable");
+        assert_eq!(commit_error_code(&DndError("Postgres: relation \"drops\" does not exist".into())), "commit-failed");
     }
 
     #[tokio::test]

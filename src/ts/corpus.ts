@@ -3,6 +3,10 @@
 import { validateEnvelope, type DndDropResult, type DndItem, type DndTelemetryEvent } from "./codec.js";
 import { REJECT_CODES, validatePolicy } from "./policy.js";
 import type { DndSessionInput, DndSessionSnapshot, DndSessionTrace } from "./session.js";
+import {
+  TRACE_DESCRIPTION_MAX, TRACE_STEPS_MAX, checkLength, codePoints, isErrorCode, isMediaType, isMediaTypePattern, isProtocolId, isSafeId,
+  isTraceId, isTraceparent, optionalSafeId, requireSafeId,
+} from "./wire.js";
 
 export const DECLARATIONS = [
   "DndOperation",
@@ -11,6 +15,12 @@ export const DECLARATIONS = [
   "DndRejectCode",
   "DndSessionState",
   "DndSessionInputKind",
+  "SafeId",
+  "ProtocolId",
+  "MediaType",
+  "MediaTypePattern",
+  "Traceparent",
+  "ErrorCode",
   "DndItem",
   "DndEnvelope",
   "DndDropResult",
@@ -30,6 +40,15 @@ const ENUMS: Record<string, readonly string[]> = {
   DndRejectCode: REJECT_CODES,
   DndSessionState: ["idle", "dragging", "over-target", "dropped", "cancelled"],
   DndSessionInputKind: ["start", "enter", "leave", "drop", "cancel", "end"],
+};
+
+const SCALARS: Record<string, (v: unknown) => boolean> = {
+  SafeId: isSafeId,
+  ProtocolId: isProtocolId,
+  MediaType: isMediaType,
+  MediaTypePattern: isMediaTypePattern,
+  Traceparent: isTraceparent,
+  ErrorCode: isErrorCode,
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -61,25 +80,22 @@ function optEnum<T extends string>(name: string, value: unknown): T | undefined 
 }
 
 export function decodeItem(value: unknown): DndItem {
-  if (!isRecord(value)) throw new Error("drag item must be an object");
-  exactKeys(value, ["kind", "mediaType", "data", "name"], "drag item");
-  const item: DndItem = { kind: enumValue("DndItemKind", value.kind), mediaType: str(value.mediaType, "mediaType"), data: str(value.data, "data") };
-  const name = optStr(value.name, "name");
-  if (name !== undefined) item.name = name;
-  return item;
+  // the item rules are the envelope's item rules: reuse the envelope validator on a one-item shell
+  const shell = validateEnvelope({ protocol: "ores.dnd/v1", dragId: "shell", sourceRuntime: "shell", allowedOperations: ["copy"], items: [value] }, {}, "structural");
+  return shell.items[0]!;
 }
 
 export function decodeDropResult(value: unknown): DndDropResult {
   if (!isRecord(value)) throw new Error("drop result must be an object");
   exactKeys(value, ["dragId", "accepted", "operation", "targetId", "errorCode"], "drop result");
   if (typeof value.accepted !== "boolean") throw new Error("accepted must be a boolean");
-  const result: DndDropResult = { dragId: str(value.dragId, "dragId"), accepted: value.accepted };
+  const result: DndDropResult = { dragId: requireSafeId(value.dragId, "dragId"), accepted: value.accepted };
   const operation = optEnum<DndDropResult["operation"] & string>("DndOperation", value.operation);
-  const targetId = optStr(value.targetId, "targetId");
-  const errorCode = optStr(value.errorCode, "errorCode");
+  const targetId = optionalSafeId(value.targetId, "targetId");
+  if (value.errorCode !== undefined && !isErrorCode(value.errorCode)) throw new Error("errorCode must be lowercase kebab-case (1..=64)");
   if (operation !== undefined) result.operation = operation;
   if (targetId !== undefined) result.targetId = targetId;
-  if (errorCode !== undefined) result.errorCode = errorCode;
+  if (value.errorCode !== undefined) result.errorCode = value.errorCode as string;
   return result;
 }
 
@@ -91,12 +107,12 @@ export function decodeTelemetryEvent(value: unknown): DndTelemetryEvent {
   }
   const event: DndTelemetryEvent = {
     phase: enumValue("DndLifecyclePhase", value.phase),
-    dragId: str(value.dragId, "dragId"),
-    sourceRuntime: str(value.sourceRuntime, "sourceRuntime"),
+    dragId: requireSafeId(value.dragId, "dragId"),
+    sourceRuntime: requireSafeId(value.sourceRuntime, "sourceRuntime"),
     itemCount: value.itemCount,
   };
   const operation = optEnum<DndTelemetryEvent["operation"] & string>("DndOperation", value.operation);
-  const targetId = optStr(value.targetId, "targetId");
+  const targetId = optionalSafeId(value.targetId, "targetId");
   if (operation !== undefined) event.operation = operation;
   if (targetId !== undefined) event.targetId = targetId;
   return event;
@@ -107,7 +123,7 @@ export function decodeSessionInput(value: unknown): DndSessionInput {
   exactKeys(value, ["kind", "envelope", "targetId", "policy", "preferredOperation"], "session input");
   const input: DndSessionInput = { kind: enumValue("DndSessionInputKind", value.kind) };
   if (value.envelope !== undefined) input.envelope = validateEnvelope(value.envelope, {}, "structural");
-  const targetId = optStr(value.targetId, "targetId");
+  const targetId = optionalSafeId(value.targetId, "targetId");
   if (targetId !== undefined) input.targetId = targetId;
   if (value.policy !== undefined) input.policy = validatePolicy(value.policy);
   const preferred = optEnum<DndSessionInput["preferredOperation"] & string>("DndOperation", value.preferredOperation);
@@ -119,8 +135,8 @@ export function decodeSessionSnapshot(value: unknown): DndSessionSnapshot {
   if (!isRecord(value)) throw new Error("session snapshot must be an object");
   exactKeys(value, ["state", "dragId", "targetId", "operation", "errorCode"], "session snapshot");
   const snapshot: DndSessionSnapshot = { state: enumValue("DndSessionState", value.state) };
-  const dragId = optStr(value.dragId, "dragId");
-  const targetId = optStr(value.targetId, "targetId");
+  const dragId = optionalSafeId(value.dragId, "dragId");
+  const targetId = optionalSafeId(value.targetId, "targetId");
   const operation = optEnum<DndSessionSnapshot["operation"] & string>("DndOperation", value.operation);
   const errorCode = optEnum<DndSessionSnapshot["errorCode"] & string>("DndRejectCode", value.errorCode);
   if (dragId !== undefined) snapshot.dragId = dragId;
@@ -134,13 +150,19 @@ export function decodeSessionTrace(value: unknown): DndSessionTrace {
   if (!isRecord(value)) throw new Error("session trace must be an object");
   exactKeys(value, ["id", "description", "inputs", "expected"], "session trace");
   if (!Array.isArray(value.inputs) || !Array.isArray(value.expected)) throw new Error("inputs and expected must be arrays");
+  if (!isTraceId(value.id)) throw new Error("trace id must match ^[a-z0-9][a-z0-9._-]{0,127}$");
+  checkLength(value.inputs.length, 1, TRACE_STEPS_MAX, "inputs");
+  checkLength(value.expected.length, 1, TRACE_STEPS_MAX, "expected");
   const trace: DndSessionTrace = {
-    id: str(value.id, "id"),
+    id: value.id,
     inputs: value.inputs.map(decodeSessionInput),
     expected: value.expected.map(decodeSessionSnapshot),
   };
   const description = optStr(value.description, "description");
-  if (description !== undefined) trace.description = description;
+  if (description !== undefined) {
+    if (codePoints(description) > TRACE_DESCRIPTION_MAX) throw new Error("description exceeds 512 characters");
+    trace.description = description;
+  }
   if (trace.inputs.length !== trace.expected.length) throw new Error("trace inputs and expected must have the same length");
   return trace;
 }
@@ -154,6 +176,10 @@ export function decodeDeclaration(declaration: string, json: string): unknown {
   const value: unknown = JSON.parse(json);
   const name = declaration.includes(".") ? declaration.slice(declaration.lastIndexOf(".") + 1) : declaration;
   if (name in ENUMS) return enumValue(name, value);
+  if (name in SCALARS) {
+    if (!SCALARS[name]!(value)) throw new Error(`${name} rejected`);
+    return value;
+  }
   switch (name) {
     case "DndItem":
       return decodeItem(value);

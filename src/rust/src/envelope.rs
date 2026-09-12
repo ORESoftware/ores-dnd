@@ -4,6 +4,7 @@
 //! field-for-field. Unknown properties, operations, kinds and protocol versions
 //! fail closed.
 
+use crate::wire;
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fmt};
 
@@ -100,6 +101,17 @@ pub struct DndDropResult {
     pub error_code: Option<String>,
 }
 
+impl DndDropResult {
+    pub fn structural(&self) -> Result<(), DndError> {
+        wire::check_safe_id(&self.drag_id, "dragId")?;
+        wire::check_opt_safe_id(self.target_id.as_deref(), "targetId")?;
+        match self.error_code.as_deref() {
+            Some(code) if !wire::is_error_code(code) => Err(DndError("errorCode must be lowercase kebab-case (1..=64)".into())),
+            _ => Ok(()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DndTelemetryEvent {
@@ -111,6 +123,18 @@ pub struct DndTelemetryEvent {
     pub operation: Option<DndOperation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub target_id: Option<String>,
+}
+
+impl DndTelemetryEvent {
+    pub fn structural(&self) -> Result<(), DndError> {
+        wire::check_safe_id(&self.drag_id, "dragId")?;
+        wire::check_safe_id(&self.source_runtime, "sourceRuntime")?;
+        wire::check_opt_safe_id(self.target_id.as_deref(), "targetId")?;
+        if self.item_count < 0 {
+            return Err(DndError("itemCount must be >= 0".into()));
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -145,27 +169,53 @@ impl From<serde_json::Error> for DndError {
     }
 }
 
-fn require_non_empty(value: &str, label: &str) -> Result<(), DndError> {
-    if value.is_empty() {
-        Err(DndError(format!("{label} must be a non-empty string")))
-    } else {
+impl DndItem {
+    /// The structural rules both schema authorities check for an item.
+    pub fn structural(&self) -> Result<(), DndError> {
+        if !wire::is_media_type(&self.media_type) {
+            return Err(DndError("mediaType must be a canonical lowercase type/subtype".into()));
+        }
+        if self.data.chars().count() > wire::ITEM_DATA_MAX_CHARS {
+            return Err(DndError("data exceeds the contract maximum length".into()));
+        }
+        if let Some(name) = self.name.as_deref() {
+            if name.is_empty() || name.chars().count() > wire::ITEM_NAME_MAX {
+                return Err(DndError("name must be 1..=255 characters".into()));
+            }
+        }
         Ok(())
     }
 }
 
 impl DndEnvelope {
-    /// Semantic validation on top of the structural (serde) decode.
+    /// The structural rules both schema authorities check (bounded ids,
+    /// protocol shape, media types, traceparent, array bounds) — everything
+    /// except the protocol *version* this runtime accepts.
+    pub fn structural(&self) -> Result<(), DndError> {
+        if !wire::is_protocol_id(&self.protocol) {
+            return Err(DndError(format!("malformed drag protocol tag: {}", self.protocol)));
+        }
+        wire::check_safe_id(&self.drag_id, "dragId")?;
+        wire::check_safe_id(&self.source_runtime, "sourceRuntime")?;
+        wire::check_len(self.allowed_operations.len(), 1, wire::OPERATIONS_MAX, "allowedOperations")?;
+        wire::check_len(self.items.len(), 1, wire::ENVELOPE_ITEMS_MAX, "items")?;
+        for (index, item) in self.items.iter().enumerate() {
+            item.structural().map_err(|e| DndError(format!("items[{index}]: {e}")))?;
+        }
+        if let Some(traceparent) = self.traceparent.as_deref() {
+            if !wire::is_traceparent(traceparent) {
+                return Err(DndError("traceparent must be a W3C trace-context value".into()));
+            }
+        }
+        wire::check_opt_safe_id(self.form_id.as_deref(), "formId")
+    }
+
+    /// Semantic validation on top of the structural (serde) decode: the
+    /// structural rules plus the protocol version and the host's item limit.
     pub fn validate(&self, options: ValidationOptions) -> Result<(), DndError> {
+        self.structural()?;
         if self.protocol != ORES_DND_PROTOCOL {
             return Err(DndError(format!("unsupported drag protocol: {}", self.protocol)));
-        }
-        require_non_empty(&self.drag_id, "dragId")?;
-        require_non_empty(&self.source_runtime, "sourceRuntime")?;
-        if self.allowed_operations.is_empty() {
-            return Err(DndError("allowedOperations must contain at least one operation".into()));
-        }
-        if self.items.is_empty() {
-            return Err(DndError("items must contain at least one drag item".into()));
         }
         if self.items.len() > options.max_items {
             return Err(DndError(format!(
@@ -173,18 +223,6 @@ impl DndEnvelope {
                 self.items.len(),
                 options.max_items
             )));
-        }
-        for (index, item) in self.items.iter().enumerate() {
-            require_non_empty(&item.media_type, &format!("items[{index}].mediaType"))?;
-            if let Some(name) = item.name.as_deref() {
-                require_non_empty(name, &format!("items[{index}].name"))?;
-            }
-        }
-        if let Some(traceparent) = self.traceparent.as_deref() {
-            require_non_empty(traceparent, "traceparent")?;
-        }
-        if let Some(form_id) = self.form_id.as_deref() {
-            require_non_empty(form_id, "formId")?;
         }
         Ok(())
     }
