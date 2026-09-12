@@ -12,5 +12,5 @@
     "rootDir": ".",
     "skipLibCheck": true
   },
-  "include": ["index.ts", "reactive.ts"]
+  "include": ["index.ts", "reactive.ts", "supabase_sync.ts"]
 }
