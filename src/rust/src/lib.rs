@@ -7,6 +7,7 @@
 //! - [`ports`]: ores-forms → opto-sync → ores-otel commit ports
 //! - [`bindings`]: stable DOM attribute/event names for HTML-first adapters
 //! - [`corpus`]: decode any declaration by name (tjsv runtime evidence)
+//! - [`fuzz`]: the seeded random session generator shared by the fuzz corpus and invariant tests
 //! - [`wire`]: the bounded scalars and array limits both schema authorities check
 //!
 //! Framework crates (`ores-dnd-mash`, `ores-dnd-leptos`, `ores-dnd-dioxus`,
@@ -15,6 +16,7 @@
 pub mod bindings;
 pub mod corpus;
 pub mod envelope;
+pub mod fuzz;
 pub mod policy;
 pub mod ports;
 pub mod session;

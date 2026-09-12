@@ -117,7 +117,15 @@ the first failure, so every runtime reports the same reject code:
 specification. They are validated as contract instances by tjsv **and**
 replayed by the Rust, TypeScript and Dart cores in their test suites. Add a
 trace first; a runtime that disagrees fails. `scripts/gen-traces.py` is the
-source of the corpus.
+source of the hand-written corpus.
+
+The `fuzz-<seed>.json` traces are differential: `cargo run --example
+gen_fuzz_traces` drives the Rust core with a seeded xorshift64* generator
+(`ores_dnd_core::fuzz`) and records what it produced. The TypeScript (`fuzz.ts`)
+and Dart (`Fuzz`) generators are bit-identical mirrors, so each runtime proves
+two things — that it *generates* the same inputs for the same seed and that it
+*produces* the same snapshots — and each runs thousands more seeded sequences
+against the invariants in `docs/SECURITY.md` without committing them.
 
 ## 4. Runtime mapping
 

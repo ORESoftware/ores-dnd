@@ -1,0 +1,282 @@
+{
+  "id": "fuzz-5eed0018",
+  "description": "differential fuzz trace: xorshift64* seed 0x5eed0018, 14 steps, expected snapshots recorded by ores-dnd-core",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "copy"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/markdown",
+            "data": "xx"
+          },
+          {
+            "kind": "bytes",
+            "mediaType": "image/png",
+            "data": "xxxx"
+          }
+        ],
+        "formId": "form-x"
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-c",
+      "policy": {
+        "targetId": "zone-c",
+        "allowedOperations": [
+          "move",
+          "link"
+        ],
+        "acceptedKinds": [
+          "text",
+          "uri",
+          "json",
+          "bytes"
+        ],
+        "maxTotalBytes": 16,
+        "formId": "form-x"
+      },
+      "preferredOperation": "link"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-d",
+      "policy": {
+        "targetId": "zone-d",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "acceptedKinds": [
+          "text",
+          "uri",
+          "bytes"
+        ],
+        "acceptedMediaTypes": [
+          "image/*",
+          "text/markdown"
+        ]
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-b"
+    },
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0002",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "copy",
+          "move",
+          "link"
+        ],
+        "items": [
+          {
+            "kind": "json",
+            "mediaType": "application/json",
+            "data": "xx"
+          },
+          {
+            "kind": "json",
+            "mediaType": "application/json",
+            "data": "xxxx"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "cancel"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-b",
+      "policy": {
+        "targetId": "zone-b",
+        "allowedOperations": [
+          "copy",
+          "link"
+        ],
+        "acceptedKinds": [
+          "json",
+          "bytes"
+        ],
+        "acceptedMediaTypes": [
+          "text/plain",
+          "text/markdown",
+          "application/*"
+        ],
+        "maxTotalBytes": 3
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-a"
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-b"
+    },
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0003",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "copy",
+          "link"
+        ],
+        "items": [
+          {
+            "kind": "bytes",
+            "mediaType": "image/png",
+            "data": "xxxxx"
+          },
+          {
+            "kind": "json",
+            "mediaType": "application/json",
+            "data": "xxxxxx"
+          }
+        ],
+        "formId": "form-x"
+      }
+    },
+    {
+      "kind": "end"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-c",
+      "policy": {
+        "targetId": "zone-c",
+        "allowedOperations": [
+          "move"
+        ],
+        "acceptedKinds": [
+          "text",
+          "json",
+          "bytes"
+        ],
+        "acceptedMediaTypes": [
+          "image/*",
+          "application/*"
+        ],
+        "formId": "form-y"
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "link"
+        ],
+        "acceptedKinds": [
+          "text"
+        ],
+        "formId": "form-x"
+      },
+      "preferredOperation": "copy"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "move"
+        ],
+        "acceptedKinds": [
+          "text",
+          "bytes"
+        ],
+        "maxItems": 1
+      },
+      "preferredOperation": "move"
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001",
+      "targetId": "zone-c",
+      "errorCode": "no-common-operation"
+    },
+    {
+      "state": "over-target",
+      "dragId": "drag-0001",
+      "targetId": "zone-d",
+      "operation": "copy"
+    },
+    {
+      "state": "over-target",
+      "dragId": "drag-0001",
+      "targetId": "zone-d",
+      "operation": "copy"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0002"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0002",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0003"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0003",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0003",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0003",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0003",
+      "errorCode": "cancelled"
+    }
+  ]
+}

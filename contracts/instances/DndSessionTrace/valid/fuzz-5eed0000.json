@@ -1,0 +1,228 @@
+{
+  "id": "fuzz-5eed0000",
+  "description": "differential fuzz trace: xorshift64* seed 0x5eed0000, 14 steps, expected snapshots recorded by ores-dnd-core",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "copy",
+          "link"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/markdown",
+            "data": "xxxx"
+          }
+        ],
+        "formId": "form-y"
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-c",
+      "policy": {
+        "targetId": "zone-c",
+        "allowedOperations": [
+          "copy",
+          "link"
+        ],
+        "acceptedKinds": [
+          "text",
+          "json"
+        ]
+      },
+      "preferredOperation": "link"
+    },
+    {
+      "kind": "cancel"
+    },
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0002",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "xxxxxxx"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-b"
+    },
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0003",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "uri",
+            "mediaType": "text/uri-list",
+            "data": "xxxxx"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0004",
+        "sourceRuntime": "fuzz",
+        "allowedOperations": [
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "uri",
+            "mediaType": "text/uri-list",
+            "data": "xxxx"
+          },
+          {
+            "kind": "json",
+            "mediaType": "application/json",
+            "data": "xx"
+          },
+          {
+            "kind": "bytes",
+            "mediaType": "image/png",
+            "data": "xxxx"
+          }
+        ],
+        "formId": "form-y"
+      }
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-c"
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-b"
+    },
+    {
+      "kind": "end"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-a",
+      "policy": {
+        "targetId": "zone-a",
+        "allowedOperations": [
+          "copy",
+          "link"
+        ],
+        "acceptedKinds": [
+          "uri",
+          "json"
+        ],
+        "maxItems": 1
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-d"
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-c"
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-a"
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "over-target",
+      "dragId": "drag-0001",
+      "targetId": "zone-c",
+      "operation": "link"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0001",
+      "errorCode": "cancelled"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0002"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0002"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0003"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0004"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0004",
+      "targetId": "zone-c",
+      "errorCode": "no-active-target"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0004",
+      "targetId": "zone-c",
+      "errorCode": "no-active-target"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0004",
+      "targetId": "zone-c",
+      "errorCode": "no-active-target"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0004",
+      "targetId": "zone-c",
+      "errorCode": "no-active-target"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0004",
+      "targetId": "zone-c",
+      "errorCode": "no-active-target"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0004",
+      "targetId": "zone-c",
+      "errorCode": "no-active-target"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0004",
+      "targetId": "zone-c",
+      "errorCode": "no-active-target"
+    }
+  ]
+}

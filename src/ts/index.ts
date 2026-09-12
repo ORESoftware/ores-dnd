@@ -8,6 +8,7 @@
 // - dom:     HTML5 drag-and-drop bindings + autoBind for HTML-first pages
 // - pointer: pointer-events fallback for touch surfaces / webviews
 // - htmx:    MASH commit endpoint wiring (JSON verdict or HTML swap)
+// - fuzz:    seeded random session generator (mirror of the Rust one) for differential fuzzing
 // - wasm:    typed shim over the ores-dnd-wasm exports + cross-checks
 export * from "./wire.js";
 export * from "./codec.js";
@@ -18,3 +19,4 @@ export * from "./dom.js";
 export * from "./pointer.js";
 export * from "./htmx.js";
 export * from "./wasm.js";
+export * from "./fuzz.js";

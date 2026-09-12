@@ -41,6 +41,10 @@
     "./codec": {
       "types": "./dist/codec.d.ts",
       "default": "./dist/codec.js"
+    },
+    "./fuzz": {
+      "types": "./dist/fuzz.d.ts",
+      "default": "./dist/fuzz.js"
     }
   },
   "files": [

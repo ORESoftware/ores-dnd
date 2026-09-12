@@ -15,3 +15,4 @@ part 'src/policy.dart';
 part 'src/session.dart';
 part 'src/ports.dart';
 part 'src/corpus.dart';
+part 'src/fuzz.dart';
