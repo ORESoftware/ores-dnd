@@ -121,13 +121,13 @@ pub fn reactive_telemetry_for(event: &DndReactiveEvent) -> DndTelemetryEvent {
 }
 
 const fn is_start_phase(phase: DndLifecyclePhase) -> bool {
-    matches!(phase, DndLifecyclePhase::DragStart | DndLifecyclePhase::DragEnter)
+    matches!(
+        phase,
+        DndLifecyclePhase::DragStart | DndLifecyclePhase::DragEnter
+    )
 }
 
-const fn can_transition(
-    previous: Option<DndLifecyclePhase>,
-    next: DndLifecyclePhase,
-) -> bool {
+const fn can_transition(previous: Option<DndLifecyclePhase>, next: DndLifecyclePhase) -> bool {
     match previous {
         None => is_start_phase(next),
         Some(DndLifecyclePhase::DragStart) => matches!(
@@ -153,9 +153,7 @@ const fn can_transition(
         ),
         Some(DndLifecyclePhase::DragLeave) => matches!(
             next,
-            DndLifecyclePhase::DragEnter
-                | DndLifecyclePhase::DragOver
-                | DndLifecyclePhase::DragEnd
+            DndLifecyclePhase::DragEnter | DndLifecyclePhase::DragOver | DndLifecyclePhase::DragEnd
         ),
         Some(DndLifecyclePhase::Drop) => matches!(next, DndLifecyclePhase::DragEnd),
         Some(DndLifecyclePhase::DragEnd) => is_start_phase(next),
@@ -324,9 +322,14 @@ mod tests {
         let telemetry_json = serde_json::to_string(&*telemetry.borrow())?;
         assert!(!states_json.contains("TOP-SECRET-DRAG-DATA"));
         assert!(!telemetry_json.contains("TOP-SECRET-DRAG-DATA"));
-        assert_eq!(states.borrow().last().map(|state| state.active), Some(false));
+        assert_eq!(
+            states.borrow().last().map(|state| state.active),
+            Some(false)
+        );
         assert_eq!(telemetry.borrow().len(), 3);
-        assert!(is_high_frequency_lifecycle_phase(DndLifecyclePhase::DragOver));
+        assert!(is_high_frequency_lifecycle_phase(
+            DndLifecyclePhase::DragOver
+        ));
         assert!(is_lossless_lifecycle_phase(DndLifecyclePhase::Drop));
         assert!(is_lossless_lifecycle_phase(DndLifecyclePhase::DragEnd));
         assert!(!is_lossless_lifecycle_phase(DndLifecyclePhase::DragOver));
@@ -368,7 +371,8 @@ mod tests {
     }
 
     #[test]
-    fn rxrust_bus_accepts_external_drag_and_tracks_lossless_terminal_events() -> Result<(), DndError> {
+    fn rxrust_bus_accepts_external_drag_and_tracks_lossless_terminal_events() -> Result<(), DndError>
+    {
         let mut bus = DndLocalReactiveBus::new();
         let lossless = Rc::new(RefCell::new(Vec::new()));
         let sink = Rc::clone(&lossless);
@@ -439,26 +443,32 @@ mod tests {
 
     #[test]
     fn drop_requires_source_allowed_operation_and_target() {
-        assert!(DndReactiveEvent::new(
-            DndLifecyclePhase::Drop,
-            envelope(),
-            None,
-            Some("zone-a".to_owned()),
-        )
-        .is_err());
-        assert!(DndReactiveEvent::new(
-            DndLifecyclePhase::Drop,
-            envelope(),
-            Some(DndOperation::Copy),
-            None,
-        )
-        .is_err());
-        assert!(DndReactiveEvent::new(
-            DndLifecyclePhase::DragOver,
-            envelope(),
-            Some(DndOperation::Link),
-            None,
-        )
-        .is_err());
+        assert!(
+            DndReactiveEvent::new(
+                DndLifecyclePhase::Drop,
+                envelope(),
+                None,
+                Some("zone-a".to_owned()),
+            )
+            .is_err()
+        );
+        assert!(
+            DndReactiveEvent::new(
+                DndLifecyclePhase::Drop,
+                envelope(),
+                Some(DndOperation::Copy),
+                None,
+            )
+            .is_err()
+        );
+        assert!(
+            DndReactiveEvent::new(
+                DndLifecyclePhase::DragOver,
+                envelope(),
+                Some(DndOperation::Link),
+                None,
+            )
+            .is_err()
+        );
     }
 }
