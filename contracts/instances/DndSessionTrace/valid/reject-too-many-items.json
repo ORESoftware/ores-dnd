@@ -1,0 +1,56 @@
+{
+  "id": "reject-too-many-items",
+  "description": "maxItems is enforced against the envelope item count",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          },
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "world"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-one",
+      "policy": {
+        "targetId": "zone-one",
+        "allowedOperations": [
+          "copy"
+        ],
+        "acceptedKinds": [
+          "text"
+        ],
+        "maxItems": 1
+      }
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001",
+      "targetId": "zone-one",
+      "errorCode": "too-many-items"
+    }
+  ]
+}

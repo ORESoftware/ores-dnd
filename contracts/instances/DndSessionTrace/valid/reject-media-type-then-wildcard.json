@@ -1,0 +1,75 @@
+{
+  "id": "reject-media-type-then-wildcard",
+  "description": "exact media types reject text/plain; a type/* wildcard accepts it",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-md",
+      "policy": {
+        "targetId": "zone-md",
+        "allowedOperations": [
+          "copy"
+        ],
+        "acceptedKinds": [
+          "text"
+        ],
+        "acceptedMediaTypes": [
+          "text/markdown"
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-any-text",
+      "policy": {
+        "targetId": "zone-any-text",
+        "allowedOperations": [
+          "copy"
+        ],
+        "acceptedKinds": [
+          "text"
+        ],
+        "acceptedMediaTypes": [
+          "text/*"
+        ]
+      }
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001",
+      "targetId": "zone-md",
+      "errorCode": "media-type-not-accepted"
+    },
+    {
+      "state": "over-target",
+      "dragId": "drag-0001",
+      "targetId": "zone-any-text",
+      "operation": "copy"
+    }
+  ]
+}

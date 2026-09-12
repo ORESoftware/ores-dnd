@@ -1,0 +1,15 @@
+{
+  "protocol": "ores.dnd/v1",
+  "dragId": "drag-0003",
+  "sourceRuntime": "flutter-ios",
+  "allowedOperations": [
+    "move"
+  ],
+  "items": [
+    {
+      "kind": "json",
+      "mediaType": "application/json",
+      "data": "{\"id\":7}"
+    }
+  ]
+}

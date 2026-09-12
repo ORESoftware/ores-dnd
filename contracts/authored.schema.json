@@ -1,6 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "ores.dnd.authored.schema.json",
+  "$comment": "ores.dnd/v1. Independently authored peer of contracts/main.tsp; never generated from it.",
   "$defs": {
     "DndOperation": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -19,6 +20,35 @@
       "$id": "DndLifecyclePhase",
       "type": "string",
       "enum": ["drag-start", "drag-enter", "drag-over", "drag-leave", "drop", "drag-end"]
+    },
+    "DndRejectCode": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndRejectCode",
+      "type": "string",
+      "enum": [
+        "invalid-envelope",
+        "no-common-operation",
+        "item-kind-not-accepted",
+        "media-type-not-accepted",
+        "too-many-items",
+        "payload-too-large",
+        "form-mismatch",
+        "no-active-target",
+        "target-mismatch",
+        "cancelled"
+      ]
+    },
+    "DndSessionState": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndSessionState",
+      "type": "string",
+      "enum": ["idle", "dragging", "over-target", "dropped", "cancelled"]
+    },
+    "DndSessionInputKind": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndSessionInputKind",
+      "type": "string",
+      "enum": ["start", "enter", "leave", "drop", "cancel", "end"]
     },
     "DndItem": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -71,15 +101,68 @@
         "phase": { "$ref": "DndLifecyclePhase" },
         "dragId": { "type": "string" },
         "sourceRuntime": { "type": "string" },
-        "itemCount": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 2147483647
-        },
+        "itemCount": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
         "operation": { "$ref": "DndOperation" },
         "targetId": { "type": "string" }
       },
       "required": ["phase", "dragId", "sourceRuntime", "itemCount"],
+      "unevaluatedProperties": false
+    },
+    "DndDropPolicy": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndDropPolicy",
+      "type": "object",
+      "properties": {
+        "targetId": { "type": "string" },
+        "allowedOperations": { "type": "array", "items": { "$ref": "DndOperation" } },
+        "acceptedKinds": { "type": "array", "items": { "$ref": "DndItemKind" } },
+        "acceptedMediaTypes": { "type": "array", "items": { "type": "string" } },
+        "maxItems": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "maxTotalBytes": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "formId": { "type": "string" }
+      },
+      "required": ["targetId", "allowedOperations", "acceptedKinds"],
+      "unevaluatedProperties": false
+    },
+    "DndSessionInput": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndSessionInput",
+      "type": "object",
+      "properties": {
+        "kind": { "$ref": "DndSessionInputKind" },
+        "envelope": { "$ref": "DndEnvelope" },
+        "targetId": { "type": "string" },
+        "policy": { "$ref": "DndDropPolicy" },
+        "preferredOperation": { "$ref": "DndOperation" }
+      },
+      "required": ["kind"],
+      "unevaluatedProperties": false
+    },
+    "DndSessionSnapshot": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndSessionSnapshot",
+      "type": "object",
+      "properties": {
+        "state": { "$ref": "DndSessionState" },
+        "dragId": { "type": "string" },
+        "targetId": { "type": "string" },
+        "operation": { "$ref": "DndOperation" },
+        "errorCode": { "$ref": "DndRejectCode" }
+      },
+      "required": ["state"],
+      "unevaluatedProperties": false
+    },
+    "DndSessionTrace": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "DndSessionTrace",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" },
+        "inputs": { "type": "array", "items": { "$ref": "DndSessionInput" } },
+        "expected": { "type": "array", "items": { "$ref": "DndSessionSnapshot" } }
+      },
+      "required": ["id", "inputs", "expected"],
       "unevaluatedProperties": false
     }
   }

@@ -1,0 +1,24 @@
+{
+  "protocol": "ores.dnd/v1",
+  "dragId": "drag-0002",
+  "sourceRuntime": "rust-desktop",
+  "allowedOperations": [
+    "copy",
+    "move",
+    "link"
+  ],
+  "items": [
+    {
+      "kind": "text",
+      "mediaType": "text/plain",
+      "data": "hello"
+    },
+    {
+      "kind": "uri",
+      "mediaType": "text/uri-list",
+      "data": "https://example.com/a",
+      "name": "a"
+    }
+  ],
+  "formId": "form-1"
+}

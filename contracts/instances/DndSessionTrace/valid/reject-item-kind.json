@@ -1,0 +1,89 @@
+{
+  "id": "reject-item-kind",
+  "description": "a rejecting target is recorded with its reason; leaving clears it; dropping on it cancels with that reason",
+  "inputs": [
+    {
+      "kind": "start",
+      "envelope": {
+        "protocol": "ores.dnd/v1",
+        "dragId": "drag-0001",
+        "sourceRuntime": "typescript-webview",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "items": [
+          {
+            "kind": "text",
+            "mediaType": "text/plain",
+            "data": "hello"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-json",
+      "policy": {
+        "targetId": "zone-json",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "acceptedKinds": [
+          "json"
+        ]
+      }
+    },
+    {
+      "kind": "leave",
+      "targetId": "zone-json"
+    },
+    {
+      "kind": "enter",
+      "targetId": "zone-json",
+      "policy": {
+        "targetId": "zone-json",
+        "allowedOperations": [
+          "copy",
+          "move"
+        ],
+        "acceptedKinds": [
+          "json"
+        ]
+      }
+    },
+    {
+      "kind": "drop",
+      "targetId": "zone-json"
+    }
+  ],
+  "expected": [
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001",
+      "targetId": "zone-json",
+      "errorCode": "item-kind-not-accepted"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001"
+    },
+    {
+      "state": "dragging",
+      "dragId": "drag-0001",
+      "targetId": "zone-json",
+      "errorCode": "item-kind-not-accepted"
+    },
+    {
+      "state": "cancelled",
+      "dragId": "drag-0001",
+      "targetId": "zone-json",
+      "errorCode": "item-kind-not-accepted"
+    }
+  ]
+}
