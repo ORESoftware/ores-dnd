@@ -168,9 +168,9 @@ impl DndLifecycleGuard {
         }
 
         match event.phase {
-            DndLifecyclePhase::DragStart => Err(DndError(
-                "duplicate drag-start before drag-end".to_owned(),
-            )),
+            DndLifecyclePhase::DragStart => {
+                Err(DndError("duplicate drag-start before drag-end".to_owned()))
+            }
             DndLifecyclePhase::DragEnter
             | DndLifecyclePhase::DragOver
             | DndLifecyclePhase::DragLeave => Ok(()),
@@ -268,7 +268,10 @@ mod tests {
         let telemetry_json = serde_json::to_string(&*telemetry.borrow())?;
         assert!(!states_json.contains("TOP-SECRET-DRAG-DATA"));
         assert!(!telemetry_json.contains("TOP-SECRET-DRAG-DATA"));
-        assert_eq!(states.borrow().last().map(|state| state.active), Some(false));
+        assert_eq!(
+            states.borrow().last().map(|state| state.active),
+            Some(false)
+        );
         assert_eq!(telemetry.borrow().len(), 3);
         Ok(())
     }
@@ -308,7 +311,8 @@ mod tests {
     }
 
     #[test]
-    fn guarded_subject_rejects_invalid_order_cross_drag_and_duplicate_drop() -> Result<(), DndError> {
+    fn guarded_subject_rejects_invalid_order_cross_drag_and_duplicate_drop() -> Result<(), DndError>
+    {
         let mut subject = local_event_subject();
         let mut guard = DndLifecycleGuard::default();
         let over = DndReactiveEvent::new(DndLifecyclePhase::DragOver, envelope(), None, None)?;

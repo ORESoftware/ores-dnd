@@ -3,6 +3,7 @@ import 'package:rxdart/rxdart.dart';
 import 'ores_dnd.dart';
 
 enum DndEffectStage { forms, optoLocal, optoSupabase, otelLocal, otelSupabase }
+
 enum DndEffectStatus { completed, skipped, failed }
 
 extension DndEffectStageWire on DndEffectStage {
@@ -147,14 +148,32 @@ Future<void> commitAcceptedDropEffects(
   final key = dndEffectKey(result);
 
   if (forms != null) {
-    await _runStage(key, result, DndEffectStage.forms, journal, receipts,
-        () => forms.applyAcceptedDrop(envelope, result));
+    await _runStage(
+      key,
+      result,
+      DndEffectStage.forms,
+      journal,
+      receipts,
+      () => forms.applyAcceptedDrop(envelope, result),
+    );
   }
   if (optoSync != null) {
-    await _runStage(key, result, DndEffectStage.optoLocal, journal, receipts,
-        () => optoSync.persistAcceptedDrop(envelope, result));
-    await _runStage(key, result, DndEffectStage.optoSupabase, journal, receipts,
-        () => optoSync.syncAcceptedDropToSupabase(envelope, result, key));
+    await _runStage(
+      key,
+      result,
+      DndEffectStage.optoLocal,
+      journal,
+      receipts,
+      () => optoSync.persistAcceptedDrop(envelope, result),
+    );
+    await _runStage(
+      key,
+      result,
+      DndEffectStage.optoSupabase,
+      journal,
+      receipts,
+      () => optoSync.syncAcceptedDropToSupabase(envelope, result, key),
+    );
   }
 
   final telemetry = telemetryFor(
@@ -164,9 +183,21 @@ Future<void> commitAcceptedDropEffects(
     targetId: result.targetId,
   );
   if (otel != null) {
-    await _runStage(key, result, DndEffectStage.otelLocal, journal, receipts,
-        () => otel.emitDndEvent(telemetry));
-    await _runStage(key, result, DndEffectStage.otelSupabase, journal, receipts,
-        () => otel.syncDndEventToSupabase(telemetry, key));
+    await _runStage(
+      key,
+      result,
+      DndEffectStage.otelLocal,
+      journal,
+      receipts,
+      () => otel.emitDndEvent(telemetry),
+    );
+    await _runStage(
+      key,
+      result,
+      DndEffectStage.otelSupabase,
+      journal,
+      receipts,
+      () => otel.syncDndEventToSupabase(telemetry, key),
+    );
   }
 }

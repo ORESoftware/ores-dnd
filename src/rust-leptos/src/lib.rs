@@ -11,8 +11,8 @@ pub mod browser;
 
 use leptos::prelude::*;
 use ores_dnd_core::{
-    DndDropPolicy, DndDropResult, DndEnvelope, DndOperation, DndSession, DndSessionInput, DndSessionSnapshot,
-    DndSessionState, ValidationOptions,
+    DndDropPolicy, DndDropResult, DndEnvelope, DndOperation, DndSession, DndSessionInput,
+    DndSessionSnapshot, DndSessionState, ValidationOptions,
 };
 
 pub use ores_dnd_core;
@@ -33,14 +33,18 @@ impl DndSessionHandle {
 
     /// Apply one input; returns the new snapshot and notifies subscribers.
     pub fn apply(&self, input: &DndSessionInput) -> DndSessionSnapshot {
-        let next = self.session.try_update_value(|session| session.apply(input).clone()).unwrap_or_default();
+        let next = self
+            .session
+            .try_update_value(|session| session.apply(input).clone())
+            .unwrap_or_default();
         self.set_snapshot.set(next.clone());
         next
     }
 
     /// The running session's envelope, if any.
     pub fn envelope(&self) -> Option<DndEnvelope> {
-        self.session.with_value(|session| session.envelope().cloned())
+        self.session
+            .with_value(|session| session.envelope().cloned())
     }
 
     /// Derived signal: is the pointer over a target that accepts the payload?
@@ -59,7 +63,11 @@ pub fn use_dnd_session() -> DndSessionHandle {
 pub fn use_dnd_session_with(options: ValidationOptions) -> DndSessionHandle {
     let (snapshot, set_snapshot) = signal(DndSessionSnapshot::IDLE);
     let session = StoredValue::new(DndSession::with_options(options));
-    DndSessionHandle { snapshot, set_snapshot, session }
+    DndSessionHandle {
+        snapshot,
+        set_snapshot,
+        session,
+    }
 }
 
 /// Provide the handle to descendants; zones/sources then find it with [`expect_dnd_session`].
@@ -76,7 +84,10 @@ pub fn expect_dnd_session() -> DndSessionHandle {
 /// The `data-ores-dnd-state` value for a zone: reflects the session only while
 /// this zone is the active target.
 pub fn zone_state_attribute(snapshot: &DndSessionSnapshot, target_id: &str) -> &'static str {
-    match (&snapshot.state, snapshot.target_id.as_deref() == Some(target_id)) {
+    match (
+        &snapshot.state,
+        snapshot.target_id.as_deref() == Some(target_id),
+    ) {
         (DndSessionState::OverTarget, true) => "accepting",
         (DndSessionState::Dragging, true) => "rejecting",
         (DndSessionState::Dragging | DndSessionState::OverTarget, false) => "dragging",
@@ -108,14 +119,20 @@ pub fn DropZone(
         let target_id = target_id.clone();
         move |ev: web_sys::DragEvent| {
             let preferred = browser::preferred_operation(&ev);
-            if handle.snapshot().with_untracked(|s| s.state == DndSessionState::Idle) {
+            if handle
+                .snapshot()
+                .with_untracked(|s| s.state == DndSessionState::Idle)
+            {
                 if let Some(dt) = ev.data_transfer() {
-                    let provisional = browser::provisional_envelope(&browser::data_transfer_types(&dt));
+                    let provisional =
+                        browser::provisional_envelope(&browser::data_transfer_types(&dt));
                     handle.apply(&DndSessionInput::start(provisional));
                 }
             }
             let next = handle.apply(&DndSessionInput::enter(policy.get_value(), preferred));
-            if next.state == DndSessionState::OverTarget && next.target_id.as_deref() == Some(&target_id) {
+            if next.state == DndSessionState::OverTarget
+                && next.target_id.as_deref() == Some(&target_id)
+            {
                 ev.prevent_default();
                 if let (Some(dt), Some(op)) = (ev.data_transfer(), next.operation) {
                     dt.set_drop_effect(browser::drop_effect_for(op));
@@ -138,7 +155,9 @@ pub fn DropZone(
             // The payload is readable now: replace a provisional session with the real one.
             if let Some(dt) = ev.data_transfer() {
                 if let Ok(envelope) = browser::read_envelope(&dt, ValidationOptions::default()) {
-                    let current_is_real = handle.envelope().is_some_and(|e| e.drag_id == envelope.drag_id);
+                    let current_is_real = handle
+                        .envelope()
+                        .is_some_and(|e| e.drag_id == envelope.drag_id);
                     if !current_is_real {
                         handle.apply(&DndSessionInput::start(envelope));
                         handle.apply(&DndSessionInput::enter(policy.get_value(), preferred));
@@ -146,7 +165,9 @@ pub fn DropZone(
                 }
             }
             let snapshot = handle.apply(&DndSessionInput::drop(target_id.clone()));
-            if let (Some(cb), Some(result), Some(envelope)) = (on_drop, snapshot.result(), handle.envelope()) {
+            if let (Some(cb), Some(result), Some(envelope)) =
+                (on_drop, snapshot.result(), handle.envelope())
+            {
                 cb.run((envelope, result));
             }
         }
@@ -210,7 +231,8 @@ mod tests {
     use leptos::reactive::owner::Owner;
     use ores_dnd_core::{decode_envelope_json, DndItemKind};
 
-    const VALID: &str = include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
+    const VALID: &str =
+        include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
 
     #[test]
     fn handle_drives_the_shared_state_machine_reactively() {
@@ -243,6 +265,9 @@ mod tests {
         let policy = DndDropPolicy::new("zone-json", &[DndOperation::Copy], &[DndItemKind::Json]);
         let snapshot = handle.apply(&DndSessionInput::enter(policy, None));
         assert_eq!(zone_state_attribute(&snapshot, "zone-json"), "rejecting");
-        assert_eq!(zone_state_attribute(&DndSessionSnapshot::IDLE, "zone-json"), "idle");
+        assert_eq!(
+            zone_state_attribute(&DndSessionSnapshot::IDLE, "zone-json"),
+            "idle"
+        );
     }
 }

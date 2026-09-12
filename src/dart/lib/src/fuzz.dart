@@ -4,7 +4,9 @@ part of '../ores_dnd.dart';
 /// (bit-identical on the Dart VM, whose ints are 64-bit two's complement).
 /// Not for `dart2js`, where ints are doubles; the fuzz tooling runs on the VM.
 final class Xorshift64 {
-  Xorshift64(int seed) : _state = seed == 0 ? -7046029254386353131 /* 0x9E3779B97F4A7C15 */ : seed;
+  Xorshift64(int seed)
+      : _state =
+            seed == 0 ? -7046029254386353131 /* 0x9E3779B97F4A7C15 */ : seed;
 
   int _state;
 
@@ -29,8 +31,21 @@ final class Xorshift64 {
 abstract final class Fuzz {
   static const ops = DndOperation.values; // copy, move, link
   static const kinds = DndItemKind.values; // text, uri, json, bytes
-  static const media = ['text/plain', 'text/markdown', 'text/uri-list', 'application/json', 'image/png'];
-  static const mediaPatterns = ['text/plain', 'text/*', 'application/json', 'image/*', 'text/markdown', 'application/*'];
+  static const media = [
+    'text/plain',
+    'text/markdown',
+    'text/uri-list',
+    'application/json',
+    'image/png',
+  ];
+  static const mediaPatterns = [
+    'text/plain',
+    'text/*',
+    'application/json',
+    'image/*',
+    'text/markdown',
+    'application/*',
+  ];
   static const targets = ['zone-a', 'zone-b', 'zone-c', 'zone-d'];
   static const forms = ['form-x', 'form-y'];
 
@@ -111,14 +126,16 @@ abstract final class Fuzz {
     final counter = [1];
     final first = randomEnvelope(rng, counter[0]);
     final out = <DndSessionInput>[
-      DndSessionInput.start(DndEnvelope(
-        protocol: oresDndProtocol,
-        dragId: first.dragId,
-        sourceRuntime: first.sourceRuntime,
-        allowedOperations: first.allowedOperations,
-        items: first.items,
-        formId: first.formId,
-      )),
+      DndSessionInput.start(
+        DndEnvelope(
+          protocol: oresDndProtocol,
+          dragId: first.dragId,
+          sourceRuntime: first.sourceRuntime,
+          allowedOperations: first.allowedOperations,
+          items: first.items,
+          formId: first.formId,
+        ),
+      ),
     ];
     while (out.length < steps) {
       out.add(randomInput(rng, counter));

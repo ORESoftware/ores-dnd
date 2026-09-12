@@ -32,15 +32,20 @@ Future<void> commitAcceptedDrop(
   }
   if (!result.accepted) return;
   final operation = result.operation;
-  if (operation == null || !safeEnvelope.allowedOperations.contains(operation)) {
-    throw const FormatException('accepted drop must use a source-allowed operation');
+  if (operation == null ||
+      !safeEnvelope.allowedOperations.contains(operation)) {
+    throw const FormatException(
+      'accepted drop must use a source-allowed operation',
+    );
   }
   await forms?.applyAcceptedDrop(safeEnvelope, result);
   await optoSync?.persistAcceptedDrop(safeEnvelope, result);
-  await otel?.emitDndEvent(telemetryFor(
-    DndLifecyclePhase.drop,
-    safeEnvelope,
-    operation: operation,
-    targetId: result.targetId,
-  ));
+  await otel?.emitDndEvent(
+    telemetryFor(
+      DndLifecyclePhase.drop,
+      safeEnvelope,
+      operation: operation,
+      targetId: result.targetId,
+    ),
+  );
 }

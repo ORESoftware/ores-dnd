@@ -9,8 +9,8 @@ use axum::{
     Json, Router,
 };
 use ores_dnd_core::{
-    evaluate_policy, DndDropPolicy, DndDropResult, DndEnvelope, DndError, DndRejectCode, ValidationOptions,
-    DEFAULT_MAX_PAYLOAD_BYTES,
+    evaluate_policy, DndDropPolicy, DndDropResult, DndEnvelope, DndError, DndRejectCode,
+    ValidationOptions, DEFAULT_MAX_PAYLOAD_BYTES,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashSet, VecDeque};
@@ -84,7 +84,11 @@ pub struct ReplayWindow {
 
 impl ReplayWindow {
     pub fn new(capacity: usize) -> Self {
-        Self { capacity, order: VecDeque::with_capacity(capacity.min(4096)), seen: HashSet::new() }
+        Self {
+            capacity,
+            order: VecDeque::with_capacity(capacity.min(4096)),
+            seen: HashSet::new(),
+        }
     }
 
     pub fn contains(&self, drag_id: &str) -> bool {
@@ -137,10 +141,19 @@ fn rejected(drag_id: &str, target_id: Option<String>, code: DndRejectCode) -> Dn
 /// Pure verification: the server never trusts the browser's verdict. The
 /// envelope is re-validated, the zone's policy re-evaluated with the reported
 /// operation as the preference, and the result must agree.
-pub fn verify_drop_commit(request: &DropCommitRequest, backend: &dyn DropCommitBackend) -> DndDropResult {
+pub fn verify_drop_commit(
+    request: &DropCommitRequest,
+    backend: &dyn DropCommitBackend,
+) -> DndDropResult {
     let DropCommitRequest { envelope, result } = request;
-    if envelope.validate(ValidationOptions::default()).is_err() || result.drag_id != envelope.drag_id {
-        return rejected(&result.drag_id, result.target_id.clone(), DndRejectCode::InvalidEnvelope);
+    if envelope.validate(ValidationOptions::default()).is_err()
+        || result.drag_id != envelope.drag_id
+    {
+        return rejected(
+            &result.drag_id,
+            result.target_id.clone(),
+            DndRejectCode::InvalidEnvelope,
+        );
     }
     let Some(target_id) = result.target_id.clone() else {
         return rejected(&result.drag_id, None, DndRejectCode::NoActiveTarget);
@@ -149,10 +162,18 @@ pub fn verify_drop_commit(request: &DropCommitRequest, backend: &dyn DropCommitB
         return rejected(&result.drag_id, Some(target_id), DndRejectCode::Cancelled);
     }
     let Some(policy) = backend.policy_for(&target_id) else {
-        return rejected(&result.drag_id, Some(target_id), DndRejectCode::TargetMismatch);
+        return rejected(
+            &result.drag_id,
+            Some(target_id),
+            DndRejectCode::TargetMismatch,
+        );
     };
     if policy.target_id != target_id || policy.validate().is_err() {
-        return rejected(&result.drag_id, Some(target_id), DndRejectCode::TargetMismatch);
+        return rejected(
+            &result.drag_id,
+            Some(target_id),
+            DndRejectCode::TargetMismatch,
+        );
     }
     match evaluate_policy(envelope, &policy, result.operation) {
         Ok(operation) if Some(operation) == result.operation => DndDropResult {
@@ -162,7 +183,11 @@ pub fn verify_drop_commit(request: &DropCommitRequest, backend: &dyn DropCommitB
             target_id: Some(target_id),
             error_code: None,
         },
-        Ok(_) => rejected(&result.drag_id, Some(target_id), DndRejectCode::NoCommonOperation),
+        Ok(_) => rejected(
+            &result.drag_id,
+            Some(target_id),
+            DndRejectCode::NoCommonOperation,
+        ),
         Err(code) => rejected(&result.drag_id, Some(target_id), code),
     }
 }
@@ -171,12 +196,18 @@ pub fn verify_drop_commit(request: &DropCommitRequest, backend: &dyn DropCommitB
 /// anything else — an exception message, a path, a query — collapses to
 /// `commit-failed` so no internal detail leaks to the browser.
 pub fn commit_error_code(error: &DndError) -> String {
-    if ores_dnd_core::wire::is_error_code(&error.0) { error.0.clone() } else { "commit-failed".to_owned() }
+    if ores_dnd_core::wire::is_error_code(&error.0) {
+        error.0.clone()
+    } else {
+        "commit-failed".to_owned()
+    }
 }
 
 fn reply(status: StatusCode, result: DndDropResult) -> Response {
     let mut response = (status, Json(result)).into_response();
-    response.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    response
+        .headers_mut()
+        .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
     response
 }
 
@@ -200,7 +231,11 @@ async fn drop_commit_handler(
         return reply(StatusCode::UNPROCESSABLE_ENTITY, verified);
     }
     let duplicate = state.backend.already_committed(&verified.drag_id)
-        || state.window.lock().map(|w| w.contains(&verified.drag_id)).unwrap_or(false);
+        || state
+            .window
+            .lock()
+            .map(|w| w.contains(&verified.drag_id))
+            .unwrap_or(false);
     if duplicate {
         return reply(StatusCode::CONFLICT, refuse(DUPLICATE_DRAG));
     }
@@ -213,7 +248,12 @@ async fn drop_commit_handler(
         }
         Err(error) => reply(
             StatusCode::UNPROCESSABLE_ENTITY,
-            DndDropResult { accepted: false, operation: None, error_code: Some(commit_error_code(&error)), ..verified },
+            DndDropResult {
+                accepted: false,
+                operation: None,
+                error_code: Some(commit_error_code(&error)),
+                ..verified
+            },
         ),
     }
 }
@@ -263,7 +303,8 @@ mod tests {
     use std::sync::Mutex;
     use tower::ServiceExt;
 
-    const VALID: &str = include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
+    const VALID: &str =
+        include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
 
     #[derive(Default)]
     struct Backend {
@@ -274,8 +315,16 @@ mod tests {
     impl DropCommitBackend for Backend {
         fn policy_for(&self, target_id: &str) -> Option<DndDropPolicy> {
             match target_id {
-                "zone-a" => Some(DndDropPolicy::new("zone-a", &[DndOperation::Copy, DndOperation::Move], &[DndItemKind::Text])),
-                "zone-json" => Some(DndDropPolicy::new("zone-json", &[DndOperation::Copy], &[DndItemKind::Json])),
+                "zone-a" => Some(DndDropPolicy::new(
+                    "zone-a",
+                    &[DndOperation::Copy, DndOperation::Move],
+                    &[DndItemKind::Text],
+                )),
+                "zone-json" => Some(DndDropPolicy::new(
+                    "zone-json",
+                    &[DndOperation::Copy],
+                    &[DndItemKind::Json],
+                )),
                 _ => None,
             }
         }
@@ -283,7 +332,11 @@ mod tests {
             if self.fail_commit {
                 return Err(DndError("storage-unavailable".into()));
             }
-            self.committed.lock().unwrap().push(format!("{}@{}", envelope.drag_id, result.target_id.clone().unwrap()));
+            self.committed.lock().unwrap().push(format!(
+                "{}@{}",
+                envelope.drag_id,
+                result.target_id.clone().unwrap()
+            ));
             Ok(())
         }
     }
@@ -291,7 +344,13 @@ mod tests {
     fn request(target: &str, accepted: bool, op: Option<DndOperation>) -> DropCommitRequest {
         let envelope = decode_envelope_json(VALID, ValidationOptions::default()).unwrap();
         DropCommitRequest {
-            result: DndDropResult { drag_id: envelope.drag_id.clone(), accepted, operation: op, target_id: Some(target.into()), error_code: None },
+            result: DndDropResult {
+                drag_id: envelope.drag_id.clone(),
+                accepted,
+                operation: op,
+                target_id: Some(target.into()),
+                error_code: None,
+            },
             envelope,
         }
     }
@@ -302,23 +361,37 @@ mod tests {
         let ok = verify_drop_commit(&request("zone-a", true, Some(DndOperation::Move)), &backend);
         assert!(ok.accepted);
         // browser claims copy on a json-only zone → the policy, not the browser, decides
-        let bad = verify_drop_commit(&request("zone-json", true, Some(DndOperation::Copy)), &backend);
+        let bad = verify_drop_commit(
+            &request("zone-json", true, Some(DndOperation::Copy)),
+            &backend,
+        );
         assert_eq!(bad.error_code.as_deref(), Some("item-kind-not-accepted"));
         // browser claims an operation the policy allows but negotiation would not pick → refused
         let link = verify_drop_commit(&request("zone-a", true, Some(DndOperation::Link)), &backend);
         assert_eq!(link.error_code.as_deref(), Some("no-common-operation"));
-        let unknown = verify_drop_commit(&request("zone-zzz", true, Some(DndOperation::Copy)), &backend);
+        let unknown = verify_drop_commit(
+            &request("zone-zzz", true, Some(DndOperation::Copy)),
+            &backend,
+        );
         assert_eq!(unknown.error_code.as_deref(), Some("target-mismatch"));
         let cancelled = verify_drop_commit(&request("zone-a", false, None), &backend);
         assert_eq!(cancelled.error_code.as_deref(), Some("cancelled"));
     }
 
-    async fn post_at(app: Router, path: &str, body: &str, hx: bool) -> (StatusCode, DndDropResult, HeaderMap) {
+    async fn post_at(
+        app: Router,
+        path: &str,
+        body: &str,
+        hx: bool,
+    ) -> (StatusCode, DndDropResult, HeaderMap) {
         let mut req = Request::post(path).header(header::CONTENT_TYPE, "application/json");
         if hx {
             req = req.header("HX-Request", "true");
         }
-        let response = app.oneshot(req.body(Body::from(body.to_owned())).unwrap()).await.unwrap();
+        let response = app
+            .oneshot(req.body(Body::from(body.to_owned())).unwrap())
+            .await
+            .unwrap();
         let status = response.status();
         let headers = response.headers().clone();
         let bytes = response.into_body().collect().await.unwrap().to_bytes();
@@ -333,14 +406,17 @@ mod tests {
     #[tokio::test]
     async fn endpoint_commits_only_verified_drops() {
         let backend = Arc::new(Backend::default());
-        let app: Router = Router::new().merge(router(backend.clone() as Arc<dyn DropCommitBackend>, None));
-        let body = serde_json::to_string(&request("zone-a", true, Some(DndOperation::Move))).unwrap();
+        let app: Router =
+            Router::new().merge(router(backend.clone() as Arc<dyn DropCommitBackend>, None));
+        let body =
+            serde_json::to_string(&request("zone-a", true, Some(DndOperation::Move))).unwrap();
         let (status, result) = post(app.clone(), &body).await;
         assert_eq!(status, StatusCode::OK);
         assert!(result.accepted);
         assert_eq!(*backend.committed.lock().unwrap(), vec!["drag-0001@zone-a"]);
 
-        let body = serde_json::to_string(&request("zone-json", true, Some(DndOperation::Copy))).unwrap();
+        let body =
+            serde_json::to_string(&request("zone-json", true, Some(DndOperation::Copy))).unwrap();
         let (status, result) = post(app.clone(), &body).await;
         assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
         assert!(!result.accepted);
@@ -363,15 +439,27 @@ mod tests {
 
     #[test]
     fn commit_errors_never_leak_internal_text() {
-        assert_eq!(commit_error_code(&DndError("storage-unavailable".into())), "storage-unavailable");
-        assert_eq!(commit_error_code(&DndError("Postgres: relation \"drops\" does not exist".into())), "commit-failed");
+        assert_eq!(
+            commit_error_code(&DndError("storage-unavailable".into())),
+            "storage-unavailable"
+        );
+        assert_eq!(
+            commit_error_code(&DndError(
+                "Postgres: relation \"drops\" does not exist".into()
+            )),
+            "commit-failed"
+        );
     }
 
     #[tokio::test]
     async fn commit_failure_is_reported_not_hidden() {
-        let backend = Arc::new(Backend { fail_commit: true, ..Default::default() });
+        let backend = Arc::new(Backend {
+            fail_commit: true,
+            ..Default::default()
+        });
         let app: Router = router(backend as Arc<dyn DropCommitBackend>, Some("/drops"));
-        let body = serde_json::to_string(&request("zone-a", true, Some(DndOperation::Copy))).unwrap();
+        let body =
+            serde_json::to_string(&request("zone-a", true, Some(DndOperation::Copy))).unwrap();
         let (status, result, _) = post_at(app, "/drops", &body, true).await;
         assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
         assert_eq!(result.error_code.as_deref(), Some("storage-unavailable"));
@@ -381,20 +469,26 @@ mod tests {
     async fn a_drag_id_commits_once() {
         let backend = Arc::new(Backend::default());
         let app: Router = router(backend.clone() as Arc<dyn DropCommitBackend>, None);
-        let body = serde_json::to_string(&request("zone-a", true, Some(DndOperation::Move))).unwrap();
+        let body =
+            serde_json::to_string(&request("zone-a", true, Some(DndOperation::Move))).unwrap();
         let (status, _, headers) = post_at(app.clone(), DEFAULT_COMMIT_PATH, &body, true).await;
         assert_eq!(status, StatusCode::OK);
         assert_eq!(headers.get(header::CACHE_CONTROL).unwrap(), "no-store");
         let (status, result, _) = post_at(app.clone(), DEFAULT_COMMIT_PATH, &body, true).await;
         assert_eq!(status, StatusCode::CONFLICT);
         assert_eq!(result.error_code.as_deref(), Some(DUPLICATE_DRAG));
-        assert_eq!(backend.committed.lock().unwrap().len(), 1, "the replayed drop never reaches the backend");
+        assert_eq!(
+            backend.committed.lock().unwrap().len(),
+            1,
+            "the replayed drop never reaches the backend"
+        );
     }
 
     #[tokio::test]
     async fn hx_request_header_is_required_by_default_and_optional_on_request() {
         let backend = Arc::new(Backend::default());
-        let body = serde_json::to_string(&request("zone-a", true, Some(DndOperation::Copy))).unwrap();
+        let body =
+            serde_json::to_string(&request("zone-a", true, Some(DndOperation::Copy))).unwrap();
         let strict: Router = router(backend.clone() as Arc<dyn DropCommitBackend>, None);
         let (status, result, _) = post_at(strict, DEFAULT_COMMIT_PATH, &body, false).await;
         assert_eq!(status, StatusCode::FORBIDDEN);
@@ -402,7 +496,10 @@ mod tests {
         assert!(backend.committed.lock().unwrap().is_empty());
         let relaxed: Router = router_with(
             backend.clone() as Arc<dyn DropCommitBackend>,
-            RouterOptions { require_hx_request: false, ..RouterOptions::default() },
+            RouterOptions {
+                require_hx_request: false,
+                ..RouterOptions::default()
+            },
         );
         let (status, _, _) = post_at(relaxed, DEFAULT_COMMIT_PATH, &body, false).await;
         assert_eq!(status, StatusCode::OK);
@@ -413,7 +510,10 @@ mod tests {
         let backend = Arc::new(Backend::default());
         let app: Router = router_with(
             backend.clone() as Arc<dyn DropCommitBackend>,
-            RouterOptions { body_limit_bytes: 256, ..RouterOptions::default() },
+            RouterOptions {
+                body_limit_bytes: 256,
+                ..RouterOptions::default()
+            },
         );
         let mut req = request("zone-a", true, Some(DndOperation::Copy));
         req.envelope.items[0].data = "x".repeat(1024);
@@ -449,7 +549,11 @@ mod tests {
         struct Durable;
         impl DropCommitBackend for Durable {
             fn policy_for(&self, target_id: &str) -> Option<DndDropPolicy> {
-                Some(DndDropPolicy::new(target_id, &[DndOperation::Copy], &[DndItemKind::Text]))
+                Some(DndDropPolicy::new(
+                    target_id,
+                    &[DndOperation::Copy],
+                    &[DndItemKind::Text],
+                ))
             }
             fn commit(&self, _: &DndEnvelope, _: &DndDropResult) -> Result<(), DndError> {
                 Ok(())
@@ -458,10 +562,13 @@ mod tests {
                 drag_id == "drag-0001"
             }
         }
-        let rt = tokio::runtime::Builder::new_current_thread().build().unwrap();
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap();
         rt.block_on(async {
             let app: Router = router(Arc::new(Durable) as Arc<dyn DropCommitBackend>, None);
-            let body = serde_json::to_string(&request("zone-a", true, Some(DndOperation::Copy))).unwrap();
+            let body =
+                serde_json::to_string(&request("zone-a", true, Some(DndOperation::Copy))).unwrap();
             let (status, result, _) = post_at(app, DEFAULT_COMMIT_PATH, &body, true).await;
             assert_eq!(status, StatusCode::CONFLICT);
             assert_eq!(result.error_code.as_deref(), Some(DUPLICATE_DRAG));

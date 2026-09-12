@@ -14,7 +14,11 @@ pub struct Xorshift64(pub u64);
 
 impl Xorshift64 {
     pub fn new(seed: u64) -> Self {
-        Self(if seed == 0 { 0x9E37_79B9_7F4A_7C15 } else { seed })
+        Self(if seed == 0 {
+            0x9E37_79B9_7F4A_7C15
+        } else {
+            seed
+        })
     }
 
     pub fn next_u64(&mut self) -> u64 {
@@ -41,9 +45,27 @@ impl Xorshift64 {
 }
 
 pub const OPS: [DndOperation; 3] = [DndOperation::Copy, DndOperation::Move, DndOperation::Link];
-pub const KINDS: [DndItemKind; 4] = [DndItemKind::Text, DndItemKind::Uri, DndItemKind::Json, DndItemKind::Bytes];
-pub const MEDIA: [&str; 5] = ["text/plain", "text/markdown", "text/uri-list", "application/json", "image/png"];
-pub const MEDIA_PATTERNS: [&str; 6] = ["text/plain", "text/*", "application/json", "image/*", "text/markdown", "application/*"];
+pub const KINDS: [DndItemKind; 4] = [
+    DndItemKind::Text,
+    DndItemKind::Uri,
+    DndItemKind::Json,
+    DndItemKind::Bytes,
+];
+pub const MEDIA: [&str; 5] = [
+    "text/plain",
+    "text/markdown",
+    "text/uri-list",
+    "application/json",
+    "image/png",
+];
+pub const MEDIA_PATTERNS: [&str; 6] = [
+    "text/plain",
+    "text/*",
+    "application/json",
+    "image/*",
+    "text/markdown",
+    "application/*",
+];
 pub const TARGETS: [&str; 4] = ["zone-a", "zone-b", "zone-c", "zone-d"];
 pub const FORMS: [&str; 2] = ["form-x", "form-y"];
 
@@ -58,18 +80,31 @@ pub fn random_envelope(rng: &mut Xorshift64, n: u32) -> DndEnvelope {
                 "image/png" => DndItemKind::Bytes,
                 _ => DndItemKind::Text,
             };
-            DndItem { kind, media_type: media.to_owned(), data: "x".repeat(rng.below(9) as usize), name: None }
+            DndItem {
+                kind,
+                media_type: media.to_owned(),
+                data: "x".repeat(rng.below(9) as usize),
+                name: None,
+            }
         })
         .collect();
     let ops = ops_subset(rng);
     DndEnvelope {
-        protocol: if rng.chance(8) { "ores.dnd/v2".to_owned() } else { ORES_DND_PROTOCOL.to_owned() },
+        protocol: if rng.chance(8) {
+            "ores.dnd/v2".to_owned()
+        } else {
+            ORES_DND_PROTOCOL.to_owned()
+        },
         drag_id: format!("drag-{n:04}"),
         source_runtime: "fuzz".to_owned(),
         allowed_operations: ops,
         items,
         traceparent: None,
-        form_id: if rng.chance(30) { Some((*rng.pick(&FORMS)).to_owned()) } else { None },
+        form_id: if rng.chance(30) {
+            Some((*rng.pick(&FORMS)).to_owned())
+        } else {
+            None
+        },
     }
 }
 
@@ -88,7 +123,11 @@ pub fn random_policy(rng: &mut Xorshift64) -> DndDropPolicy {
     }
     let mut policy = DndDropPolicy::new(*rng.pick(&TARGETS), &ops_subset(rng), &kinds);
     if rng.chance(35) {
-        let mut patterns: Vec<String> = MEDIA_PATTERNS.iter().filter(|_| rng.chance(40)).map(|p| (*p).to_owned()).collect();
+        let mut patterns: Vec<String> = MEDIA_PATTERNS
+            .iter()
+            .filter(|_| rng.chance(40))
+            .map(|p| (*p).to_owned())
+            .collect();
         if patterns.is_empty() {
             patterns.push((*rng.pick(&MEDIA_PATTERNS)).to_owned());
         }
@@ -115,7 +154,11 @@ pub fn random_input(rng: &mut Xorshift64, n: &mut u32) -> DndSessionInput {
         }
         18..=52 => {
             let policy = random_policy(rng);
-            let preferred = if rng.chance(30) { Some(*rng.pick(&OPS)) } else { None };
+            let preferred = if rng.chance(30) {
+                Some(*rng.pick(&OPS))
+            } else {
+                None
+            };
             DndSessionInput::enter(policy, preferred)
         }
         53..=67 => DndSessionInput::leave(*rng.pick(&TARGETS)),

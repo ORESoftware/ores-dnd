@@ -43,7 +43,9 @@ impl DomBinding {
 
 /// The `(name, value)` attributes a drop zone element carries so the TypeScript
 /// adapter (`autoBind`) can drive it without any framework-specific code.
-pub fn zone_attributes(policy: &DndDropPolicy) -> Result<Vec<(&'static str, String)>, serde_json::Error> {
+pub fn zone_attributes(
+    policy: &DndDropPolicy,
+) -> Result<Vec<(&'static str, String)>, serde_json::Error> {
     Ok(vec![
         (ATTR_ZONE, policy.target_id.clone()),
         (ATTR_POLICY, serde_json::to_string(policy)?),

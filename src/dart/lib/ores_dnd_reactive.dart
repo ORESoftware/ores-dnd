@@ -56,7 +56,8 @@ final class DndReactiveState {
       };
 }
 
-DndReactiveState reactiveStateFor(DndReactiveEvent event, {bool? active}) => DndReactiveState(
+DndReactiveState reactiveStateFor(DndReactiveEvent event, {bool? active}) =>
+    DndReactiveState(
       active: active ?? event.phase != DndLifecyclePhase.dragEnd,
       phase: event.phase,
       dragId: event.envelope.dragId,
@@ -85,18 +86,23 @@ final class DndLifecycleGuard {
         _dropped = false;
         return;
       }
-      if (phase == DndLifecyclePhase.drop && mode == DndLifecycleMode.externalDropCompatible) {
+      if (phase == DndLifecyclePhase.drop &&
+          mode == DndLifecycleMode.externalDropCompatible) {
         return;
       }
       throw FormatException('${phase.wire} requires an active drag-start');
     }
 
     if (dragId != _activeDragId) {
-      throw const FormatException('reactive lifecycle dragId changed before drag-end');
+      throw const FormatException(
+        'reactive lifecycle dragId changed before drag-end',
+      );
     }
     if (_dropped) {
       if (phase != DndLifecyclePhase.dragEnd) {
-        throw FormatException('${phase.wire} is invalid after drop; expected drag-end');
+        throw FormatException(
+          '${phase.wire} is invalid after drop; expected drag-end',
+        );
       }
       _activeDragId = null;
       _dropped = false;
@@ -124,7 +130,8 @@ final class DndLifecycleGuard {
 final class OresDndReactiveBus {
   OresDndReactiveBus({DndLifecycleMode lifecycleMode = DndLifecycleMode.strict})
       : _events = PublishSubject<DndReactiveEvent>(),
-        _state = BehaviorSubject<DndReactiveState>.seeded(DndReactiveState.idle),
+        _state =
+            BehaviorSubject<DndReactiveState>.seeded(DndReactiveState.idle),
         _guard = DndLifecycleGuard(mode: lifecycleMode);
 
   final PublishSubject<DndReactiveEvent> _events;
@@ -154,11 +161,16 @@ final class OresDndReactiveBus {
     String? targetId,
   }) {
     final safeEnvelope = DndEnvelope.fromJson(envelope.toJson());
-    if (operation != null && !safeEnvelope.allowedOperations.contains(operation)) {
-      throw const FormatException('reactive event operation is not source-allowed');
+    if (operation != null &&
+        !safeEnvelope.allowedOperations.contains(operation)) {
+      throw const FormatException(
+        'reactive event operation is not source-allowed',
+      );
     }
     if (targetId != null && targetId.isEmpty) {
-      throw const FormatException('reactive event targetId must be a non-empty string');
+      throw const FormatException(
+        'reactive event targetId must be a non-empty string',
+      );
     }
     _guard.accept(phase, safeEnvelope.dragId);
 
