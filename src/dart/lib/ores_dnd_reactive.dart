@@ -2,8 +2,6 @@ import 'package:rxdart/rxdart.dart';
 
 import 'ores_dnd.dart';
 
-/// Process-local reactive event. [envelope] may contain dragged data, so this
-/// event must not be persisted as replay history or forwarded to telemetry.
 final class DndReactiveEvent {
   const DndReactiveEvent({
     required this.phase,
@@ -18,8 +16,6 @@ final class DndReactiveEvent {
   final String? targetId;
 }
 
-/// Replay-safe reactive state. It intentionally contains metadata only and
-/// never includes DndItem.data or other dragged payload values.
 final class DndReactiveState {
   const DndReactiveState({
     required this.active,
@@ -60,8 +56,8 @@ final class DndReactiveState {
       };
 }
 
-DndReactiveState reactiveStateFor(DndReactiveEvent event) => DndReactiveState(
-      active: event.phase != DndLifecyclePhase.dragEnd,
+DndReactiveState reactiveStateFor(DndReactiveEvent event, {bool? active}) => DndReactiveState(
+      active: active ?? event.phase != DndLifecyclePhase.dragEnd,
       phase: event.phase,
       dragId: event.envelope.dragId,
       sourceRuntime: event.envelope.sourceRuntime,
@@ -70,19 +66,70 @@ DndReactiveState reactiveStateFor(DndReactiveEvent event) => DndReactiveState(
       targetId: event.targetId,
     );
 
-/// RxDart-backed hot event bus for drag/drop lifecycles.
-///
-/// Raw events use [PublishSubject], so dragged payloads are never replayed to
-/// late subscribers. Only the metadata-only [state] stream uses a
-/// [BehaviorSubject]. Persistence/forms remain explicit `commitAcceptedDrop`
-/// effects and are never triggered by [emit].
+enum DndLifecycleMode { strict, externalDropCompatible }
+
+final class DndLifecycleGuard {
+  DndLifecycleGuard({this.mode = DndLifecycleMode.strict});
+
+  final DndLifecycleMode mode;
+  String? _activeDragId;
+  bool _dropped = false;
+
+  bool get active => _activeDragId != null;
+  String? get activeDragId => _activeDragId;
+
+  void accept(DndLifecyclePhase phase, String dragId) {
+    if (_activeDragId == null) {
+      if (phase == DndLifecyclePhase.dragStart) {
+        _activeDragId = dragId;
+        _dropped = false;
+        return;
+      }
+      if (phase == DndLifecyclePhase.drop && mode == DndLifecycleMode.externalDropCompatible) {
+        return;
+      }
+      throw FormatException('${phase.wire} requires an active drag-start');
+    }
+
+    if (dragId != _activeDragId) {
+      throw const FormatException('reactive lifecycle dragId changed before drag-end');
+    }
+    if (_dropped) {
+      if (phase != DndLifecyclePhase.dragEnd) {
+        throw FormatException('${phase.wire} is invalid after drop; expected drag-end');
+      }
+      _activeDragId = null;
+      _dropped = false;
+      return;
+    }
+
+    switch (phase) {
+      case DndLifecyclePhase.dragStart:
+        throw const FormatException('duplicate drag-start before drag-end');
+      case DndLifecyclePhase.dragEnter:
+      case DndLifecyclePhase.dragOver:
+      case DndLifecyclePhase.dragLeave:
+        return;
+      case DndLifecyclePhase.drop:
+        _dropped = true;
+        return;
+      case DndLifecyclePhase.dragEnd:
+        _activeDragId = null;
+        _dropped = false;
+        return;
+    }
+  }
+}
+
 final class OresDndReactiveBus {
-  OresDndReactiveBus()
+  OresDndReactiveBus({DndLifecycleMode lifecycleMode = DndLifecycleMode.strict})
       : _events = PublishSubject<DndReactiveEvent>(),
-        _state = BehaviorSubject<DndReactiveState>.seeded(DndReactiveState.idle);
+        _state = BehaviorSubject<DndReactiveState>.seeded(DndReactiveState.idle),
+        _guard = DndLifecycleGuard(mode: lifecycleMode);
 
   final PublishSubject<DndReactiveEvent> _events;
   final BehaviorSubject<DndReactiveState> _state;
+  final DndLifecycleGuard _guard;
 
   Stream<DndReactiveEvent> get events => _events.stream;
   ValueStream<DndReactiveState> get state => _state.stream;
@@ -107,6 +154,14 @@ final class OresDndReactiveBus {
     String? targetId,
   }) {
     final safeEnvelope = DndEnvelope.fromJson(envelope.toJson());
+    if (operation != null && !safeEnvelope.allowedOperations.contains(operation)) {
+      throw const FormatException('reactive event operation is not source-allowed');
+    }
+    if (targetId != null && targetId.isEmpty) {
+      throw const FormatException('reactive event targetId must be a non-empty string');
+    }
+    _guard.accept(phase, safeEnvelope.dragId);
+
     final event = DndReactiveEvent(
       phase: phase,
       envelope: safeEnvelope,
@@ -114,7 +169,7 @@ final class OresDndReactiveBus {
       targetId: targetId,
     );
     _events.add(event);
-    _state.add(reactiveStateFor(event));
+    _state.add(reactiveStateFor(event, active: _guard.active));
   }
 
   Future<void> dispose() async {
