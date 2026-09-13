@@ -72,6 +72,10 @@ function emit(
   void options.otel.emitDndEvent(telemetryFor(phase, envelope, operation, targetId));
 }
 
+function dragIdFields(dragId: string | undefined): { dragId: string } | Record<never, never> {
+  return dragId === undefined ? {} : { dragId };
+}
+
 /**
  * Framework-neutral keyboard navigation for one DndSession.
  *
@@ -113,7 +117,7 @@ export class KeyboardDndController {
     const snapshot = this.session.apply(inputs.start(envelope));
     if (snapshot.state === "dragging" && this.session.envelope) {
       emit(this.#options, "drag-start", this.session.envelope);
-      this.#options.announce?.({ kind: "started", dragId: snapshot.dragId });
+      this.#options.announce?.({ kind: "started", ...dragIdFields(snapshot.dragId) });
     }
     return snapshot;
   }
@@ -123,7 +127,7 @@ export class KeyboardDndController {
     const current = this.session.snapshot;
     if (current.state !== "dragging" && current.state !== "over-target") return current;
     if (this.#targets.length === 0) {
-      this.#options.announce?.({ kind: "target-required", dragId: current.dragId });
+      this.#options.announce?.({ kind: "target-required", ...dragIdFields(current.dragId) });
       return current;
     }
     const previous = this.activeTarget;
@@ -154,7 +158,7 @@ export class KeyboardDndController {
     const target = this.activeTarget;
     const envelopeBefore = this.session.envelope;
     if (!target) {
-      this.#options.announce?.({ kind: "target-required", dragId: this.session.snapshot.dragId });
+      this.#options.announce?.({ kind: "target-required", ...dragIdFields(this.session.snapshot.dragId) });
       return null;
     }
     const snapshot = this.session.apply(inputs.drop(target.targetId));
@@ -204,14 +208,14 @@ export class KeyboardDndController {
       emit(this.#options, "drag-enter", this.session.envelope, snapshot.operation, target.targetId);
       this.#options.announce?.({
         kind: "target-accepted",
-        dragId: snapshot.dragId,
+        ...dragIdFields(snapshot.dragId),
         targetId: target.targetId,
         ...(snapshot.operation ? { operation: snapshot.operation } : {}),
       });
     } else {
       this.#options.announce?.({
         kind: "target-rejected",
-        dragId: snapshot.dragId,
+        ...dragIdFields(snapshot.dragId),
         targetId: target.targetId,
         ...(snapshot.errorCode ? { errorCode: snapshot.errorCode } : {}),
       });
