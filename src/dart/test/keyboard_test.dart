@@ -71,8 +71,10 @@ void main() {
         DndKeyboardAnnouncementKind.dropped,
       ],
     );
-    expect(jsonEncode(announcements.map((a) => a.kind.name).toList()),
-        isNot(contains('SECRET-DRAG-DATA')));
+    expect(
+      jsonEncode(announcements.map((a) => a.kind.name).toList()),
+      isNot(contains('SECRET-DRAG-DATA')),
+    );
   });
 
   test('cancel telemetry and announcements never include dragged data', () async {
@@ -96,8 +98,10 @@ void main() {
       DndLifecyclePhase.dragEnter,
       DndLifecyclePhase.dragEnd,
     ]);
-    expect(jsonEncode(recorder.events.map((e) => e.toJson()).toList()),
-        isNot(contains('SECRET-DRAG-DATA')));
+    expect(
+      jsonEncode(recorder.events.map((e) => e.toJson()).toList()),
+      isNot(contains('SECRET-DRAG-DATA')),
+    );
     expect(announcements.last.kind, DndKeyboardAnnouncementKind.cancelled);
   });
 
