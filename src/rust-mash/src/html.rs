@@ -3,7 +3,9 @@
 
 use maud::{html, Markup, PreEscaped};
 use ores_dnd_core::bindings::{ATTR_POLICY, ATTR_SOURCE, ATTR_STATE, ATTR_ZONE};
-use ores_dnd_core::{encode_envelope_json, DndDropPolicy, DndEnvelope, DndError, ValidationOptions};
+use ores_dnd_core::{
+    encode_envelope_json, DndDropPolicy, DndEnvelope, DndError, ValidationOptions,
+};
 
 /// Attribute carrying the URL an accepted drop is POSTed to (JSON `DropCommitRequest`).
 pub const ATTR_COMMIT: &str = "data-ores-dnd-commit";
@@ -24,7 +26,11 @@ pub struct DropZoneWiring<'a> {
 
 impl<'a> DropZoneWiring<'a> {
     pub fn new(commit_url: &'a str) -> Self {
-        Self { commit_url, swap_target: None, class: None }
+        Self {
+            commit_url,
+            swap_target: None,
+            class: None,
+        }
     }
 }
 
@@ -34,8 +40,14 @@ impl<'a> DropZoneWiring<'a> {
 /// <div data-ores-dnd-zone="zone-a" data-ores-dnd-policy='{"targetId":"zone-a",…}'
 ///      data-ores-dnd-state="idle" data-ores-dnd-commit="/drops">…</div>
 /// ```
-pub fn drop_zone(policy: &DndDropPolicy, wiring: &DropZoneWiring<'_>, inner: Markup) -> Result<Markup, DndError> {
-    policy.validate().map_err(|code| DndError(format!("invalid drop policy: {}", code.wire())))?;
+pub fn drop_zone(
+    policy: &DndDropPolicy,
+    wiring: &DropZoneWiring<'_>,
+    inner: Markup,
+) -> Result<Markup, DndError> {
+    policy
+        .validate()
+        .map_err(|code| DndError(format!("invalid drop policy: {}", code.wire())))?;
     let policy_json = serde_json::to_string(policy)?;
     Ok(html! {
         div
@@ -51,7 +63,11 @@ pub fn drop_zone(policy: &DndDropPolicy, wiring: &DropZoneWiring<'_>, inner: Mar
 
 /// Render a drag source: a `draggable` element carrying its envelope so the
 /// browser adapter can write the ores MIME type into `DataTransfer` on `dragstart`.
-pub fn drag_source(envelope: &DndEnvelope, class: Option<&str>, inner: Markup) -> Result<Markup, DndError> {
+pub fn drag_source(
+    envelope: &DndEnvelope,
+    class: Option<&str>,
+    inner: Markup,
+) -> Result<Markup, DndError> {
     let json = encode_envelope_json(envelope, ValidationOptions::default())?;
     Ok(html! {
         div draggable="true" class=[class] data-ores-dnd-source=(json) { (inner) }
@@ -80,13 +96,21 @@ mod tests {
     use super::*;
     use ores_dnd_core::{decode_envelope_json, DndItemKind, DndOperation};
 
-    const VALID: &str = include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
+    const VALID: &str =
+        include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
 
     #[test]
     fn drop_zone_carries_policy_and_wiring() {
-        let policy = DndDropPolicy::new("zone-a", &[DndOperation::Copy], &[DndItemKind::Text]).with_max_items(3);
-        let wiring = DropZoneWiring { commit_url: "/drops", swap_target: Some("#list"), class: Some("zone") };
-        let markup = drop_zone(&policy, &wiring, html! { p { "drop here" } }).unwrap().into_string();
+        let policy = DndDropPolicy::new("zone-a", &[DndOperation::Copy], &[DndItemKind::Text])
+            .with_max_items(3);
+        let wiring = DropZoneWiring {
+            commit_url: "/drops",
+            swap_target: Some("#list"),
+            class: Some("zone"),
+        };
+        let markup = drop_zone(&policy, &wiring, html! { p { "drop here" } })
+            .unwrap()
+            .into_string();
         assert!(markup.starts_with("<div class=\"zone\" data-ores-dnd-zone=\"zone-a\""));
         assert!(markup.contains("data-ores-dnd-policy=\"{&quot;targetId&quot;:&quot;zone-a&quot;"));
         assert!(markup.contains("&quot;maxItems&quot;:3"));
@@ -96,14 +120,17 @@ mod tests {
 
     #[test]
     fn invalid_policy_is_refused() {
-        let policy = DndDropPolicy::new("zone-a", &[DndOperation::Copy], &[DndItemKind::Text]).with_max_items(0);
+        let policy = DndDropPolicy::new("zone-a", &[DndOperation::Copy], &[DndItemKind::Text])
+            .with_max_items(0);
         assert!(drop_zone(&policy, &DropZoneWiring::new("/drops"), html! {}).is_err());
     }
 
     #[test]
     fn drag_source_embeds_the_envelope_escaped() {
         let envelope = decode_envelope_json(VALID, ValidationOptions::default()).unwrap();
-        let markup = drag_source(&envelope, None, html! { "card" }).unwrap().into_string();
+        let markup = drag_source(&envelope, None, html! { "card" })
+            .unwrap()
+            .into_string();
         assert!(markup.starts_with("<div draggable=\"true\" data-ores-dnd-source=\"{&quot;protocol&quot;:&quot;ores.dnd/v1&quot;"));
         assert!(!markup.contains("<script"));
     }

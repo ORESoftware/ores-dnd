@@ -6,7 +6,9 @@ import 'package:test/test.dart';
 
 void main() {
   const codec = OresDndCodec();
-  final validText = File('../../contracts/instances/DndEnvelope/valid/text-copy.json').readAsStringSync();
+  final validText = File(
+    '../../contracts/instances/DndEnvelope/valid/text-copy.json',
+  ).readAsStringSync();
   final valid = codec.decode(validText);
 
   test('shared fixture round-trips', () {
@@ -16,19 +18,32 @@ void main() {
   });
 
   test('unknown operation fails closed', () {
-    final invalid = File('../../contracts/instances/DndEnvelope/invalid/unknown-op.json').readAsStringSync();
+    final invalid = File(
+      '../../contracts/instances/DndEnvelope/invalid/unknown-op.json',
+    ).readAsStringSync();
     expect(() => codec.decode(invalid), throwsFormatException);
   });
 
-  test('structural decode accepts what the schema accepts and nothing more', () {
-    final map = (jsonDecode(validText) as Map<String, Object?>)..['protocol'] = 'ores.dnd/v9';
-    expect(() => DndEnvelope.fromJson(map), throwsFormatException);
-    expect(DndEnvelope.fromJson(map, structural: true).protocol, 'ores.dnd/v9');
-    expect(() => DndEnvelope.fromJson(map..['secret'] = 'x', structural: true), throwsFormatException);
-  });
+  test(
+    'structural decode accepts what the schema accepts and nothing more',
+    () {
+      final map = (jsonDecode(validText) as Map<String, Object?>)
+        ..['protocol'] = 'ores.dnd/v9';
+      expect(() => DndEnvelope.fromJson(map), throwsFormatException);
+      expect(
+        DndEnvelope.fromJson(map, structural: true).protocol,
+        'ores.dnd/v9',
+      );
+      expect(
+        () => DndEnvelope.fromJson(map..['secret'] = 'x', structural: true),
+        throwsFormatException,
+      );
+    },
+  );
 
   test('unknown property fails closed', () {
-    final map = (jsonDecode(validText) as Map<String, Object?>)..['secret'] = 'x';
+    final map = (jsonDecode(validText) as Map<String, Object?>)
+      ..['secret'] = 'x';
     expect(() => codec.decode(jsonEncode(map)), throwsFormatException);
   });
 
@@ -39,14 +54,24 @@ void main() {
 
   test('operation negotiation is deterministic', () {
     expect(
-      negotiateOperation([DndOperation.copy, DndOperation.move], [DndOperation.copy, DndOperation.move]),
+      negotiateOperation(
+        [DndOperation.copy, DndOperation.move],
+        [DndOperation.copy, DndOperation.move],
+      ),
       DndOperation.move,
     );
-    expect(negotiateOperation([DndOperation.copy], [DndOperation.move]), isNull);
+    expect(
+      negotiateOperation([DndOperation.copy], [DndOperation.move]),
+      isNull,
+    );
   });
 
   test('telemetry never includes item data', () {
-    final event = telemetryFor(DndLifecyclePhase.drop, valid, operation: DndOperation.copy);
+    final event = telemetryFor(
+      DndLifecyclePhase.drop,
+      valid,
+      operation: DndOperation.copy,
+    );
     expect(jsonEncode(event.toJson()).contains('hello'), isFalse);
     expect(event.itemCount, 1);
   });

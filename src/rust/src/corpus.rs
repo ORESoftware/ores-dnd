@@ -6,7 +6,9 @@ use crate::envelope::{
     DndTelemetryEvent, ValidationOptions,
 };
 use crate::policy::{DndDropPolicy, DndRejectCode};
-use crate::session::{DndSessionInput, DndSessionInputKind, DndSessionSnapshot, DndSessionState, DndSessionTrace};
+use crate::session::{
+    DndSessionInput, DndSessionInputKind, DndSessionSnapshot, DndSessionState, DndSessionTrace,
+};
 use crate::wire;
 
 /// Every declaration the contract admits, in TypeSpec order.
@@ -34,12 +36,18 @@ pub const DECLARATIONS: [&str; 20] = [
 ];
 
 fn structural<T: serde::de::DeserializeOwned>(json: &str) -> Result<(), DndError> {
-    serde_json::from_str::<T>(json).map(|_| ()).map_err(DndError::from)
+    serde_json::from_str::<T>(json)
+        .map(|_| ())
+        .map_err(DndError::from)
 }
 
 fn scalar(json: &str, label: &str, ok: impl Fn(&str) -> bool) -> Result<(), DndError> {
     let value: String = serde_json::from_str(json)?;
-    if ok(&value) { Ok(()) } else { Err(DndError(format!("{label} rejected: {value}"))) }
+    if ok(&value) {
+        Ok(())
+    } else {
+        Err(DndError(format!("{label} rejected: {value}")))
+    }
 }
 
 /// Structural decode (closed enums, no unknown properties, contract bounds)
@@ -60,7 +68,9 @@ pub fn decode_declaration(declaration: &str, json: &str) -> Result<(), DndError>
         "Traceparent" => scalar(json, "Traceparent", wire::is_traceparent),
         "ErrorCode" => scalar(json, "ErrorCode", wire::is_error_code),
         "DndItem" => serde_json::from_str::<DndItem>(json)?.structural(),
-        "DndEnvelope" => serde_json::from_str::<DndEnvelope>(json)?.validate(ValidationOptions::default()),
+        "DndEnvelope" => {
+            serde_json::from_str::<DndEnvelope>(json)?.validate(ValidationOptions::default())
+        }
         "DndDropResult" => serde_json::from_str::<DndDropResult>(json)?.structural(),
         "DndTelemetryEvent" => serde_json::from_str::<DndTelemetryEvent>(json)?.structural(),
         "DndDropPolicy" => serde_json::from_str::<DndDropPolicy>(json)?.structural(),

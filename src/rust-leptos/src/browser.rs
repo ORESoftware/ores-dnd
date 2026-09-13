@@ -3,8 +3,8 @@
 //! Mirrors `src/ts/dom.ts` so a Rust island and a TypeScript page interoperate.
 
 use ores_dnd_core::{
-    decode_envelope_json, effect_allowed_for, encode_envelope_json, DndEnvelope, DndError, DndItem, DndItemKind,
-    DndOperation, ValidationOptions, ORES_DND_MIME, ORES_DND_PROTOCOL,
+    decode_envelope_json, effect_allowed_for, encode_envelope_json, DndEnvelope, DndError, DndItem,
+    DndItemKind, DndOperation, ValidationOptions, ORES_DND_MIME, ORES_DND_PROTOCOL,
 };
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -16,7 +16,12 @@ static EXTERNAL_COUNTER: AtomicU64 = AtomicU64::new(0);
 /// is reported as `application/octet-stream` bytes. The ores MIME itself maps
 /// to `None` (its items are only known once the payload is readable).
 pub fn kind_for_type(format: &str) -> Option<(DndItemKind, String)> {
-    let media = format.split(';').next().unwrap_or("").trim().to_ascii_lowercase();
+    let media = format
+        .split(';')
+        .next()
+        .unwrap_or("")
+        .trim()
+        .to_ascii_lowercase();
     if media == ORES_DND_MIME {
         return None;
     }
@@ -39,11 +44,23 @@ pub fn provisional_envelope(types: &[String]) -> DndEnvelope {
     let n = EXTERNAL_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     let mut items: Vec<DndItem> = types
         .iter()
-        .filter_map(|t| kind_for_type(t).map(|(kind, media_type)| DndItem { kind, media_type, data: String::new(), name: None }))
+        .filter_map(|t| {
+            kind_for_type(t).map(|(kind, media_type)| DndItem {
+                kind,
+                media_type,
+                data: String::new(),
+                name: None,
+            })
+        })
         .collect();
     items.truncate(ores_dnd_core::wire::ENVELOPE_ITEMS_MAX);
     if items.is_empty() {
-        items.push(DndItem { kind: DndItemKind::Text, media_type: "text/plain".into(), data: String::new(), name: None });
+        items.push(DndItem {
+            kind: DndItemKind::Text,
+            media_type: "text/plain".into(),
+            data: String::new(),
+            name: None,
+        });
     }
     DndEnvelope {
         protocol: ORES_DND_PROTOCOL.to_owned(),
@@ -58,11 +75,16 @@ pub fn provisional_envelope(types: &[String]) -> DndEnvelope {
 
 pub fn data_transfer_types(dt: &web_sys::DataTransfer) -> Vec<String> {
     let list = dt.types();
-    (0..list.length()).filter_map(|i| list.get(i).as_string()).collect()
+    (0..list.length())
+        .filter_map(|i| list.get(i).as_string())
+        .collect()
 }
 
 /// Read the ores envelope, or synthesize one from a `text/plain` drop.
-pub fn read_envelope(dt: &web_sys::DataTransfer, options: ValidationOptions) -> Result<DndEnvelope, DndError> {
+pub fn read_envelope(
+    dt: &web_sys::DataTransfer,
+    options: ValidationOptions,
+) -> Result<DndEnvelope, DndError> {
     if let Ok(json) = dt.get_data(ORES_DND_MIME) {
         if !json.is_empty() {
             return decode_envelope_json(&json, options);
@@ -70,7 +92,9 @@ pub fn read_envelope(dt: &web_sys::DataTransfer, options: ValidationOptions) -> 
     }
     let text = dt.get_data("text/plain").unwrap_or_default();
     if text.is_empty() {
-        return Err(DndError("no ores.dnd payload or text/plain fallback in DataTransfer".into()));
+        return Err(DndError(
+            "no ores.dnd payload or text/plain fallback in DataTransfer".into(),
+        ));
     }
     let n = EXTERNAL_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     let envelope = DndEnvelope {
@@ -78,7 +102,12 @@ pub fn read_envelope(dt: &web_sys::DataTransfer, options: ValidationOptions) -> 
         drag_id: format!("external-text-{n}"),
         source_runtime: "external-browser".to_owned(),
         allowed_operations: vec![DndOperation::Copy],
-        items: vec![DndItem { kind: DndItemKind::Text, media_type: "text/plain".into(), data: text, name: None }],
+        items: vec![DndItem {
+            kind: DndItemKind::Text,
+            media_type: "text/plain".into(),
+            data: text,
+            name: None,
+        }],
         traceparent: None,
         form_id: None,
     };
@@ -89,7 +118,8 @@ pub fn read_envelope(dt: &web_sys::DataTransfer, options: ValidationOptions) -> 
 /// Write the ores MIME payload, `effectAllowed`, and a `text/plain` fallback.
 pub fn write_envelope(dt: &web_sys::DataTransfer, envelope: &DndEnvelope) -> Result<(), DndError> {
     let json = encode_envelope_json(envelope, ValidationOptions::default())?;
-    dt.set_data(ORES_DND_MIME, &json).map_err(|_| DndError("DataTransfer.setData failed".into()))?;
+    dt.set_data(ORES_DND_MIME, &json)
+        .map_err(|_| DndError("DataTransfer.setData failed".into()))?;
     dt.set_effect_allowed(effect_allowed_for(&envelope.allowed_operations));
     if let Some(text) = envelope.text_fallback() {
         let _ = dt.set_data("text/plain", text);
@@ -119,11 +149,15 @@ mod tests {
 
     #[test]
     fn provisional_envelope_reflects_advertised_types() {
-        let env = provisional_envelope(&["text/uri-list".into(), ORES_DND_MIME.into(), "Files".into()]);
+        let env =
+            provisional_envelope(&["text/uri-list".into(), ORES_DND_MIME.into(), "Files".into()]);
         assert_eq!(env.items.len(), 2);
         assert_eq!(env.items[0].kind, DndItemKind::Uri);
         assert_eq!(env.items[1].kind, DndItemKind::Bytes);
-        assert_eq!(env.items[1].media_type, "application/octet-stream", "browser formats that are not media types are canonicalised");
+        assert_eq!(
+            env.items[1].media_type, "application/octet-stream",
+            "browser formats that are not media types are canonicalised"
+        );
         assert!(env.validate(ValidationOptions::default()).is_ok());
         assert!(env.drag_id.starts_with("external-"));
         let empty = provisional_envelope(&[]);
@@ -133,8 +167,14 @@ mod tests {
     #[test]
     fn drop_effects_match_operation_wire_names() {
         assert_eq!(drop_effect_for(DndOperation::Move), "move");
-        assert_eq!(kind_for_type("TEXT/Markdown; charset=utf-8"), Some((DndItemKind::Text, "text/markdown".to_owned())));
-        assert_eq!(kind_for_type("downloadurl"), Some((DndItemKind::Bytes, "application/octet-stream".to_owned())));
+        assert_eq!(
+            kind_for_type("TEXT/Markdown; charset=utf-8"),
+            Some((DndItemKind::Text, "text/markdown".to_owned()))
+        );
+        assert_eq!(
+            kind_for_type("downloadurl"),
+            Some((DndItemKind::Bytes, "application/octet-stream".to_owned()))
+        );
         assert_eq!(kind_for_type(ORES_DND_MIME), None);
     }
 }

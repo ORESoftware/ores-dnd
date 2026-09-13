@@ -8,9 +8,12 @@
 use ores_dnd_core::{
     corpus::decode_declaration,
     decode_envelope_json, encode_envelope_json, evaluate_policy, negotiate_operation,
-    reactive::{reactive_state_for, reactive_telemetry_for, DndLifecycleGuard, DndLifecycleMode, DndReactiveEvent},
-    DndDropPolicy, DndError, DndLifecyclePhase, DndOperation, DndSession, DndSessionInput, DndSessionTrace,
-    ValidationOptions, ORES_DND_MIME, ORES_DND_PROTOCOL,
+    reactive::{
+        reactive_state_for, reactive_telemetry_for, DndLifecycleGuard, DndLifecycleMode,
+        DndReactiveEvent,
+    },
+    DndDropPolicy, DndError, DndLifecyclePhase, DndOperation, DndSession, DndSessionInput,
+    DndSessionTrace, ValidationOptions, ORES_DND_MIME, ORES_DND_PROTOCOL,
 };
 use wasm_bindgen::prelude::*;
 
@@ -23,12 +26,22 @@ fn js_error(error: impl ToString) -> JsValue {
 pub mod api {
     use super::*;
 
-    pub fn evaluate_policy_json(envelope_json: &str, policy_json: &str, preferred: Option<&str>) -> Result<String, String> {
-        let envelope = decode_envelope_json(envelope_json, ValidationOptions::default()).map_err(|e| e.to_string())?;
+    pub fn evaluate_policy_json(
+        envelope_json: &str,
+        policy_json: &str,
+        preferred: Option<&str>,
+    ) -> Result<String, String> {
+        let envelope = decode_envelope_json(envelope_json, ValidationOptions::default())
+            .map_err(|e| e.to_string())?;
         let policy: DndDropPolicy = serde_json::from_str(policy_json).map_err(|e| e.to_string())?;
-        policy.validate().map_err(|code| format!("invalid policy: {}", code.wire()))?;
+        policy
+            .validate()
+            .map_err(|code| format!("invalid policy: {}", code.wire()))?;
         let preferred = match preferred {
-            Some(value) => Some(DndOperation::parse(value).ok_or_else(|| "unsupported drag operation".to_owned())?),
+            Some(value) => Some(
+                DndOperation::parse(value)
+                    .ok_or_else(|| "unsupported drag operation".to_owned())?,
+            ),
             None => None,
         };
         let verdict = match evaluate_policy(&envelope, &policy, preferred) {
@@ -38,11 +51,20 @@ pub mod api {
         Ok(verdict.to_string())
     }
 
-    pub fn negotiate_operation_json(source_json: &str, target_json: &str, preferred: Option<&str>) -> Result<Option<String>, String> {
-        let source: Vec<DndOperation> = serde_json::from_str(source_json).map_err(|e| e.to_string())?;
-        let target: Vec<DndOperation> = serde_json::from_str(target_json).map_err(|e| e.to_string())?;
+    pub fn negotiate_operation_json(
+        source_json: &str,
+        target_json: &str,
+        preferred: Option<&str>,
+    ) -> Result<Option<String>, String> {
+        let source: Vec<DndOperation> =
+            serde_json::from_str(source_json).map_err(|e| e.to_string())?;
+        let target: Vec<DndOperation> =
+            serde_json::from_str(target_json).map_err(|e| e.to_string())?;
         let preferred = match preferred {
-            Some(value) => Some(DndOperation::parse(value).ok_or_else(|| "unsupported drag operation".to_owned())?),
+            Some(value) => Some(
+                DndOperation::parse(value)
+                    .ok_or_else(|| "unsupported drag operation".to_owned())?,
+            ),
             None => None,
         };
         Ok(negotiate_operation(&source, &target, preferred).map(|op| op.wire().to_owned()))
@@ -61,17 +83,25 @@ pub mod api {
 
     impl JsonSession {
         pub fn apply(&mut self, input_json: &str) -> Result<String, String> {
-            let input: DndSessionInput = serde_json::from_str(input_json).map_err(|e| e.to_string())?;
+            let input: DndSessionInput =
+                serde_json::from_str(input_json).map_err(|e| e.to_string())?;
             serde_json::to_string(self.inner.apply(&input)).map_err(|e| e.to_string())
         }
         pub fn snapshot(&self) -> Result<String, String> {
             serde_json::to_string(self.inner.snapshot()).map_err(|e| e.to_string())
         }
         pub fn envelope(&self) -> Result<Option<String>, String> {
-            self.inner.envelope().map(|e| serde_json::to_string(e).map_err(|e| e.to_string())).transpose()
+            self.inner
+                .envelope()
+                .map(|e| serde_json::to_string(e).map_err(|e| e.to_string()))
+                .transpose()
         }
         pub fn result(&self) -> Result<Option<String>, String> {
-            self.inner.snapshot().result().map(|r| serde_json::to_string(&r).map_err(|e| e.to_string())).transpose()
+            self.inner
+                .snapshot()
+                .result()
+                .map(|r| serde_json::to_string(&r).map_err(|e| e.to_string()))
+                .transpose()
         }
     }
 }
@@ -152,7 +182,9 @@ impl Default for WasmDndSession {
 impl WasmDndSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { inner: api::JsonSession::default() }
+        Self {
+            inner: api::JsonSession::default(),
+        }
     }
 
     /// Apply one `DndSessionInput` (JSON) and return the new snapshot (JSON).
@@ -195,7 +227,10 @@ fn parse_phase(value: &str) -> Result<DndLifecyclePhase, DndError> {
 /// Untrusted values are never echoed into error text.
 fn parse_operation(value: Option<String>) -> Result<Option<DndOperation>, DndError> {
     value
-        .map(|value| DndOperation::parse(&value).ok_or_else(|| DndError("unsupported drag operation".to_owned())))
+        .map(|value| {
+            DndOperation::parse(&value)
+                .ok_or_else(|| DndError("unsupported drag operation".to_owned()))
+        })
         .transpose()
 }
 
@@ -207,7 +242,12 @@ fn project_reactive_event(
     target_id: Option<String>,
 ) -> Result<String, DndError> {
     let envelope = decode_envelope_json(envelope_json, ValidationOptions::default())?;
-    let event = DndReactiveEvent::new(parse_phase(phase)?, envelope, parse_operation(operation)?, target_id)?;
+    let event = DndReactiveEvent::new(
+        parse_phase(phase)?,
+        envelope,
+        parse_operation(operation)?,
+        target_id,
+    )?;
     guard.accept(&event)?;
 
     let mut state = reactive_state_for(&event);
@@ -235,8 +275,14 @@ pub struct DndLifecycleHandle {
 impl DndLifecycleHandle {
     #[wasm_bindgen(constructor)]
     pub fn new(external_drop_compatible: bool) -> Self {
-        let mode = if external_drop_compatible { DndLifecycleMode::ExternalDropCompatible } else { DndLifecycleMode::Strict };
-        Self { guard: DndLifecycleGuard::new(mode) }
+        let mode = if external_drop_compatible {
+            DndLifecycleMode::ExternalDropCompatible
+        } else {
+            DndLifecycleMode::Strict
+        };
+        Self {
+            guard: DndLifecycleGuard::new(mode),
+        }
     }
 
     #[wasm_bindgen]
@@ -247,7 +293,8 @@ impl DndLifecycleHandle {
         operation: Option<String>,
         target_id: Option<String>,
     ) -> Result<String, JsValue> {
-        project_reactive_event(&mut self.guard, phase, envelope_json, operation, target_id).map_err(js_error)
+        project_reactive_event(&mut self.guard, phase, envelope_json, operation, target_id)
+            .map_err(js_error)
     }
 
     #[wasm_bindgen(getter)]
@@ -265,7 +312,8 @@ impl DndLifecycleHandle {
 mod tests {
     use super::*;
 
-    const VALID: &str = include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
+    const VALID: &str =
+        include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
 
     #[test]
     fn wasm_session_speaks_json_end_to_end() {
@@ -274,10 +322,19 @@ mod tests {
         let snapshot = session.apply(&start).unwrap();
         assert!(snapshot.contains("\"state\":\"dragging\""));
         let enter = r#"{"kind":"enter","targetId":"zone-a","policy":{"targetId":"zone-a","allowedOperations":["copy"],"acceptedKinds":["text"]}}"#;
-        assert!(session.apply(enter).unwrap().contains("\"operation\":\"copy\""));
+        assert!(session
+            .apply(enter)
+            .unwrap()
+            .contains("\"operation\":\"copy\""));
         assert!(session.result().unwrap().is_none());
-        session.apply(r#"{"kind":"drop","targetId":"zone-a"}"#).unwrap();
-        assert!(session.result().unwrap().unwrap().contains("\"accepted\":true"));
+        session
+            .apply(r#"{"kind":"drop","targetId":"zone-a"}"#)
+            .unwrap();
+        assert!(session
+            .result()
+            .unwrap()
+            .unwrap()
+            .contains("\"accepted\":true"));
         assert!(session.envelope().unwrap().unwrap().contains("drag-0001"));
     }
 
@@ -291,8 +348,14 @@ mod tests {
         assert!(api::evaluate_policy_json(VALID, policy, Some("teleport")).is_err());
         assert!(decode_declaration("DndDropPolicy", policy).is_ok());
         assert!(decode_declaration("DndDropPolicy", r#"{"targetId":"z"}"#).is_err());
-        assert_eq!(api::negotiate_operation_json(r#"["copy","move"]"#, r#"["move"]"#, None).unwrap().as_deref(), Some("move"));
-        let trace = include_str!("../../../contracts/instances/DndSessionTrace/valid/basic-drop.json");
+        assert_eq!(
+            api::negotiate_operation_json(r#"["copy","move"]"#, r#"["move"]"#, None)
+                .unwrap()
+                .as_deref(),
+            Some("move")
+        );
+        let trace =
+            include_str!("../../../contracts/instances/DndSessionTrace/valid/basic-drop.json");
         assert_eq!(api::replay_trace_json(trace).unwrap(), None);
     }
 
@@ -311,7 +374,13 @@ mod tests {
         assert!(!start.contains("hello"));
         assert!(guard.active());
 
-        let drop = project_reactive_event(&mut guard, "drop", VALID, Some("copy".to_owned()), Some("zone-a".to_owned()))?;
+        let drop = project_reactive_event(
+            &mut guard,
+            "drop",
+            VALID,
+            Some("copy".to_owned()),
+            Some("zone-a".to_owned()),
+        )?;
         assert!(!drop.contains("hello"));
         assert!(guard.active());
 
@@ -327,7 +396,13 @@ mod tests {
     #[test]
     fn external_one_shot_drop_remains_inactive() -> Result<(), DndError> {
         let mut guard = DndLifecycleGuard::new(DndLifecycleMode::ExternalDropCompatible);
-        let projection = project_reactive_event(&mut guard, "drop", VALID, Some("copy".to_owned()), Some("zone-a".to_owned()))?;
+        let projection = project_reactive_event(
+            &mut guard,
+            "drop",
+            VALID,
+            Some("copy".to_owned()),
+            Some("zone-a".to_owned()),
+        )?;
         assert!(!guard.active());
         let json: serde_json::Value = serde_json::from_str(&projection)?;
         assert_eq!(json["state"]["active"], false);
@@ -339,9 +414,12 @@ mod tests {
     fn parser_errors_do_not_echo_untrusted_values() {
         let phase = parse_phase("secret-phase-value").expect_err("unsupported phase");
         assert!(!phase.0.contains("secret-phase-value"));
-        let operation = parse_operation(Some("secret-op-value".to_owned())).expect_err("unsupported operation");
+        let operation =
+            parse_operation(Some("secret-op-value".to_owned())).expect_err("unsupported operation");
         assert!(!operation.0.contains("secret-op-value"));
-        let negotiated = api::negotiate_operation_json("[\"copy\"]", "[\"copy\"]", Some("secret-op-value")).expect_err("unsupported preferred operation");
+        let negotiated =
+            api::negotiate_operation_json("[\"copy\"]", "[\"copy\"]", Some("secret-op-value"))
+                .expect_err("unsupported preferred operation");
         assert!(!negotiated.contains("secret-op-value"));
     }
 }

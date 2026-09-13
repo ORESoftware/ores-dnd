@@ -1,9 +1,8 @@
 use std::{cell::RefCell, collections::BTreeSet};
 
 use crate::{
-    commit_accepted_drop, telemetry_for, DndDropResult, DndEnvelope, DndError,
-    DndLifecyclePhase, DndOperation, DndTelemetryEvent, DropCommitPorts, OptoSyncPort,
-    OresFormsPort, OresOtelPort,
+    commit_accepted_drop, telemetry_for, DndDropResult, DndEnvelope, DndError, DndLifecyclePhase,
+    DndOperation, DndTelemetryEvent, DropCommitPorts, OptoSyncPort, OresFormsPort, OresOtelPort,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, serde::Serialize)]
@@ -51,7 +50,8 @@ pub struct DndEffectReceipt {
 }
 
 pub trait DndEffectJournalPort {
-    fn has_completed(&self, idempotency_key: &str, stage: DndEffectStage) -> Result<bool, DndError>;
+    fn has_completed(&self, idempotency_key: &str, stage: DndEffectStage)
+        -> Result<bool, DndError>;
     fn mark_completed(&self, idempotency_key: &str, stage: DndEffectStage) -> Result<(), DndError>;
 }
 
@@ -169,7 +169,13 @@ where
             return Err(error);
         }
     }
-    publish(ports.receipts, key, result, stage, DndEffectStatus::Completed);
+    publish(
+        ports.receipts,
+        key,
+        result,
+        stage,
+        DndEffectStatus::Completed,
+    );
     Ok(())
 }
 
@@ -250,12 +256,21 @@ pub struct MemoryEffectJournal {
 }
 
 impl DndEffectJournalPort for MemoryEffectJournal {
-    fn has_completed(&self, idempotency_key: &str, stage: DndEffectStage) -> Result<bool, DndError> {
-        Ok(self.completed.borrow().contains(&(idempotency_key.to_owned(), stage)))
+    fn has_completed(
+        &self,
+        idempotency_key: &str,
+        stage: DndEffectStage,
+    ) -> Result<bool, DndError> {
+        Ok(self
+            .completed
+            .borrow()
+            .contains(&(idempotency_key.to_owned(), stage)))
     }
 
     fn mark_completed(&self, idempotency_key: &str, stage: DndEffectStage) -> Result<(), DndError> {
-        self.completed.borrow_mut().insert((idempotency_key.to_owned(), stage));
+        self.completed
+            .borrow_mut()
+            .insert((idempotency_key.to_owned(), stage));
         Ok(())
     }
 }
@@ -267,7 +282,8 @@ mod tests {
     use super::*;
     use crate::{decode_envelope_json, ValidationOptions};
 
-    const VALID: &str = include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
+    const VALID: &str =
+        include_str!("../../../contracts/instances/DndEnvelope/valid/text-copy.json");
 
     struct Forms(Rc<RefCell<Vec<&'static str>>>);
     impl OresFormsPort for Forms {
@@ -279,7 +295,11 @@ mod tests {
 
     struct Opto(Rc<RefCell<Vec<&'static str>>>, Rc<RefCell<Vec<String>>>);
     impl OptoSyncPort for Opto {
-        fn persist_accepted_drop(&self, _: &DndEnvelope, _: &DndDropResult) -> Result<(), DndError> {
+        fn persist_accepted_drop(
+            &self,
+            _: &DndEnvelope,
+            _: &DndDropResult,
+        ) -> Result<(), DndError> {
             self.0.borrow_mut().push("opto-local");
             Ok(())
         }
@@ -377,8 +397,20 @@ mod tests {
             },
         )?;
 
-        assert_eq!(calls.borrow().as_slice(), ["forms", "opto-local", "opto-supabase", "otel-local", "otel-supabase"]);
-        assert!(keys.borrow().iter().all(|key| key == &dnd_effect_key(&result)));
+        assert_eq!(
+            calls.borrow().as_slice(),
+            [
+                "forms",
+                "opto-local",
+                "opto-supabase",
+                "otel-local",
+                "otel-supabase"
+            ]
+        );
+        assert!(keys
+            .borrow()
+            .iter()
+            .all(|key| key == &dnd_effect_key(&result)));
         let serialized = serde_json::to_string(&sink.snapshot())?;
         assert!(!serialized.contains("hello"));
         Ok(())
@@ -410,18 +442,32 @@ mod tests {
         assert!(commit_accepted_drop_effects(&envelope, &result, ports()).is_err());
         commit_accepted_drop_effects(&envelope, &result, ports())?;
 
-        assert_eq!(calls.borrow().as_slice(), [
-            "forms", "opto-local", "opto-supabase", "otel-local", "otel-supabase", "otel-supabase"
-        ]);
+        assert_eq!(
+            calls.borrow().as_slice(),
+            [
+                "forms",
+                "opto-local",
+                "opto-supabase",
+                "otel-local",
+                "otel-supabase",
+                "otel-supabase"
+            ]
+        );
         let receipts = sink.snapshot();
         let second = &receipts[5..];
-        assert_eq!(second.iter().map(|r| (r.stage, r.status)).collect::<Vec<_>>(), vec![
-            (DndEffectStage::Forms, DndEffectStatus::Skipped),
-            (DndEffectStage::OptoLocal, DndEffectStatus::Skipped),
-            (DndEffectStage::OptoSupabase, DndEffectStatus::Skipped),
-            (DndEffectStage::OtelLocal, DndEffectStatus::Skipped),
-            (DndEffectStage::OtelSupabase, DndEffectStatus::Completed),
-        ]);
+        assert_eq!(
+            second
+                .iter()
+                .map(|r| (r.stage, r.status))
+                .collect::<Vec<_>>(),
+            vec![
+                (DndEffectStage::Forms, DndEffectStatus::Skipped),
+                (DndEffectStage::OptoLocal, DndEffectStatus::Skipped),
+                (DndEffectStage::OptoSupabase, DndEffectStatus::Skipped),
+                (DndEffectStage::OtelLocal, DndEffectStatus::Skipped),
+                (DndEffectStage::OtelSupabase, DndEffectStatus::Completed),
+            ]
+        );
         let serialized = serde_json::to_string(&receipts)?;
         assert!(!serialized.contains("provider-token"));
         assert!(!serialized.contains("sensitive-value"));
