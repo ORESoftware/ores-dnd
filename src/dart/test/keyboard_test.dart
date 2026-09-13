@@ -11,18 +11,18 @@ class _Recorder implements OresOtelPort {
 }
 
 DndEnvelope envelope(String id) => DndEnvelope(
-      protocol: oresDndProtocol,
-      dragId: id,
-      sourceRuntime: 'dart-keyboard-test',
-      allowedOperations: const [DndOperation.copy, DndOperation.move],
-      items: const [
-        DndItem(
-          kind: DndItemKind.text,
-          mediaType: 'text/plain',
-          data: 'SECRET-DRAG-DATA',
-        ),
-      ],
-    );
+  protocol: oresDndProtocol,
+  dragId: id,
+  sourceRuntime: 'dart-keyboard-test',
+  allowedOperations: const [DndOperation.copy, DndOperation.move],
+  items: const [
+    DndItem(
+      kind: DndItemKind.text,
+      mediaType: 'text/plain',
+      data: 'SECRET-DRAG-DATA',
+    ),
+  ],
+);
 
 const textTarget = DndDropPolicy(
   targetId: 'text-zone',
@@ -48,7 +48,10 @@ void main() {
       onTargetChange: (targetId, _) => targets.add(targetId),
     );
 
-    expect(controller.start(envelope('drag-1')).state, DndSessionState.dragging);
+    expect(
+      controller.start(envelope('drag-1')).state,
+      DndSessionState.dragging,
+    );
     expect(controller.move(1).state, DndSessionState.overTarget);
     expect(session.snapshot.operation, DndOperation.move);
     expect(controller.move(1).state, DndSessionState.dragging);
@@ -61,49 +64,49 @@ void main() {
     expect(result?.accepted, isTrue);
     expect(result?.operation, DndOperation.copy);
     expect(targets, ['text-zone', 'json-zone', 'text-zone']);
-    expect(
-      announcements.map((value) => value.kind),
-      [
-        DndKeyboardAnnouncementKind.started,
-        DndKeyboardAnnouncementKind.targetAccepted,
-        DndKeyboardAnnouncementKind.targetRejected,
-        DndKeyboardAnnouncementKind.targetAccepted,
-        DndKeyboardAnnouncementKind.dropped,
-      ],
-    );
+    expect(announcements.map((value) => value.kind), [
+      DndKeyboardAnnouncementKind.started,
+      DndKeyboardAnnouncementKind.targetAccepted,
+      DndKeyboardAnnouncementKind.targetRejected,
+      DndKeyboardAnnouncementKind.targetAccepted,
+      DndKeyboardAnnouncementKind.dropped,
+    ]);
     expect(
       jsonEncode(announcements.map((a) => a.kind.name).toList()),
       isNot(contains('SECRET-DRAG-DATA')),
     );
   });
 
-  test('cancel telemetry and announcements never include dragged data', () async {
-    final recorder = _Recorder();
-    final announcements = <DndKeyboardAnnouncement>[];
-    final controller = DndKeyboardController.forSession(
-      session: DndSession(),
-      targets: const [textTarget],
-      otel: recorder,
-      announce: announcements.add,
-    );
-    controller.start(envelope('drag-2'));
-    controller.move(1);
-    final result = controller.cancel();
-    await Future<void>.delayed(Duration.zero);
+  test(
+    'cancel telemetry and announcements never include dragged data',
+    () async {
+      final recorder = _Recorder();
+      final announcements = <DndKeyboardAnnouncement>[];
+      final controller = DndKeyboardController.forSession(
+        session: DndSession(),
+        targets: const [textTarget],
+        otel: recorder,
+        announce: announcements.add,
+      );
+      controller.start(envelope('drag-2'));
+      controller.move(1);
+      final result = controller.cancel();
+      await Future<void>.delayed(Duration.zero);
 
-    expect(result?.accepted, isFalse);
-    expect(result?.errorCode, DndRejectCode.cancelled.wire);
-    expect(recorder.events.map((e) => e.phase), [
-      DndLifecyclePhase.dragStart,
-      DndLifecyclePhase.dragEnter,
-      DndLifecyclePhase.dragEnd,
-    ]);
-    expect(
-      jsonEncode(recorder.events.map((e) => e.toJson()).toList()),
-      isNot(contains('SECRET-DRAG-DATA')),
-    );
-    expect(announcements.last.kind, DndKeyboardAnnouncementKind.cancelled);
-  });
+      expect(result?.accepted, isFalse);
+      expect(result?.errorCode, DndRejectCode.cancelled.wire);
+      expect(recorder.events.map((e) => e.phase), [
+        DndLifecyclePhase.dragStart,
+        DndLifecyclePhase.dragEnter,
+        DndLifecyclePhase.dragEnd,
+      ]);
+      expect(
+        jsonEncode(recorder.events.map((e) => e.toJson()).toList()),
+        isNot(contains('SECRET-DRAG-DATA')),
+      );
+      expect(announcements.last.kind, DndKeyboardAnnouncementKind.cancelled);
+    },
+  );
 
   test('duplicate targets and invalid move step fail closed', () {
     expect(
