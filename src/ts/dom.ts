@@ -16,6 +16,7 @@ import {
   type OresOtelPort,
   type ValidationOptions,
 } from "./codec.js";
+import { readExternalTransfer, requiresExternalMaterialization } from "./external.js";
 import { validatePolicy, type DndDropPolicy } from "./policy.js";
 import { DndSession, inputs, type DndSessionSnapshot } from "./session.js";
 import { ENVELOPE_ITEMS_MAX, isMediaType } from "./wire.js";
@@ -209,21 +210,12 @@ export function bindDropZone(
     session.apply(inputs.leave(targetId));
     if (wasAccepting) emit(options, "drag-leave", session.envelope, undefined, targetId);
   };
-  const drop = (event: DragEvent): void => {
-    event.preventDefault();
-    const preferred = preferredOperation(event);
-    if (event.dataTransfer) {
-      let real: DndEnvelope | null = null;
-      try {
-        real = readEnvelope(event.dataTransfer, options.validation);
-      } catch {
-        real = null;
-      }
-      // The payload is readable now: replace a provisional session with the real one.
-      if (real && session.envelope?.dragId !== real.dragId) {
-        session.apply(inputs.start(real));
-        session.apply(inputs.enter(validated, preferred));
-      }
+
+  const finishDrop = (real: DndEnvelope | null, preferred: DndOperation | undefined): void => {
+    // The payload is readable now: replace a provisional session with the real one.
+    if (real && session.envelope?.dragId !== real.dragId) {
+      session.apply(inputs.start(real));
+      session.apply(inputs.enter(validated, preferred));
     }
     const snapshot = session.apply(inputs.drop(targetId));
     const result = session.result;
@@ -235,6 +227,52 @@ export function bindDropZone(
     } else {
       handlers.onReject?.(session.envelope, result);
     }
+  };
+
+  const cancelUnreadableDrop = (): void => {
+    const envelopeBefore = session.envelope;
+    session.apply(inputs.cancel());
+    const result = session.result;
+    if (result) handlers.onReject?.(envelopeBefore, result);
+  };
+
+  const drop = (event: DragEvent): void => {
+    event.preventDefault();
+    const preferred = preferredOperation(event);
+    const transfer = event.dataTransfer;
+    if (transfer && requiresExternalMaterialization(transfer)) {
+      // File reads are async. Keep both object identities so a later start,
+      // leave/cancel/drop, or even a reused dragId cannot be mutated by this
+      // stale completion.
+      const expectedEnvelope = session.envelope;
+      const expectedSnapshot = session.snapshot;
+      void readExternalTransfer(transfer, options.validation).then(
+        (read) => {
+          if (session.envelope !== expectedEnvelope || session.snapshot !== expectedSnapshot) return;
+          if (!read) {
+            cancelUnreadableDrop();
+            return;
+          }
+          finishDrop(read.envelope, preferred);
+        },
+        () => {
+          if (session.envelope !== expectedEnvelope || session.snapshot !== expectedSnapshot) return;
+          cancelUnreadableDrop();
+        },
+      );
+      return;
+    }
+
+    let real: DndEnvelope | null = null;
+    if (transfer) {
+      try {
+        real = readEnvelope(transfer, options.validation);
+      } catch {
+        cancelUnreadableDrop();
+        return;
+      }
+    }
+    finishDrop(real, preferred);
   };
   el.addEventListener("dragenter", enter);
   el.addEventListener("dragover", enter);
