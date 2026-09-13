@@ -11,18 +11,18 @@ class _Recorder implements OresOtelPort {
 }
 
 DndEnvelope envelope(String id) => DndEnvelope(
-  protocol: oresDndProtocol,
-  dragId: id,
-  sourceRuntime: 'dart-keyboard-test',
-  allowedOperations: const [DndOperation.copy, DndOperation.move],
-  items: const [
-    DndItem(
-      kind: DndItemKind.text,
-      mediaType: 'text/plain',
-      data: 'SECRET-DRAG-DATA',
-    ),
-  ],
-);
+      protocol: oresDndProtocol,
+      dragId: id,
+      sourceRuntime: 'dart-keyboard-test',
+      allowedOperations: const [DndOperation.copy, DndOperation.move],
+      items: const [
+        DndItem(
+          kind: DndItemKind.text,
+          mediaType: 'text/plain',
+          data: 'SECRET-DRAG-DATA',
+        ),
+      ],
+    );
 
 const textTarget = DndDropPolicy(
   targetId: 'text-zone',
