@@ -111,8 +111,7 @@ final class DndKeyboardController {
     DndKeyboardTargetChanged? onTargetChange,
     DndKeyboardDropAccepted? onDrop,
     DndKeyboardDropRejected? onReject,
-  }) =>
-      DndKeyboardController(
+  }) => DndKeyboardController(
         driver: DndSessionDriverAdapter(session),
         targets: targets,
         otel: otel,
