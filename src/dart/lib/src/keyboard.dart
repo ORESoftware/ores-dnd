@@ -113,15 +113,16 @@ final class DndKeyboardController {
     DndKeyboardTargetChanged? onTargetChange,
     DndKeyboardDropAccepted? onDrop,
     DndKeyboardDropRejected? onReject,
-  }) => DndKeyboardController(
-    driver: DndSessionDriverAdapter(session),
-    targets: targets,
-    otel: otel,
-    announce: announce,
-    onTargetChange: onTargetChange,
-    onDrop: onDrop,
-    onReject: onReject,
-  );
+  }) =>
+      DndKeyboardController(
+        driver: DndSessionDriverAdapter(session),
+        targets: targets,
+        otel: otel,
+        announce: announce,
+        onTargetChange: onTargetChange,
+        onDrop: onDrop,
+        onReject: onReject,
+      );
 
   final DndSessionDriver driver;
   final List<DndDropPolicy> _targets;
