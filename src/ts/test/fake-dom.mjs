@@ -51,11 +51,24 @@ export class FakeDataTransfer {
   #data = new Map();
   effectAllowed = "none";
   dropEffect = "none";
+  files = [];
   /** browsers hide data during dragenter/dragover ("protected mode") */
   protectedMode = false;
   setData(type, value) { this.#data.set(type, String(value)); }
   getData(type) { return this.protectedMode ? "" : (this.#data.get(type) ?? ""); }
-  get types() { return [...this.#data.keys()]; }
+  get types() {
+    const types = [...this.#data.keys()];
+    if (this.files.length > 0 && !types.includes("Files")) types.push("Files");
+    return types;
+  }
+  /** DataTransferItem kind/type metadata stays visible in protected mode. */
+  get items() {
+    const out = this.files.map((file) => ({ kind: "file", type: file.type ?? "" }));
+    for (const type of this.#data.keys()) {
+      if (type !== "Files") out.push({ kind: "string", type });
+    }
+    return out;
+  }
 }
 
 export function dragEvent(type, { dataTransfer = new FakeDataTransfer(), relatedTarget = null, ...keys } = {}) {
