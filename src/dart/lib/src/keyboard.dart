@@ -93,7 +93,9 @@ final class DndKeyboardController {
     final ids = <String>{};
     for (final target in _targets) {
       if (!target.isValid) {
-        throw FormatException('invalid keyboard DnD policy: ${target.targetId}');
+        throw FormatException(
+          'invalid keyboard DnD policy: ${target.targetId}',
+        );
       }
       if (!ids.add(target.targetId)) {
         throw FormatException(
@@ -181,10 +183,7 @@ final class DndKeyboardController {
     return _enterActive(preferred: preferred);
   }
 
-  DndSessionSnapshot select(
-    String targetId, {
-    DndOperation? preferred,
-  }) {
+  DndSessionSnapshot select(String targetId, {DndOperation? preferred}) {
     final current = driver.snapshot;
     if (current.state != DndSessionState.dragging &&
         current.state != DndSessionState.overTarget) {
@@ -317,12 +316,7 @@ final class DndKeyboardController {
     if (port == null || current == null) return;
     unawaited(
       port.emitDndEvent(
-        telemetryFor(
-          phase,
-          current,
-          operation: operation,
-          targetId: targetId,
-        ),
+        telemetryFor(phase, current, operation: operation, targetId: targetId),
       ),
     );
   }
