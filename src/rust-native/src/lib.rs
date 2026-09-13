@@ -191,7 +191,10 @@ mod tests {
             .external_drop(envelope("external-2", "toolarge"), policy, None)
             .expect("terminal definitive result");
         assert!(!result.accepted);
-        assert_eq!(result.error_code.as_deref(), Some(DndRejectCode::PayloadTooLarge.wire()));
+        assert_eq!(
+            result.error_code.as_deref(),
+            Some(DndRejectCode::PayloadTooLarge.wire())
+        );
         assert_eq!(bridge.snapshot().state, DndSessionState::Cancelled);
     }
 
@@ -208,7 +211,10 @@ mod tests {
             .expect("drop result");
         assert!(result.accepted);
         assert_eq!(result.operation, Some(DndOperation::Copy));
-        assert_eq!(bridge.envelope().expect("definitive envelope").items[0].data, "hello");
+        assert_eq!(
+            bridge.envelope().expect("definitive envelope").items[0].data,
+            "hello"
+        );
     }
 
     #[test]
@@ -217,9 +223,14 @@ mod tests {
         bridge.external_enter(envelope("external-4", ""), text_policy(), None);
         let snapshot = bridge.leave("native-zone");
         assert_eq!(snapshot.state, DndSessionState::Dragging);
-        let result = bridge.drop_current("native-zone").expect("cancelled result");
+        let result = bridge
+            .drop_current("native-zone")
+            .expect("cancelled result");
         assert!(!result.accepted);
-        assert_eq!(result.error_code.as_deref(), Some(DndRejectCode::NoActiveTarget.wire()));
+        assert_eq!(
+            result.error_code.as_deref(),
+            Some(DndRejectCode::NoActiveTarget.wire())
+        );
     }
 
     #[test]
