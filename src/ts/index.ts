@@ -7,6 +7,7 @@
 // - corpus:   decode any contract declaration by name (tjsv runtime evidence)
 // - dom:      HTML5 drag-and-drop bindings + autoBind for HTML-first pages
 // - external: bounded drop-time materialization of Files / URI-list / JSON / text
+// - keyboard: accessible keyboard input adapter over the same DndSession
 // - pointer:  pointer-events fallback for touch surfaces / webviews
 // - htmx:     MASH commit endpoint wiring (JSON verdict or HTML swap)
 // - fuzz:     seeded random session generator (mirror of the Rust one) for differential fuzzing
@@ -18,6 +19,7 @@ export * from "./session.js";
 export * from "./corpus.js";
 export * from "./dom.js";
 export * from "./external.js";
+export * from "./keyboard.js";
 export * from "./pointer.js";
 export * from "./htmx.js";
 export * from "./wasm.js";
