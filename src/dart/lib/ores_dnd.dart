@@ -7,12 +7,14 @@
 /// every runtime (Rust, TypeScript, Dart) implements identically.
 library;
 
+import 'dart:async';
 import 'dart:convert';
 
 part 'src/wire.dart';
 part 'src/codec.dart';
 part 'src/policy.dart';
 part 'src/session.dart';
+part 'src/keyboard.dart';
 part 'src/ports.dart';
 part 'src/corpus.dart';
 part 'src/fuzz.dart';
