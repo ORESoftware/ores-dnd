@@ -1,0 +1,26 @@
+name: dart-format-oracle
+
+on:
+  push:
+    branches: [DEN-1025-dart-flutter-keyboard-parity-v2]
+
+permissions:
+  contents: read
+
+jobs:
+  format-diff:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+        with:
+          sdk: stable
+      - name: Print canonical formatter diff
+        working-directory: src/dart
+        run: |
+          dart format lib/src/keyboard.dart test/keyboard_test.dart
+          git diff -- lib/src/keyboard.dart test/keyboard_test.dart
+          test -z "$(git status --porcelain -- lib/src/keyboard.dart test/keyboard_test.dart)"
