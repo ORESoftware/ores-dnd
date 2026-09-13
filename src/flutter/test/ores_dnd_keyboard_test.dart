@@ -3,18 +3,18 @@ import 'package:ores_dnd_flutter/ores_dnd_flutter.dart';
 import 'package:ores_dnd_flutter/ores_dnd_keyboard.dart';
 
 DndEnvelope envelope() => const DndEnvelope(
-      protocol: oresDndProtocol,
-      dragId: 'flutter-keyboard-1',
-      sourceRuntime: 'flutter-keyboard-test',
-      allowedOperations: [DndOperation.copy, DndOperation.move],
-      items: [
-        DndItem(
-          kind: DndItemKind.text,
-          mediaType: 'text/plain',
-          data: 'private-drag-data',
-        ),
-      ],
-    );
+  protocol: oresDndProtocol,
+  dragId: 'flutter-keyboard-1',
+  sourceRuntime: 'flutter-keyboard-test',
+  allowedOperations: [DndOperation.copy, DndOperation.move],
+  items: [
+    DndItem(
+      kind: DndItemKind.text,
+      mediaType: 'text/plain',
+      data: 'private-drag-data',
+    ),
+  ],
+);
 
 const target = DndDropPolicy(
   targetId: 'timeline',
