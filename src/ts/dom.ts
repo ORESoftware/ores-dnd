@@ -28,7 +28,7 @@ export const ATTR_STATE = "data-ores-dnd-state";
 export const ATTR_SOURCE = "data-ores-dnd-source";
 export const ATTR_COMMIT = "data-ores-dnd-commit";
 export const ATTR_SWAP = "data-ores-dnd-swap";
-/** CustomEvent dispatched on a zone after a drop (`detail: { envelope, result }`). */
+/** CustomEvent dispatched on a zone after an accepted drop (`detail: { envelope, result }`). */
 export const EVENT_DROP = "ores-dnd:drop";
 /** CustomEvent dispatched on a zone when the session snapshot changes (`detail: snapshot`). */
 export const EVENT_STATE = "ores-dnd:state";
@@ -80,20 +80,59 @@ export function kindForType(format: string): { kind: DndItemKind; mediaType: str
 
 let externalCounter = 0;
 
+function provisionalFromMapped(items: DndItem[]): DndEnvelope {
+  externalCounter += 1;
+  if (items.length === 0) items.push({ kind: "text", mediaType: "text/plain", data: "" });
+  return {
+    protocol: ORES_DND_PROTOCOL,
+    dragId: `external-${externalCounter}`,
+    sourceRuntime: "external-browser",
+    allowedOperations: ["copy"],
+    items,
+  };
+}
+
 /**
  * An envelope describing an external drag by its advertised types only (data
  * is empty until `drop`). Lets a zone evaluate kind/media-type rules during
  * `dragover`; byte limits are re-checked definitively on drop.
  */
 export function provisionalEnvelope(types: readonly string[]): DndEnvelope {
-  externalCounter += 1;
   const items: DndItem[] = [];
   for (const type of types) {
     const mapped = kindForType(type);
     if (mapped && items.length < ENVELOPE_ITEMS_MAX) items.push({ kind: mapped.kind, mediaType: mapped.mediaType, data: "" });
   }
-  if (items.length === 0) items.push({ kind: "text", mediaType: "text/plain", data: "" });
-  return { protocol: ORES_DND_PROTOCOL, dragId: `external-${externalCounter}`, sourceRuntime: "external-browser", allowedOperations: ["copy"], items };
+  return provisionalFromMapped(items);
+}
+
+/**
+ * Stronger protected-mode provisional view. `DataTransferItem.type` is readable
+ * during dragover even when file bytes are not, so file targets can apply
+ * media-type policy (for example `image/*`) without touching file content.
+ * Falls back to `DataTransfer.types` when item metadata is unavailable.
+ */
+export function provisionalEnvelopeFromTransfer(
+  transfer: Pick<DataTransfer, "types" | "items">,
+): DndEnvelope {
+  const items: DndItem[] = [];
+  for (const item of Array.from(transfer.items ?? [])) {
+    if (items.length >= ENVELOPE_ITEMS_MAX) break;
+    if (item.kind === "file") {
+      const media = (item.type.split(";")[0] ?? "").trim().toLowerCase();
+      items.push({ kind: "bytes", mediaType: isMediaType(media) ? media : "application/octet-stream", data: "" });
+      continue;
+    }
+    const mapped = kindForType(item.type);
+    if (mapped) items.push({ kind: mapped.kind, mediaType: mapped.mediaType, data: "" });
+  }
+  if (items.length === 0) {
+    for (const type of Array.from(transfer.types ?? [])) {
+      const mapped = kindForType(type);
+      if (mapped && items.length < ENVELOPE_ITEMS_MAX) items.push({ kind: mapped.kind, mediaType: mapped.mediaType, data: "" });
+    }
+  }
+  return provisionalFromMapped(items);
 }
 
 /** Read the ores envelope, or synthesize one from a `text/plain` drop. Returns null when neither is present. */
@@ -193,7 +232,7 @@ export function bindDropZone(
   const enter = (event: DragEvent): void => {
     const preferred = preferredOperation(event);
     if (session.snapshot.state === "idle" && event.dataTransfer) {
-      session.apply(inputs.start(provisionalEnvelope(Array.from(event.dataTransfer.types ?? []))));
+      session.apply(inputs.start(provisionalEnvelopeFromTransfer(event.dataTransfer)));
     }
     const wasOver = session.snapshot.state === "over-target" && session.snapshot.targetId === targetId;
     const next = session.apply(inputs.enter(validated, preferred));
