@@ -2,7 +2,7 @@
   "name": "@oresoftware/ores-dnd",
   "version": "0.1.0",
   "type": "module",
-  "description": "Browser and webview drag-and-drop for the ores.dnd/v1 protocol: codec, drop policy, session state machine, HTML5 DnD, pointer fallback, htmx/MASH commit, WASM shim, RxJS reactive lifecycle streams",
+  "description": "Browser and webview drag-and-drop for the ores.dnd/v1 protocol: codec, drop policy, session state machine, HTML5 DnD, bounded external drops, pointer fallback, htmx/MASH commit, WASM shim, RxJS reactive lifecycle streams",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -25,6 +25,10 @@
     "./dom": {
       "types": "./dist/dom.d.ts",
       "default": "./dist/dom.js"
+    },
+    "./external": {
+      "types": "./dist/external.d.ts",
+      "default": "./dist/external.js"
     },
     "./pointer": {
       "types": "./dist/pointer.d.ts",

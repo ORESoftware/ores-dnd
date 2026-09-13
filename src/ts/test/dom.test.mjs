@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DndSession } from "../dist/session.js";
+import { DndSession, inputs } from "../dist/session.js";
 import { ORES_DND_MIME } from "../dist/index.js";
 import {
   ATTR_COMMIT, ATTR_POLICY, ATTR_SOURCE, ATTR_STATE, ATTR_ZONE, EVENT_DROP, EVENT_STATE,
   autoBind, bindDragSource, bindDropZone, kindForType, preferredOperation, provisionalEnvelope, zoneStateAttribute,
 } from "../dist/dom.js";
+import { base64ToBytes } from "../dist/external.js";
 import { FakeDataTransfer, FakeDocument, dragEvent, otelRecorder } from "./fake-dom.mjs";
 import { validEnvelope } from "./helpers.mjs";
 
@@ -127,6 +128,79 @@ test("external text drag is evaluated provisionally then definitively on drop", 
   zone.dispatchEvent(dragEvent("drop", { dataTransfer: dt }));
   assert.deepEqual(dropped, ["rejected:payload-too-large"], "the real payload is re-evaluated on drop");
   assert.equal(session.snapshot.state, "cancelled");
+});
+
+test("external native files are materialized only on drop and re-evaluated against the target", async () => {
+  const doc = new FakeDocument();
+  const session = new DndSession();
+  const zone = doc.createElement("div");
+  const dropped = [];
+  bindDropZone(zone, {
+    targetId: "image-zone",
+    allowedOperations: ["copy"],
+    acceptedKinds: ["bytes"],
+    acceptedMediaTypes: ["image/*"],
+    maxTotalBytes: 16,
+  }, session, { onDrop: (env) => dropped.push(env) });
+
+  const dt = new FakeDataTransfer();
+  dt.setData("Files", ""); // advertise the protected-mode browser format
+  dt.files = [{
+    name: "pixel.png",
+    type: "image/png",
+    size: 3,
+    async arrayBuffer() { return Uint8Array.from([0, 255, 7]).buffer; },
+  }];
+  dt.protectedMode = true;
+  const over = dragEvent("dragover", { dataTransfer: dt });
+  zone.dispatchEvent(over);
+  assert.equal(over.defaultPrevented, true);
+  assert.equal(session.snapshot.state, "over-target");
+
+  dt.protectedMode = false;
+  zone.dispatchEvent(dragEvent("drop", { dataTransfer: dt }));
+  assert.equal(session.snapshot.state, "over-target", "file bytes are read asynchronously before terminal admission");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(session.snapshot.state, "dropped");
+  assert.equal(dropped.length, 1);
+  assert.equal(dropped[0].items[0].kind, "bytes");
+  assert.equal(dropped[0].items[0].mediaType, "image/png");
+  assert.deepEqual([...base64ToBytes(dropped[0].items[0].data)], [0, 255, 7]);
+});
+
+test("slow external file reads cannot mutate a newer drag session", async () => {
+  const doc = new FakeDocument();
+  const session = new DndSession();
+  const zone = doc.createElement("div");
+  const outcomes = [];
+  bindDropZone(zone, { targetId: "image-zone", allowedOperations: ["copy"], acceptedKinds: ["bytes"] }, session, {
+    onDrop: () => outcomes.push("drop"),
+    onReject: () => outcomes.push("reject"),
+  });
+
+  let resolveRead;
+  const pending = new Promise((resolve) => { resolveRead = resolve; });
+  const dt = new FakeDataTransfer();
+  dt.setData("Files", "");
+  dt.files = [{
+    name: "slow.bin",
+    type: "application/octet-stream",
+    size: 2,
+    async arrayBuffer() { return pending; },
+  }];
+  dt.protectedMode = true;
+  zone.dispatchEvent(dragEvent("dragover", { dataTransfer: dt }));
+  dt.protectedMode = false;
+  zone.dispatchEvent(dragEvent("drop", { dataTransfer: dt }));
+
+  const newer = { ...(await validEnvelope()), dragId: "newer-drag" };
+  session.apply(inputs.start(newer));
+  assert.equal(session.snapshot.dragId, "newer-drag");
+  resolveRead(Uint8Array.from([1, 2]).buffer);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(session.snapshot.state, "dragging");
+  assert.equal(session.snapshot.dragId, "newer-drag");
+  assert.deepEqual(outcomes, []);
 });
 
 test("provisional envelopes, kinds and modifier preferences", () => {
