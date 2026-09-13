@@ -1,5 +1,5 @@
 [workspace]
-members = ["src/rust", "src/rust-wasm", "src/rust-mash", "src/rust-leptos", "src/rust-dioxus", "examples/mash-kanban"]
+members = ["src/rust", "src/rust-wasm", "src/rust-native", "src/rust-mash", "src/rust-leptos", "src/rust-dioxus", "examples/mash-kanban"]
 resolver = "2"
 
 [workspace.package]

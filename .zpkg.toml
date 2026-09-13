@@ -4,7 +4,7 @@ name = "ores-dnd"
 version = "0.1.0"
 description = "Cross-runtime drag-and-drop contracts and adapters"
 license = "MIT"
-keywords = ["drag-drop", "wasm", "typescript", "rust", "flutter", "dart"]
+keywords = ["drag-drop", "wasm", "typescript", "rust", "native", "flutter", "dart"]
 
 [package.repository]
 vcs = "git"
@@ -27,6 +27,13 @@ adapter = "rust"
 
 [targets.wasm]
 dir = "src/rust-wasm"
+adapter = "rust"
+
+# Framework-neutral bridge for GPUI/Slint/Qt/winit/tao/native shells. Hosts own
+# OS-specific file promises, temp files, clipboard APIs and path permissions.
+[targets.native]
+dir = "src/rust-native"
+name = "ores-dnd-native"
 adapter = "rust"
 
 # Framework adapters: each depends on ores-dnd-core, never the reverse, so a

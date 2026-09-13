@@ -1,0 +1,10 @@
+[package]
+name = "ores-dnd-native"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Framework-neutral native desktop event bridge for ores.dnd/v1"
+
+[dependencies]
+ores-dnd-core = { path = "../rust", default-features = false }
