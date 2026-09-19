@@ -1,0 +1,18 @@
+{
+  "schema": "ores.conformance.bootstrap/v1",
+  "repository": "ORESoftware/ores-dnd",
+  "id": "authority-boundary",
+  "contractRoot": "contracts/",
+  "status": "bootstrap-only",
+  "expected": {
+    "contractsRemainAuthoritative": true,
+    "conformanceIsSharedAcrossImplementations": true,
+    "runtimeSpecificGoldensAllowed": false,
+    "staleEvidenceAccepted": false,
+    "missingRequiredRuntimeEvidenceAccepted": false
+  },
+  "notes": [
+    "This bootstrap case establishes the top-level repository conformance boundary only.",
+    "Existing conformance adapters should converge on shared top-level cases without duplicating case authority."
+  ]
+}
