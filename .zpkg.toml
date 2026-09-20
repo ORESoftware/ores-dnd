@@ -10,9 +10,6 @@ keywords = ["drag-drop", "wasm", "typescript", "rust", "native", "flutter", "dar
 vcs = "git"
 url = "https://github.com/ORESoftware/ores-dnd"
 
-[dependencies]
-"oresoftware/typespec-json-schema-validator" = "^0.1.0"
-
 [publish]
 include_readme = true
 tag_format = "v{version}"
@@ -32,15 +29,11 @@ adapter = "rust"
 dir = "src/rust-wasm"
 adapter = "rust"
 
-# Framework-neutral bridge for GPUI/Slint/Qt/winit/tao/native shells. Hosts own
-# OS-specific file promises, temp files, clipboard APIs and path permissions.
 [targets.native]
 dir = "src/rust-native"
 name = "ores-dnd-native"
 adapter = "rust"
 
-# Framework adapters: each depends on ores-dnd-core, never the reverse, so a
-# Leptos/Dioxus/axum release is an adapter change and not a protocol change.
 [targets.mash]
 dir = "src/rust-mash"
 name = "ores-dnd-mash"
@@ -61,13 +54,10 @@ dir = "src/ts"
 name = "ores-dnd-typescript"
 adapter = "node"
 
-# Pure Dart protocol/runtime target. This intentionally has no Flutter dependency
-# so public core packages can consume the contract without importing UI code.
 [targets.dart]
 dir = "src/dart"
 adapter = "dart"
 
-# Flutter widgets are a separate target so hosts opt into framework dependencies.
 [targets.flutter]
 dir = "src/flutter"
 adapter = "dart"
@@ -83,6 +73,7 @@ name = "ores-dnd-conformance"
 adapter = "none"
 
 [scripts]
-# Package tests explicitly prove peer-authority parity through the Zed-resolved
-# TJSV binary and then execute the repository's canonical behavioral checker.
-test = "sh conformance/check-wrapper.sh"
+# Current Zed itself executes the canonical conformance checker around package
+# lifecycle operations. Keep the package test credential-free/offline so r2g's
+# local registry remains a real release gate.
+test = "node conformance/check.mjs"
