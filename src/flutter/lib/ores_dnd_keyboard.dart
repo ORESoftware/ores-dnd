@@ -6,8 +6,6 @@
 /// accessibility wording remain widget/application responsibilities.
 library;
 
-import 'package:ores_dnd/ores_dnd.dart';
-
 import 'ores_dnd_flutter.dart';
 
 export 'package:ores_dnd/ores_dnd.dart'
