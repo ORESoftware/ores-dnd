@@ -1,0 +1,5 @@
+{
+  "schema": "ores.dnd/config/v1",
+  "enabled": true,
+  "unexpected": true
+}
