@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ores.dev/schemas/ores-dnd-config.v1.json",
+  "title": "ORES DnD consumer configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "protocol", "enabled", "policy_source", "server", "telemetry"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "protocol": {"const": "ores.dnd/v1"},
+    "enabled": {"type": "boolean"},
+    "policy_source": {"const": "pub-lib-core"},
+    "server": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit_path", "require_auth", "require_rate_limit"],
+      "properties": {
+        "commit_path": {"type": "string", "minLength": 1},
+        "require_auth": {"type": "boolean"},
+        "require_rate_limit": {"type": "boolean"}
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "include_payload"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "include_payload": {"const": false}
+      }
+    }
+  }
+}
