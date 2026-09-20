@@ -1,4 +1,15 @@
-# Repository-root activation binding for ORESoftware/ores-dnd.
+# Repository-root consumer binding for ORESoftware/ores-dnd.
 # Drop policies remain governed by contracts/main.tsp and contracts/authored.schema.json.
-schema = "ores.dnd/config/v1"
+schema_version = 1
+protocol = "ores.dnd/v1"
 enabled = false
+policy_source = "pub-lib-core"
+
+[server]
+commit_path = "/_ores/dnd/drop"
+require_auth = true
+require_rate_limit = true
+
+[telemetry]
+enabled = true
+include_payload = false
