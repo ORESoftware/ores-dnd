@@ -3,25 +3,29 @@ name: dnd-config-contract
 on:
   pull_request:
     paths:
-      - 'contracts/config/**'
+      - 'contracts/runtime-config/**'
       - '.github/workflows/config-contract.yml'
   push:
     branches: [main]
     paths:
-      - 'contracts/config/**'
+      - 'contracts/runtime-config/**'
       - '.github/workflows/config-contract.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   parity:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
       - uses: ORESoftware/typespec-json-schema-validator@bd503465dab8c5148fee722b443ed04ff126c9bf
         with:
-          typespec: contracts/config/main.tsp
-          schema: contracts/config/authored.schema.json
+          typespec: contracts/runtime-config/main.tsp
+          schema: contracts/runtime-config/authored.schema.json
+          instances: contracts/runtime-config/instances
+          seal-object-schemas: true
