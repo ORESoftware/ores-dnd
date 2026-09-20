@@ -20,7 +20,7 @@
       "type": "object",
       "properties": {
         "enabled": { "type": "boolean" },
-        "include_payload": { "type": "boolean" }
+        "include_payload": { "const": false }
       },
       "required": ["enabled", "include_payload"],
       "unevaluatedProperties": false
@@ -33,7 +33,7 @@
         "schema_version": { "type": "integer", "const": 1 },
         "protocol": { "type": "string", "const": "ores.dnd/v1" },
         "enabled": { "type": "boolean" },
-        "policy_source": { "type": "string", "minLength": 1 },
+        "policy_source": { "const": "pub-lib-core" },
         "server": { "$ref": "OresDndServerConfig" },
         "telemetry": { "$ref": "OresDndTelemetryConfig" }
       },
