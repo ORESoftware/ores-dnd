@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$root"
+
+# Keep normal commits cheap. Contract/conformance/package lifecycle edits must
+# execute the same boundary Zed will consume during install/test/pack.
+if ! git diff --cached --name-only --diff-filter=ACMR -- contracts conformance .zpkg.toml zed-env.toml .githooks | grep -q .; then
+  exit 0
+fi
+
+zed_bin="${ZED_BIN:-$(command -v zed 2>/dev/null || true)}"
+[ -n "$zed_bin" ] || { echo "[zed-pre-commit] zed not found; refusing to bypass contract/conformance admission" >&2; exit 1; }
+if [ -f .zpkg.lock ]; then "$zed_bin" validate --require-lock; else "$zed_bin" validate; fi
+sh conformance/check-wrapper.sh
