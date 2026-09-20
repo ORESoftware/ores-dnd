@@ -28,4 +28,4 @@ jobs:
           typespec: contracts/runtime-config/main.tsp
           schema: contracts/runtime-config/authored.schema.json
           instances: contracts/runtime-config/instances
-          seal-object-schemas: true
+          seal_object_schemas: true
