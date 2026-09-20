@@ -2,7 +2,34 @@
 set -eu
 root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
 cd "$root"
+
 zed_bin="${ZED_BIN:-$(command -v zed 2>/dev/null || true)}"
 [ -n "$zed_bin" ] || { echo "[zed-pre-push] zed not found; refusing to bypass validation" >&2; exit 1; }
-if [ -f .zpkg.lock ]; then "$zed_bin" validate --require-lock; else "$zed_bin" validate; fi
-sh ./conformance/check.sh --full
+
+had_lock=0
+[ -f .zpkg.lock ] && had_lock=1
+cleanup() {
+  if [ "$had_lock" -eq 0 ] && [ -f .zpkg.lock ]; then rm -f .zpkg.lock; fi
+  rm -rf "${TMPDIR:-/tmp}/ores-dnd-zed-pack-$$"
+}
+trap cleanup EXIT HUP INT TERM
+
+if [ "$had_lock" -eq 1 ]; then "$zed_bin" validate --require-lock; else "$zed_bin" validate; fi
+
+# Current Zed performs structural contracts/conformance admission before these
+# lifecycle mutations and executes the canonical checker after successful
+# install/build/test and before pack. Exercise those paths rather than bypassing
+# them with direct package-manager commands.
+"$zed_bin" install
+"$zed_bin" validate --require-lock
+"$zed_bin" install --frozen
+"$zed_bin" build
+"$zed_bin" run test
+pack_dir="${TMPDIR:-/tmp}/ores-dnd-zed-pack-$$"
+mkdir -p "$pack_dir"
+"$zed_bin" pack --out "$pack_dir"
+
+if [ "$had_lock" -eq 1 ] && ! git diff --quiet -- .zpkg.lock; then
+  echo "[zed-pre-push] .zpkg.lock changed; commit the resolver-produced lock before pushing" >&2
+  exit 1
+fi

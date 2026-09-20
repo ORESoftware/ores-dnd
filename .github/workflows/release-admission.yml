@@ -15,7 +15,9 @@ concurrency:
 
 env:
   EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-  ZED_CLI_REV: d50ceb0c75f3de972dde4b0ed27ebbf910973cfd
+  # Pinned to the reviewed Zed commit that introduced first-class paired
+  # contracts/conformance lifecycle admission (zed-pkg/zed-cli#468).
+  ZED_CLI_REV: 1a613b8345b0aecf24eb925720c0784782ac5dd8
   CARGO_TARGET_DIR: ${{ github.workspace }}/.deps/zed-target
 
 jobs:
