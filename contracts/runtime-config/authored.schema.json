@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ores.dnd.runtime-config.schema.json",
+  "$defs": {
+    "OresDndServerConfig": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "OresDndServerConfig",
+      "type": "object",
+      "properties": {
+        "commit_path": { "type": "string", "minLength": 1 },
+        "require_auth": { "type": "boolean" },
+        "require_rate_limit": { "type": "boolean" }
+      },
+      "required": ["commit_path", "require_auth", "require_rate_limit"],
+      "unevaluatedProperties": false
+    },
+    "OresDndTelemetryConfig": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "OresDndTelemetryConfig",
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "include_payload": { "const": false }
+      },
+      "required": ["enabled", "include_payload"],
+      "unevaluatedProperties": false
+    },
+    "OresDndRuntimeConfig": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "OresDndRuntimeConfig",
+      "type": "object",
+      "properties": {
+        "schema_version": { "type": "integer", "const": 1 },
+        "protocol": { "type": "string", "const": "ores.dnd/v1" },
+        "enabled": { "type": "boolean" },
+        "policy_source": { "const": "pub-lib-core" },
+        "server": { "$ref": "OresDndServerConfig" },
+        "telemetry": { "$ref": "OresDndTelemetryConfig" }
+      },
+      "required": ["schema_version", "protocol", "enabled", "policy_source", "server", "telemetry"],
+      "unevaluatedProperties": false
+    }
+  }
+}
