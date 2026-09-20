@@ -1,12 +1,12 @@
 schema = 2
 
 [tasks.conformance]
-description = "Run Zed-resolved TypeSpec/JSON Schema parity plus canonical behavioral conformance"
-run = ["sh conformance/check-wrapper.sh"]
+description = "Run the canonical digest/evidence contract and behavioral conformance boundary"
+run = ["node conformance/check.mjs"]
 
 [tasks.test]
 description = "Run the package-level release test contract"
-run = ["sh conformance/check-wrapper.sh"]
+run = ["node conformance/check.mjs"]
 
 [tasks.precommit]
 description = "Run staged boundary admission"
