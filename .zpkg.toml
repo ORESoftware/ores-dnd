@@ -10,6 +10,9 @@ keywords = ["drag-drop", "wasm", "typescript", "rust", "native", "flutter", "dar
 vcs = "git"
 url = "https://github.com/ORESoftware/ores-dnd"
 
+[dependencies]
+"oresoftware/typespec-json-schema-validator" = "^0.1.0"
+
 [publish]
 include_readme = true
 tag_format = "v{version}"
@@ -73,3 +76,13 @@ adapter = "dart"
 dir = "contracts"
 name = "ores-dnd-contracts"
 adapter = "none"
+
+[targets.conformance]
+dir = "conformance"
+name = "ores-dnd-conformance"
+adapter = "none"
+
+[scripts]
+# Package tests explicitly prove peer-authority parity through the Zed-resolved
+# TJSV binary and then execute the repository's canonical behavioral checker.
+test = "sh conformance/check-wrapper.sh"
