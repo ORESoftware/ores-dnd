@@ -17,7 +17,8 @@ model OresDndServerConfig {
 @id("OresDndTelemetryConfig")
 model OresDndTelemetryConfig {
   enabled: boolean;
-  include_payload: boolean;
+  // DnD payloads can contain customer/application data. Telemetry may record metadata only.
+  include_payload: false;
 }
 
 @id("OresDndRuntimeConfig")
@@ -25,8 +26,8 @@ model OresDndRuntimeConfig {
   schema_version: 1;
   protocol: "ores.dnd/v1";
   enabled: boolean;
-  @minLength(1)
-  policy_source: string;
+  // Policy remains owned by the shared public core; consumers must not redirect policy authority.
+  policy_source: "pub-lib-core";
   server: OresDndServerConfig;
   telemetry: OresDndTelemetryConfig;
 }
