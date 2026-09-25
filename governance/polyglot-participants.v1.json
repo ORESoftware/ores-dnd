@@ -1,0 +1,95 @@
+{
+  "schema": "ores.polyglot-governance/v1",
+  "repository": "ORESoftware/ores-dnd",
+  "sourceRoot": "src",
+  "workflow": ".github/workflows/ci.yml",
+  "requiredWorkflowTokens": [
+    "npm run conformance"
+  ],
+  "participants": [
+    {
+      "id": "typescript",
+      "sourceDir": "src/ts",
+      "ciJob": "typescript",
+      "boundaryLanguage": "typescript",
+      "conformanceId": "typescript",
+      "adapterTokens": [
+        "typescript-ores-dnd"
+      ],
+      "requiredCiTokens": [
+        "npm --prefix src/ts test"
+      ]
+    },
+    {
+      "id": "rust",
+      "sourceDir": "src/rust",
+      "ciJob": "rust",
+      "boundaryLanguage": "rust",
+      "conformanceId": "rust",
+      "adapterTokens": [
+        "rust-serde"
+      ],
+      "requiredCiTokens": [
+        "cargo test --workspace --all-features"
+      ]
+    },
+    {
+      "id": "dart",
+      "sourceDir": "src/dart",
+      "ciJob": "dart",
+      "boundaryLanguage": "dart",
+      "conformanceId": "dart",
+      "adapterTokens": [
+        "dart-ores-dnd"
+      ],
+      "requiredCiTokens": [
+        "dart test"
+      ]
+    }
+  ],
+  "ignoredSourceDirectories": [
+    {
+      "name": "flutter",
+      "owner": "dart",
+      "reason": "Flutter projection is governed by the Dart core participant and has its own CI job."
+    },
+    {
+      "name": "rust-dioxus",
+      "owner": "rust",
+      "reason": "Rust framework projection governed by the Rust core contract."
+    },
+    {
+      "name": "rust-leptos",
+      "owner": "rust",
+      "reason": "Rust framework projection governed by the Rust core contract."
+    },
+    {
+      "name": "rust-mash",
+      "owner": "rust",
+      "reason": "Rust framework projection governed by the Rust core contract."
+    },
+    {
+      "name": "rust-native",
+      "owner": "rust",
+      "reason": "Native Rust projection governed by the Rust core contract."
+    },
+    {
+      "name": "rust-wasm",
+      "owner": "rust",
+      "reason": "WASM Rust projection governed by the Rust core contract and differential WASM CI."
+    }
+  ],
+  "mirrors": {
+    "languageBoundaries": "contracts/runtime-participants.v1.json",
+    "conformanceManifest": "conformance/manifest.v1.json",
+    "conformanceAdapterFile": "scripts/conformance/verify.mjs"
+  },
+  "policy": {
+    "allSourceDirectoriesMustBeGoverned": true,
+    "ciExercisesEveryParticipant": true,
+    "missingOrExtraParticipantFailsClosed": true,
+    "languageBoundariesMustMatchParticipants": true,
+    "conformanceParticipantsMustMatch": true,
+    "conformanceAdaptersMustMatchParticipants": true
+  }
+}
