@@ -1,12 +1,39 @@
 {
   "schema": "ores.conformance.manifest/v1",
   "repository": "ORESoftware/ores-dnd",
-  "contractRoots": ["contracts/"],
-  "caseRoots": ["conformance/cases"],
+  "contractRoots": [
+    "contracts/"
+  ],
+  "caseRoots": [
+    "conformance/cases"
+  ],
   "caseSchema": "conformance/case.schema.json",
   "evidenceDir": "artifacts/conformance/evidence",
-  "requiredParticipants": [],
-  "coverage": {"status": "scaffold-only", "behavioralCasesRequired": false},
-  "evidence": {"bindToContractDigests": true, "bindToCaseDigests": true, "missingRequiredEvidenceFails": true, "staleEvidenceFails": true},
-  "policy": {"runtimeSpecificGoldensAllowed": false, "generatedEvidenceIsAuthority": false}
+  "requiredParticipants": [
+    {
+      "id": "typescript"
+    },
+    {
+      "id": "rust"
+    },
+    {
+      "id": "dart"
+    }
+  ],
+  "coverage": {
+    "status": "scaffold-only",
+    "behavioralCasesRequired": false,
+    "behavioralAuthority": "scripts/conformance/run.mjs",
+    "behavioralEvidence": "artifacts/conformance/runtime-conformance-report.json"
+  },
+  "evidence": {
+    "bindToContractDigests": true,
+    "bindToCaseDigests": true,
+    "missingRequiredEvidenceFails": true,
+    "staleEvidenceFails": true
+  },
+  "policy": {
+    "runtimeSpecificGoldensAllowed": false,
+    "generatedEvidenceIsAuthority": false
+  }
 }
