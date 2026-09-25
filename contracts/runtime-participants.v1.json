@@ -1,0 +1,40 @@
+{
+  "schema": "ores.runtime-participants/v1",
+  "repository": "ORESoftware/ores-dnd",
+  "targets": [
+    {
+      "language": "typescript",
+      "required": true,
+      "sourceDir": "src/ts",
+      "evidenceAdapter": "typescript-ores-dnd"
+    },
+    {
+      "language": "rust",
+      "required": true,
+      "sourceDir": "src/rust",
+      "evidenceAdapter": "rust-serde"
+    },
+    {
+      "language": "dart",
+      "required": true,
+      "sourceDir": "src/dart",
+      "evidenceAdapter": "dart-ores-dnd"
+    }
+  ],
+  "projections": {
+    "rust": [
+      "src/rust-dioxus",
+      "src/rust-leptos",
+      "src/rust-mash",
+      "src/rust-native",
+      "src/rust-wasm"
+    ],
+    "dart": [
+      "src/flutter"
+    ]
+  },
+  "policy": {
+    "allRequiredTargetsUseSharedRuntimeCorpus": true,
+    "missingAdapterEvidenceFailsClosed": true
+  }
+}
