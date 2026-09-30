@@ -47,7 +47,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(wasm-tools --version)" = "wasm-tools ${WIT_TOOLS_VERSION}"
+          observed="$(wasm-tools --version)"
+          case "$observed" in
+            "wasm-tools ${WIT_TOOLS_VERSION} "*) ;;
+            *) echo "unexpected wasm-tools version: $observed" >&2; exit 1 ;;
+          esac
           test -f wit/ores-dnd.wit
           wasm-tools component wit wit --json > "$RUNNER_TEMP/ores-dnd.wit.json"
           test -s "$RUNNER_TEMP/ores-dnd.wit.json"
