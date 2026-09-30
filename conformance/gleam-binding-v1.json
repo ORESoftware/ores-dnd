@@ -1,0 +1,13 @@
+{
+  "schema": "ores.dnd.gleam-binding/v1",
+  "wire_name_policy": "snake_case",
+  "cases": [
+    {"id": "string", "wire": {"kind": "string", "value": "hello"}, "expected_gleam": "String"},
+    {"id": "bool", "wire": {"kind": "bool", "value": true}, "expected_gleam": "Bool"},
+    {"id": "integer", "wire": {"kind": "integer", "value": 42}, "expected_gleam": "Int"},
+    {"id": "float", "wire": {"kind": "float", "value": 4.25}, "expected_gleam": "Float"},
+    {"id": "optional-string-none", "wire": {"kind": "optional_string", "value": null}, "expected_gleam": "Option(String)"},
+    {"id": "result-error", "wire": {"kind": "result", "ok": null, "error": {"code": "invalid_input"}}, "expected_gleam": "Result(a, Error)"},
+    {"id": "unknown-kind", "wire": {"kind": "dynamic_unbounded"}, "expected_error": "unsupported_binding_kind"}
+  ]
+}
