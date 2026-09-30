@@ -7,14 +7,14 @@
     "node": ">=22.9.0"
   },
   "scripts": {
-    "contracts:check": "tjsv check --typespec=contracts/main.tsp --schema=contracts/authored.schema.json --instances=contracts/instances --report=artifacts/schema-parity.json",
-    "contracts:inventory": "tjsv inventory --typespec=contracts/main.tsp",
+    "contracts:check": "tjsv check",
+    "contracts:inventory": "tjsv inventory",
     "test": "npm run contracts:check && npm --prefix src/ts test && npm run conformance -- --skip dart",
     "conformance": "node scripts/conformance/run.mjs",
     "conformance:corpus": "node scripts/conformance/corpus.mjs",
     "conformance:verify": "node scripts/conformance/verify.mjs"
   },
   "devDependencies": {
-    "@oresoftware/typespec-json-schema-validator": "https://github.com/ORESoftware/typespec-json-schema-validator/archive/4af1c3da7764996602872e89222569113830fb98.tar.gz"
+    "@oresoftware/typespec-json-schema-validator": "https://github.com/ORESoftware/typespec-json-schema-validator/archive/246440fc876938376b036f8b7759e8dd2bed5794.tar.gz"
   }
 }
