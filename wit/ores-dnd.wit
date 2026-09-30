@@ -58,8 +58,9 @@ interface session {
     apply: func(input: string) -> result<string, string>;
     snapshot: func() -> result<string, string>;
     envelope: func() -> result<option<string>, string>;
-    /// The terminal DndDropResult, or none while the session runs.
-    result: func() -> result<option<string>, string>;
+    /// The terminal DndDropResult, or none while the session runs. `%result`
+    /// preserves the public identifier while escaping WIT's reserved keyword.
+    %result: func() -> result<option<string>, string>;
   }
 }
 
