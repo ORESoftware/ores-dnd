@@ -19,6 +19,7 @@ env:
   # contracts/conformance lifecycle admission (zed-pkg/zed-cli#468).
   ZED_CLI_REV: 1a613b8345b0aecf24eb925720c0784782ac5dd8
   CARGO_TARGET_DIR: ${{ github.workspace }}/.deps/zed-target
+  WIT_TOOLS_VERSION: 1.259.0
 
 jobs:
   release-admission:
@@ -37,6 +38,19 @@ jobs:
         with:
           node-version: 22.23.2
           package-manager-cache: false
+      - name: Install reviewed wasm-tools
+        uses: bytecodealliance/actions/wasm-tools/setup@9152e710e9f7182e4c29ad218e4f335a7b203613 # v1
+        with:
+          version: ${{ env.WIT_TOOLS_VERSION }}
+          github_token: ${{ github.token }}
+      - name: Validate WIT syntax with reviewed toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(wasm-tools --version)" = "wasm-tools ${WIT_TOOLS_VERSION}"
+          test -f wit/ores-dnd.wit
+          wasm-tools component wit wit --json > "$RUNNER_TEMP/ores-dnd.wit.json"
+          test -s "$RUNNER_TEMP/ores-dnd.wit.json"
       - name: Set up Rust for pinned Zed CLI
         uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30
         with:
